@@ -2,13 +2,13 @@ extends Node2D
 
 var damage_per_hit := 10
 var hits_per_second := 5
-var width := 0.1
+var width := 0.01
 var ray_count := 7
 var ray_length := 1000.0
 
 var use_mouse := true
 
-@onready var particle_template := $ParticleEffect # Pre-made particle node
+@export var particle_scene: PackedScene
 
 func _physics_process(delta):
     var direction = get_aim_direction()
@@ -80,7 +80,7 @@ func draw_particle_beams(hits: Array):
         var hit = hits[i]
         var hit_pos: Vector2 = hit["position"]
 
-        var beam = particle_template.duplicate()
+        var beam = particle_scene.instantiate()
         beam.name = "Beam_%d" % i
         add_child(beam)
 
@@ -94,17 +94,17 @@ func draw_particle_beams(hits: Array):
 
         beam.rotation = angle
 
-        # 🔥 IMPORTANT PART: stretch particles along the ray
-        if beam.process_material:
-            var mat = beam.process_material
+        # # 🔥 IMPORTANT PART: stretch particles along the ray
+        # if beam.process_material:
+        #     var mat = beam.process_material
 
-            # Assuming a ParticleProcessMaterial
-            if mat is ParticleProcessMaterial:
-                mat.direction = Vector3(1, 0, 0) # Emit along X
-                mat.initial_velocity_min = distance
-                mat.initial_velocity_max = distance
+        #     # Assuming a ParticleProcessMaterial
+        #     if mat is ParticleProcessMaterial:
+        #         mat.direction = Vector3(1, 0, 0) # Emit along X
+        #         mat.initial_velocity_min = distance
+        #         mat.initial_velocity_max = distance
 
-        # Scale visually (fallback if material not used that way)
-        beam.scale.x = distance / 100.0 # adjust depending on your texture
+        # # Scale visually (fallback if material not used that way)
+        # beam.scale.x = distance / 100.0 # adjust depending on your texture
 
         beam.emitting = true
