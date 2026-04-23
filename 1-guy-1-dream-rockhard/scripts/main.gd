@@ -27,7 +27,7 @@ const SURFACE_AMPLITUDE := 6
 
 # Layer depths below the surface.
 const DIRT_DEPTH := 50
-const STONE_TIER_HEIGHT := 90  # each of the 5 stone tiers spans this many cells
+const STONE_TIER_HEIGHT := 90 # each of the 5 stone tiers spans this many cells
 
 # Broken-cell storage grouping: each group spans BREAK_GROUP_CHUNKS x BREAK_GROUP_CHUNKS chunks.
 # Coarser groups = fewer outer dict entries as the world fills up with mined cells.
@@ -54,8 +54,8 @@ var world_seed: int
 var noise: FastNoiseLite
 var cave_noise: FastNoiseLite
 var surface_noise: FastNoiseLite
-var loaded_chunks: Dictionary = {}  # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
-var active_tiles: Dictionary = {}   # Vector2i cell -> Tile (fast break lookup)
+var loaded_chunks: Dictionary = {} # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
+var active_tiles: Dictionary = {} # Vector2i cell -> Tile (fast break lookup)
 # Per-cell damage, grouped by break-group coord: group -> Dictionary[cell, hp_lost].
 # A cell is fully broken once its hp_lost >= Tile.HP[tile_type]. Partial damage persists
 # across chunk unload/reload so a half-mined block stays half-mined.
@@ -115,7 +115,11 @@ func _clear_spawn_area(center: Vector2i, radius: int) -> void:
 				var cell := center + Vector2i(dx, dy)
 				var group := _chunk_to_break_group(_cell_to_chunk(cell))
 				var group_broken: Dictionary = broken_by_group.get(group, {})
-				group_broken[cell] = 99999  # well above any tile's HP → always broken
+<< << << < HEAD
+				group_broken[cell] = 99999 # well above any tile's HP → always broken
+== == == =
+				group_broken[cell] = 99999 # well above any tile's HP → always broken
+>> >> >> > pascal - 2
 				if not broken_by_group.has(group):
 					broken_by_group[group] = group_broken
 
@@ -216,7 +220,11 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 			if cell.y < WORLD_Y_MIN or cell.y > WORLD_Y_MAX:
 				continue
 			if cell.y < surface_y:
-				continue  # above surface: sky
+<< << << < HEAD
+				continue # above surface: sky
+== == == =
+				continue # above surface: sky
+>> >> >> > pascal - 2
 			var bulk := noise.get_noise_2d(cell.x, cell.y)
 			var cave := _cave_at(cell)
 			var cave_penalty: float = maxf(cave - CAVE_SPARSITY, 0.0) * CAVE_STRENGTH
