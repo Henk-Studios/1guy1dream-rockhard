@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ed1uc7gjiyy2"]
 
-[ext_resource type="Script" uid="uid://koaqhvc0qs2j" path="res://script/shop.gd" id="1_ry0wc"]
+[ext_resource type="Script" uid="uid://koaqhvc0qs2j" path="res://scene/shop.gd" id="1_ry0wc"]
 [ext_resource type="PackedScene" uid="uid://df4ib6fx2xicq" path="res://scene/button.tscn" id="2_fgwry"]
 [ext_resource type="Script" uid="uid://b37amt1qcwq0j" path="res://scene/money.gd" id="3_fgwry"]
 
@@ -19,9 +19,9 @@ button_scene = ExtResource("2_fgwry")
 [node name="money" type="RichTextLabel" parent="." unique_id=928853571]
 offset_left = 30.0
 offset_top = 17.0
-offset_right = 638.0
+offset_right = 365.0
 offset_bottom = 101.0
 theme_override_colors/default_color = Color(0.4229943, 0.5935775, 0.23407158, 1)
-theme_override_font_sizes/normal_font_size = 50
+theme_override_font_sizes/normal_font_size = 64
 text = "Money"
 script = ExtResource("3_fgwry")
