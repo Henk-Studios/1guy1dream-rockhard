@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://bh8l316fr4joh"]
+
+[ext_resource type="Script" uid="uid://80vx6b2n7l4i" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bb416utg6nq8s" path="res://scripts/audio_player.gd" id="3_wp4xf"]
+[ext_resource type="AudioStream" uid="uid://jw2xpl4gnc0d" path="res://audio/djartmusic-fun-with-my-8-bit-game-301278.mp3" id="4_brvut"]
+[ext_resource type="PackedScene" uid="uid://xtv65a2ku4yj" path="res://scene/the_guy.tscn" id="4_guy"]
+[ext_resource type="AudioStream" uid="uid://c05p3do0x32v6" path="res://audio/jetfart.mp3" id="5_0ha60"]
+[ext_resource type="AudioStream" uid="uid://csueundcky6ww" path="res://audio/freesound_community-small-explosion-103931.mp3" id="6_4j5ol"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_small"]
+radius = 12.8
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_small"]
+radius = 4.0
+height = 19.2
+
+[node name="Main" type="Node2D" unique_id=717164903]
+script = ExtResource("1_main")
+
+[node name="TheGuy" parent="." unique_id=1049185052 node_paths=PackedStringArray("audio_player") instance=ExtResource("4_guy")]
+position = Vector2(0, 7200)
+audio_player = NodePath("../AudioPlayer")
+
+[node name="Sprite2D" parent="TheGuy" index="0" unique_id=1888951784]
+scale = Vector2(0.02, 0.02)
+
+[node name="CollisionShape2D" parent="TheGuy" index="1" unique_id=1438068098]
+position = Vector2(-0.8, 6)
+shape = SubResource("CircleShape2D_small")
+
+[node name="Camera2D" parent="TheGuy" index="2" unique_id=1949905347]
+zoom = Vector2(3, 3)
+
+[node name="square" parent="TheGuy" index="3" unique_id=1096005966]
+position = Vector2(-0.8, 14.8)
+shape = SubResource("CapsuleShape2D_small")
+
+[node name="Sprite2D" parent="TheGuy/the_gun" parent_id_path=PackedInt32Array(1049185052, 247112652) index="0" unique_id=1547750680]
+scale = Vector2(0.02, 0.02)
+
+[node name="AudioPlayer" type="Node2D" parent="." unique_id=373112670]
+script = ExtResource("3_wp4xf")
+sounds = Dictionary[String, AudioStream]({
+"explosion": ExtResource("6_4j5ol"),
+"jetfart": ExtResource("5_0ha60"),
+"music 1": ExtResource("4_brvut"),
+"music 2": ExtResource("4_brvut")
+})
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="AudioPlayer" unique_id=1319092510]
+
+[editable path="TheGuy"]
+[editable path="TheGuy/the_gun"]
