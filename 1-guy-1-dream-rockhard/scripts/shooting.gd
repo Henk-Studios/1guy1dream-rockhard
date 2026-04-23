@@ -12,6 +12,8 @@ var _spawn_accumulator := 0.0
 
 func _process(delta):
 	var direction = get_aim_direction()
+	rotation = direction.angle()
+	# $Sprite2D.flip_v = direction.x > 0
 	if direction == Vector2.ZERO:
 		return
 
@@ -23,13 +25,15 @@ func _process(delta):
 
 
 func get_aim_direction() -> Vector2:
-	if use_mouse:
+	# if using mouse and mouse down
+	if use_mouse and Input.is_action_pressed("aim_mouse"):
 		return (get_global_mouse_position() - global_position).normalized()
 	else:
 		var input_vec = Vector2(
 			Input.get_action_strength("aim_right") - Input.get_action_strength("aim_left"),
 			Input.get_action_strength("aim_down") - Input.get_action_strength("aim_up")
 		)
+		print(input_vec)
 		return input_vec.normalized()
 
 
