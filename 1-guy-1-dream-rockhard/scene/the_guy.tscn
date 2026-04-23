@@ -1,0 +1,21 @@
+[gd_scene format=3 uid="uid://xtv65a2ku4yj"]
+
+[ext_resource type="Script" uid="uid://cmo0f75krdcgh" path="res://script/the_guy.gd" id="1_mtops"]
+[ext_resource type="Texture2D" uid="uid://dsr8t5kdlscbl" path="res://icon.svg" id="2_wuybt"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_7vjtm"]
+radius = 37.12142
+
+[node name="TheGuy" type="RigidBody2D" unique_id=1780183407]
+gravity_scale = 0.655
+script = ExtResource("1_mtops")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1888951784]
+position = Vector2(-0.9999981, 3.999998)
+scale = Vector2(0.45312503, 0.45312497)
+texture = ExtResource("2_wuybt")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1438068098]
+shape = SubResource("CircleShape2D_7vjtm")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1949905347]
