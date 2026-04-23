@@ -6,6 +6,7 @@ const TILE_SIZE := 16
 const CHUNK_SIZE := 8
 const LOAD_RADIUS_X := 4 # original is 3
 const LOAD_RADIUS_Y := 2 # original is 2
+const FREE_CAM_RADIUS_MULT := 2.0  # freecam loads a wider area for debugging
 
 const WORLD_Y_MIN := 0
 const WORLD_Y_MAX := 500
@@ -54,6 +55,9 @@ var world_seed: int
 var noise: FastNoiseLite
 var cave_noise: FastNoiseLite
 var surface_noise: FastNoiseLite
+var gold_noise: FastNoiseLite
+var diamond_noise: FastNoiseLite
+var emerald_noise: FastNoiseLite
 var loaded_chunks: Dictionary = {}  # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
 var active_tiles: Dictionary = {}   # Vector2i cell -> Tile (fast break lookup)
 # Per-cell damage, grouped by break-group coord: group -> Dictionary[cell, hp_lost].
@@ -66,6 +70,7 @@ var tile_pool: Array[Tile] = []
 var fps_label: Label
 
 @onready var the_guy: Node2D = $TheGuy
+@onready var free_cam: Camera2D = $FreeCam
 var _last_streamed_chunk: Vector2i = Vector2i(-2147483648, -2147483648)
 
 func _ready() -> void:
@@ -88,6 +93,21 @@ func _ready() -> void:
 	surface_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	surface_noise.frequency = 0.03
 
+	gold_noise = FastNoiseLite.new()
+	gold_noise.seed = world_seed ^ 0xA1B2C3D4
+	gold_noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	gold_noise.frequency = 0.08
+
+	diamond_noise = FastNoiseLite.new()
+	diamond_noise.seed = world_seed ^ 0xB2C3D4E5
+	diamond_noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	diamond_noise.frequency = 0.12
+
+	emerald_noise = FastNoiseLite.new()
+	emerald_noise.seed = world_seed ^ 0xC3D4E5F6
+	emerald_noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	emerald_noise.frequency = 0.14
+
 	_setup_fps_overlay()
 	_setup_lava()
 
@@ -101,12 +121,18 @@ func _process(_delta: float) -> void:
 	if fps_label:
 		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 
-	if the_guy:
-		_update_sky(the_guy.global_position.y)
-		var chunk := _world_to_chunk(the_guy.global_position)
-		if chunk != _last_streamed_chunk:
-			_last_streamed_chunk = chunk
-			update_region(the_guy.global_position)
+	var tracking_pos: Vector2
+	if free_cam.is_current():
+		tracking_pos = free_cam.global_position
+	elif the_guy:
+		tracking_pos = the_guy.global_position
+	else:
+		return
+	_update_sky(tracking_pos.y)
+	var chunk := _world_to_chunk(tracking_pos)
+	if chunk != _last_streamed_chunk:
+		_last_streamed_chunk = chunk
+		update_region(tracking_pos)
 
 func _clear_spawn_area(center: Vector2i, radius: int) -> void:
 	for dx in range(-radius, radius + 1):
@@ -187,10 +213,15 @@ func _setup_fps_overlay() -> void:
 
 func update_region(world_pos: Vector2) -> void:
 	_update_sky(world_pos.y)
+	var rx := LOAD_RADIUS_X
+	var ry := LOAD_RADIUS_Y
+	if free_cam != null and free_cam.is_current():
+		rx = roundi(LOAD_RADIUS_X * FREE_CAM_RADIUS_MULT)
+		ry = roundi(LOAD_RADIUS_Y * FREE_CAM_RADIUS_MULT)
 	var center := _world_to_chunk(world_pos)
 	var wanted: Dictionary = {}
-	for dx in range(-LOAD_RADIUS_X, LOAD_RADIUS_X + 1):
-		for dy in range(-LOAD_RADIUS_Y, LOAD_RADIUS_Y + 1):
+	for dx in range(-rx, rx + 1):
+		for dy in range(-ry, ry + 1):
 			var chunk := center + Vector2i(dx, dy)
 			wanted[chunk] = true
 			if not loaded_chunks.has(chunk):
@@ -227,7 +258,7 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 
 			var depth: int = cell.y - surface_y
 			var is_heavy: bool = combined >= HEAVY_THRESHOLD
-			var tile_type: Tile.Type = _tile_type_for(depth, is_heavy)
+			var tile_type: Tile.Type = _tile_type_for(cell, depth, is_heavy)
 
 			# Skip cell if accumulated damage already destroys this tile type.
 			if chunk_broken != null:
@@ -261,6 +292,7 @@ func break_cell(cell: Vector2i, damage: int = 1) -> void:
 	if active_tiles.has(cell):
 		var tile: Tile = active_tiles[cell]
 		if hp_lost >= Tile.HP[tile.tile_type]:
+			Global.money += Tile.COIN_VALUES[tile.tile_type]
 			active_tiles.erase(cell)
 			if loaded_chunks.has(chunk):
 				loaded_chunks[chunk].erase(cell)
@@ -288,18 +320,47 @@ func _chunk_to_break_group(chunk: Vector2i) -> Vector2i:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		break_cell_at_world_pos(get_global_mouse_position())
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_F1:
+		_toggle_free_cam()
+
+func _toggle_free_cam() -> void:
+	var player_cam: Camera2D = the_guy.get_node("Camera2D")
+	if free_cam.is_current():
+		player_cam.make_current()
+		free_cam.enabled = false
+	else:
+		free_cam.global_position = player_cam.global_position
+		free_cam.enabled = true
+		free_cam.make_current()
+	# Force a region refresh so the expanded/contracted radius takes effect immediately.
+	_last_streamed_chunk = Vector2i(-2147483648, -2147483648)
 
 func _surface_y(x: int) -> int:
 	return roundi(SURFACE_BASE + surface_noise.get_noise_1d(x) * SURFACE_AMPLITUDE)
 
-func _tile_type_for(depth: int, is_heavy: bool) -> Tile.Type:
+func _tile_type_for(cell: Vector2i, depth: int, is_heavy: bool) -> Tile.Type:
 	if depth == 0:
 		return Tile.Type.GRASS
 	if depth <= DIRT_DEPTH:
 		return Tile.Type.DIRT
-	# Stone zone: tier 1..5 by depth below dirt
+	# Compute underlying stone tier up-front; some ores are gated on it.
 	var below_dirt: int = depth - DIRT_DEPTH - 1
 	var stone_num: int = clampi(below_dirt / STONE_TIER_HEIGHT + 1, 1, 5)
+	# Ore check (replaces stone). Ordered rarest-first.
+	# height_ratio = 0 at the bottom (start), 1 at the top (endgame).
+	var height_ratio: float = clampf(1.0 - float(cell.y) / float(WORLD_Y_MAX), 0.0, 1.0)
+	if is_heavy and stone_num < 5:  # emerald never spawns in the deepest tier
+		var emerald_threshold: float = 0.48 - height_ratio * 0.28  # a touch rarer at the bottom
+		if emerald_noise.get_noise_2d(cell.x, cell.y) > emerald_threshold:
+			return Tile.Type.EMERALD
+	var diamond_threshold: float = 0.45 - height_ratio * 0.15
+	if is_heavy:
+		diamond_threshold -= 0.12  # more common inside heavy rock pouches
+	if diamond_noise.get_noise_2d(cell.x, cell.y) > diamond_threshold:
+		return Tile.Type.DIAMOND
+	var gold_threshold: float = 0.35 + height_ratio * 0.10  # rarer / smaller veins near top
+	if gold_noise.get_noise_2d(cell.x, cell.y) > gold_threshold:
+		return Tile.Type.GOLD
 	# Dark spot: a heavy cell in stone N shows the previous (darker) tier.
 	if is_heavy and stone_num > 1:
 		stone_num -= 1
