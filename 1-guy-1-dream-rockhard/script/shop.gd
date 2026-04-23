@@ -45,13 +45,13 @@ var upgrades := {
 		"increase": .5,
 		"price": 50,
 		"price_add": 50,
-		"price_mult": 1.5
+		"price_mult": 1.3
 	},
 	"explosive_chance": {
 		"name": "Explosive Chance",
 		"target": "bullet_explosive_chance_level",
 		"value": 0,
-		"increase": .5,
+		"increase": 1,
 		"price": 5000,
 		"price_add": 1000,
 		"price_mult": 1.2
