@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://df4ib6fx2xicq"]
 
 [ext_resource type="StyleBox" uid="uid://cgde461qndpjj" path="res://coolbutton.tres" id="1_b5a7g"]
-[ext_resource type="Script" uid="uid://cqubpkmflgeuh" path="res://scene/button.gd" id="1_e4n74"]
+[ext_resource type="Script" uid="uid://cqubpkmflgeuh" path="res://script/button.gd" id="1_e4n74"]
 
 [sub_resource type="Theme" id="Theme_b5a7g"]
 Button/styles/disabled = ExtResource("1_b5a7g")

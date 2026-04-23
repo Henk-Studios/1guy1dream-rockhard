@@ -22,12 +22,30 @@ var upgrades := {
 	},
 	"bulletspeed": {
 		"name": "Bullet Speed",
-		"target": "bulletspeed",
-		"value": 10.0,
-		"increase": 1,
+		"target": "particle_speed",
+		"value": 300,
+		"increase": 50,
 		"price": 30,
+		"price_add": 0,
+		"price_mult": 1.5
+	},
+	"width": {
+		"name": "Spray",
+		"target": "width",
+		"value": 0.1,
+		"increase": 0.1,
+		"price": 300,
+		"price_add": 100,
+		"price_mult": 2
+	},
+	"particles_per_second": {
+		"name": "Bullet Amount",
+		"target": "particles_per_second",
+		"value": 3,
+		"increase": 3,
+		"price": 100,
 		"price_add": 10,
-		"price_mult": 1.1
+		"price_mult": 1.05
 	}
 }
 
@@ -42,7 +60,6 @@ func _process(delta):
 		return
 		
 	
-
 	handle_joystick_selection()
 
 func toggle_shop():
@@ -96,12 +113,18 @@ func update_button_text(button):
 	var next = current + u["increase"]
 	var price = u["price"]
 
-	button.text = "%s\n$%d\n%d -> %d" % [
+	button.text = "%s\n$%d\n%s -> %s" % [
 		u["name"],
 		price,
-		current,
-		next
+		format_number(current),
+		format_number(next)
 	]
+	
+func format_number(value: float) -> String:
+	if is_equal_approx(value, round(value)):
+		return str(int(round(value)))
+	else:
+		return "%.2f" % value
 
 func handle_joystick_selection():
 	var input_vector = Vector2(
@@ -150,11 +173,19 @@ func set_selected(index: int):
 func buy_selected():
 	if selected_index < 0 or selected_index >= buttons.size():
 		return
+	
 
 	var button = buttons[selected_index]
 	var key = button.upgrade_key
 	var u = upgrades[key]
 
+	if global.money < u["price"]:
+		return
+	else: 
+		global.money -= u["price"]
+
+	
+	
 	print("Bought:", u["name"])
 
 	# APPLY UPGRADE VALUE
@@ -162,10 +193,10 @@ func buy_selected():
 
 	# APPLY TO GLOBAL VARIABLE (GENERIC)
 	var target = u["target"]
-	if global.has_method("set"):
-		global.set(target, u["value"])
+	if Global.has_method("set"):
+		Global.set(target, u["value"])
 	else:
-		global.set(target, u["value"])
+		Global.set(target, u["value"])
 
 	# PRICE SCALING
 	u["price"] = int(u["price"] * u["price_mult"] + u["price_add"])

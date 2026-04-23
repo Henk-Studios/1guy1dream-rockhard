@@ -10,6 +10,7 @@ particle_scene = ExtResource("2_dyrpo")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1547750680]
 z_index = 3
-position = Vector2(4, -5)
+position = Vector2(9.536743e-07, -1.0000019)
 scale = Vector2(0.05, 0.05)
 texture = ExtResource("3_ev86e")
+offset = Vector2(300, -380)
