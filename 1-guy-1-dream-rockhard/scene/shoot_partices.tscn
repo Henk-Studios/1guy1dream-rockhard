@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c2ap1kbaxqjaj"]
 
 [ext_resource type="Texture2D" uid="uid://dqhj4e4vxpd2i" path="res://textures/ragged stone.png" id="1_njl8w"]
-[ext_resource type="Script" uid="uid://c2lua3dp3ikjo" path="res://script/shoot_particles.gd" id="2_yorcp"]
+[ext_resource type="Script" path="res://script/shoot_particles.gd" id="2_yorcp"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_yorcp"]
 

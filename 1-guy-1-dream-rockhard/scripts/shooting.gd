@@ -31,7 +31,6 @@ func get_aim_direction() -> Vector2:
 			Input.get_action_strength("aim_right") - Input.get_action_strength("aim_left"),
 			Input.get_action_strength("aim_down") - Input.get_action_strength("aim_up")
 		)
-		print(input_vec)
 		return input_vec.normalized()
 
 
