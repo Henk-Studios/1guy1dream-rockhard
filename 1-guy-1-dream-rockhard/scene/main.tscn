@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://def0dga52atjf"]
+[gd_scene format=3 uid="uid://bh8l316fr4joh"]
 
 [ext_resource type="Script" uid="uid://80vx6b2n7l4i" path="res://scripts/main.gd" id="1_main"]
-[ext_resource type="PackedScene" path="res://scene/shopcanvas.tscn" id="3_wp4xf"]
+[ext_resource type="PackedScene" uid="uid://ed1uc7gjiyy2" path="res://scene/shopcanvas.tscn" id="3_wp4xf"]
 [ext_resource type="PackedScene" uid="uid://xtv65a2ku4yj" path="res://scene/the_guy.tscn" id="4_guy"]
 [ext_resource type="Script" uid="uid://ccjcluay40l2u" path="res://scripts/camera_2d.gd" id="5_freecam"]
 

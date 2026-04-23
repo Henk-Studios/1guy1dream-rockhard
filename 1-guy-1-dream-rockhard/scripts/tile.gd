@@ -34,9 +34,9 @@ const COLORS := {
 const HP := {
 	Type.GRASS: 1,
 	Type.DIRT: 1,
-	Type.STONE_1: 500,
-	Type.STONE_2: 100,
-	Type.STONE_3: 40,
+	Type.STONE_1: 300,
+	Type.STONE_2: 80,
+	Type.STONE_3: 20,
 	Type.STONE_4: 5,
 	Type.STONE_5: 2,
 	Type.GOLD: 5,
