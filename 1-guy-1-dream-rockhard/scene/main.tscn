@@ -35,13 +35,13 @@ shape = SubResource("CapsuleShape2D_small")
 [node name="Sprite2D" parent="TheGuy/the_gun" parent_id_path=PackedInt32Array(1049185052, 247112652) index="0" unique_id=1547750680]
 scale = Vector2(0.02, 0.02)
 
+[node name="jetpart" parent="TheGuy" index="5" unique_id=1323313036]
+position = Vector2(-3, 25)
+
 [node name="FreeCam" type="Camera2D" parent="." unique_id=709071274]
 enabled = false
 zoom = Vector2(2.5, 2.5)
 script = ExtResource("5_freecam")
-
-[node name="CPUParticles2D" parent="TheGuy" index="5" unique_id=1323313036]
-position = Vector2(-3, 25)
 
 [node name="shopcanvas" parent="." unique_id=2031217533 instance=ExtResource("3_wp4xf")]
 
