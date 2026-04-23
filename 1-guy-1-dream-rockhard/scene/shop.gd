@@ -17,7 +17,8 @@ var upgrades := {
 		"increase": 100,
 		"price": 50,
 		"price_add": 5,
-		"price_mult": 2
+		"price_mult": 1.2
+		
 	},
 	"bulletspeed": {
 		"name": "Bullet Speed",
@@ -82,6 +83,7 @@ func create_button_circle():
 
 		button.position = pos - button.size / 2
 		button.upgrade_key = key
+		button.nr = i
 
 		update_button_text(button)
 
@@ -171,4 +173,7 @@ func buy_selected():
 	# refresh UI text
 	update_button_text(button)
 
-	
+func buy_from_button(bint):
+	print("buybutton")
+	set_selected(bint)
+	buy_selected()
