@@ -29,6 +29,10 @@ const SURFACE_AMPLITUDE := 6
 const DIRT_DEPTH := 50
 const STONE_TIER_HEIGHT := 90  # each of the 5 stone tiers spans this many cells
 
+# Broken-cell storage grouping: each group spans BREAK_GROUP_CHUNKS x BREAK_GROUP_CHUNKS chunks.
+# Coarser groups = fewer outer dict entries as the world fills up with mined cells.
+const BREAK_GROUP_CHUNKS := 8
+
 const STONE_TYPES := [
 	Tile.Type.STONE_1,
 	Tile.Type.STONE_2,
@@ -46,7 +50,24 @@ var world_seed: int
 var noise: FastNoiseLite
 var cave_noise: FastNoiseLite
 var surface_noise: FastNoiseLite
-var loaded_chunks: Dictionary = {}  # Vector2i -> Array[Tile]
+var loaded_chunks: Dictionary = {}  # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
+var active_tiles: Dictionary = {}   # Vector2i cell -> Tile (fast break lookup)
+# Persistent mined cells, grouped by break-group coord: group -> Dictionary[cell, true].
+# One upfront lookup per chunk; fewer outer entries since each group spans many chunks.
+var broken_by_group: Dictionary = {}
+
+var tile_pool: Array[Tile] = []
+
+var fps_label: Label
+
+# Debug instrumentation: totals per 2-second window.
+var _dbg_timer := 0.0
+var _dbg_gen_count := 0
+var _dbg_gen_us := 0
+var _dbg_unload_count := 0
+var _dbg_unload_us := 0
+var _dbg_break_count := 0
+var _dbg_break_us := 0
 
 func _ready() -> void:
 	world_seed = randi()
@@ -68,7 +89,45 @@ func _ready() -> void:
 	surface_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	surface_noise.frequency = 0.03
 
+	_setup_fps_overlay()
+
 	update_region(Vector2.ZERO)
+
+func _process(_delta: float) -> void:
+	if fps_label:
+		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
+
+	_dbg_timer += _delta
+	if _dbg_timer >= 2.0:
+		_dbg_timer = 0.0
+		var total_broken := 0
+		for g in broken_by_group.values():
+			total_broken += g.size()
+		print("--- perf 2s window (fps=", Engine.get_frames_per_second(), ") ---")
+		print("  generate: ", _dbg_gen_count, " chunks, ", _dbg_gen_us / 1000.0, " ms total")
+		print("  unload:   ", _dbg_unload_count, " chunks, ", _dbg_unload_us / 1000.0, " ms total")
+		print("  break:    ", _dbg_break_count, " cells, ",  _dbg_break_us / 1000.0, " ms total")
+		print("  loaded_chunks=", loaded_chunks.size(),
+			" active_tiles=", active_tiles.size(),
+			" broken_groups=", broken_by_group.size(),
+			" total_broken=", total_broken)
+		_dbg_gen_count = 0
+		_dbg_gen_us = 0
+		_dbg_unload_count = 0
+		_dbg_unload_us = 0
+		_dbg_break_count = 0
+		_dbg_break_us = 0
+
+func _setup_fps_overlay() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	fps_label = Label.new()
+	fps_label.position = Vector2(8, 4)
+	fps_label.add_theme_color_override("font_color", Color.WHITE)
+	fps_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	fps_label.add_theme_constant_override("outline_size", 4)
+	fps_label.add_theme_font_size_override("font_size", 20)
+	layer.add_child(fps_label)
 
 func update_region(world_pos: Vector2) -> void:
 	_update_sky(world_pos.y)
@@ -89,8 +148,11 @@ func _world_to_chunk(world_pos: Vector2) -> Vector2i:
 	return Vector2i(floor(world_pos.x / chunk_pixels), floor(world_pos.y / chunk_pixels))
 
 func _generate_chunk(chunk_coord: Vector2i) -> void:
+	var _t0 := Time.get_ticks_usec()
 	var base := chunk_coord * CHUNK_SIZE
-	var tiles: Array = []
+	var tiles: Dictionary = {}
+	# One upfront lookup; null means no broken cells in this chunk's group (fast path).
+	var chunk_broken: Variant = broken_by_group.get(_chunk_to_break_group(chunk_coord))
 	for lx in CHUNK_SIZE:
 		var col_x: int = base.x + lx
 		var surface_y: int = _surface_y(col_x)
@@ -100,6 +162,8 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 				continue
 			if cell.y < surface_y:
 				continue  # above surface: sky
+			if chunk_broken != null and chunk_broken.has(cell):
+				continue  # player has mined this cell previously
 
 			var bulk := noise.get_noise_2d(cell.x, cell.y)
 			var cave := _cave_at(cell)
@@ -113,17 +177,67 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 			var is_heavy: bool = combined >= HEAVY_THRESHOLD
 			var tile_type: Tile.Type = _tile_type_for(depth, is_heavy)
 
-			var tile := Tile.new()
-			tile.configure(tile_type, _cell_angle(cell), _cell_texture_index(cell))
+			var tile := _acquire_tile()
+			tile.configure(tile_type, _cell_angle(cell), _cell_texture_index(cell), cell)
 			tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
 			add_child(tile)
-			tiles.append(tile)
+			tiles[cell] = tile
+			active_tiles[cell] = tile
 	loaded_chunks[chunk_coord] = tiles
+	_dbg_gen_count += 1
+	_dbg_gen_us += Time.get_ticks_usec() - _t0
 
 func _unload_chunk(chunk_coord: Vector2i) -> void:
-	for tile in loaded_chunks[chunk_coord]:
-		tile.queue_free()
+	var _t0 := Time.get_ticks_usec()
+	var chunk_tiles: Dictionary = loaded_chunks[chunk_coord]
+	for cell in chunk_tiles:
+		active_tiles.erase(cell)
+		_release_tile(chunk_tiles[cell])
 	loaded_chunks.erase(chunk_coord)
+	_dbg_unload_count += 1
+	_dbg_unload_us += Time.get_ticks_usec() - _t0
+
+func break_cell(cell: Vector2i) -> void:
+	var _t0 := Time.get_ticks_usec()
+	var chunk := _cell_to_chunk(cell)
+	var group := _chunk_to_break_group(chunk)
+	var group_broken: Dictionary = broken_by_group.get(group, {})
+	if group_broken.has(cell):
+		return
+	group_broken[cell] = true
+	if not broken_by_group.has(group):
+		broken_by_group[group] = group_broken
+	if active_tiles.has(cell):
+		var tile: Tile = active_tiles[cell]
+		active_tiles.erase(cell)
+		if loaded_chunks.has(chunk):
+			loaded_chunks[chunk].erase(cell)
+		_release_tile(tile)
+	_dbg_break_count += 1
+	_dbg_break_us += Time.get_ticks_usec() - _t0
+
+# Pool helpers: never queue_free tiles. Remove from tree and reuse later.
+func _acquire_tile() -> Tile:
+	if tile_pool.is_empty():
+		return Tile.new()
+	return tile_pool.pop_back()
+
+func _release_tile(tile: Tile) -> void:
+	remove_child(tile)
+	tile_pool.append(tile)
+
+func break_cell_at_world_pos(world_pos: Vector2) -> void:
+	break_cell(Vector2i(floori(world_pos.x / TILE_SIZE), floori(world_pos.y / TILE_SIZE)))
+
+func _cell_to_chunk(cell: Vector2i) -> Vector2i:
+	return Vector2i(floori(float(cell.x) / CHUNK_SIZE), floori(float(cell.y) / CHUNK_SIZE))
+
+func _chunk_to_break_group(chunk: Vector2i) -> Vector2i:
+	return Vector2i(floori(float(chunk.x) / BREAK_GROUP_CHUNKS), floori(float(chunk.y) / BREAK_GROUP_CHUNKS))
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		break_cell_at_world_pos(get_global_mouse_position())
 
 func _surface_y(x: int) -> int:
 	return roundi(SURFACE_BASE + surface_noise.get_noise_1d(x) * SURFACE_AMPLITUDE)

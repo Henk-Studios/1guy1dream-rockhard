@@ -4,11 +4,13 @@ var damage_per_hit := 10
 var hits_per_second := 5
 var width := 0.01
 var ray_count := 7
-var ray_length := 1000.0
+var ray_length := 300.0
 
 var use_mouse := true
 
 @export var particle_scene: PackedScene
+
+var _main_ref: Node = null
 
 func _physics_process(delta):
     var direction = get_aim_direction()
@@ -16,6 +18,13 @@ func _physics_process(delta):
         return
 
     var hits = cast_cone_rays(direction)
+
+    if _main_ref == null:
+        _main_ref = get_tree().current_scene
+    for hit in hits:
+        var collider = hit.collider
+        if collider is Tile and _main_ref.has_method("break_cell"):
+            _main_ref.break_cell(collider.cell)
 
     draw_particle_beams(hits)
 
@@ -71,10 +80,15 @@ func cast_cone_rays(direction: Vector2) -> Array:
 
 
 func draw_particle_beams(hits: Array):
+    return  # disabled: particle node churn (420/sec create+free) was dragging FPS down
+
     # Clear old beams
     for child in get_children():
         if child.name.begins_with("Beam"):
             child.queue_free()
+
+    if particle_scene == null:
+        return  # no particle template assigned — skip visuals
 
     for i in range(hits.size()):
         var hit = hits[i]
