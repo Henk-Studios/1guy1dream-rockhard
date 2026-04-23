@@ -179,10 +179,10 @@ func buy_selected():
 	var key = button.upgrade_key
 	var u = upgrades[key]
 
-	if global.money < u["price"]:
+	if Global.money < u["price"]:
 		return
 	else: 
-		global.money -= u["price"]
+		Global.money -= u["price"]
 
 	
 	
