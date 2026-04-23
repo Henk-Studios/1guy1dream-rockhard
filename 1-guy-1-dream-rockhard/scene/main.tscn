@@ -15,7 +15,7 @@ height = 19.2
 script = ExtResource("1_main")
 
 [node name="TheGuy" parent="." unique_id=1049185052 instance=ExtResource("4_guy")]
-position = Vector2(0, 7200)
+position = Vector2(0, 7186)
 
 [node name="Sprite2D" parent="TheGuy" index="0" unique_id=1888951784]
 scale = Vector2(0.02, 0.02)
@@ -33,6 +33,9 @@ shape = SubResource("CapsuleShape2D_small")
 
 [node name="Sprite2D" parent="TheGuy/the_gun" parent_id_path=PackedInt32Array(1049185052, 247112652) index="0" unique_id=1547750680]
 scale = Vector2(0.02, 0.02)
+
+[node name="CPUParticles2D" parent="TheGuy" index="5" unique_id=1323313036]
+position = Vector2(-3, 25)
 
 [node name="shopcanvas" parent="." unique_id=2031217533 instance=ExtResource("3_wp4xf")]
 
