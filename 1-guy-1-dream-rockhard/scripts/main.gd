@@ -123,6 +123,8 @@ func _ready() -> void:
 	_setup_audio()
 	_setup_timer_overlay()
 	_setup_title()
+	_apply_resolution_zoom()
+	get_viewport().size_changed.connect(_apply_resolution_zoom)
 
 	_clear_spawn_area(SPAWN_CELL, SPAWN_CLEAR_RADIUS)
 	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
@@ -378,13 +380,11 @@ func _setup_timer_overlay() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	_timer_label = Label.new()
-	_timer_label.anchor_left = 1.0
-	_timer_label.anchor_right = 1.0
-	_timer_label.offset_left = -240.0
-	_timer_label.offset_top = 10.0
-	_timer_label.offset_right = -16.0
-	_timer_label.offset_bottom = 60.0
-	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_timer_label.offset_left = 30.0
+	_timer_label.offset_top = 110.0
+	_timer_label.offset_right = 330.0
+	_timer_label.offset_bottom = 160.0
+	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_timer_label.add_theme_color_override("font_color", Color.WHITE)
 	_timer_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	_timer_label.add_theme_constant_override("outline_size", 4)
@@ -393,7 +393,9 @@ func _setup_timer_overlay() -> void:
 
 func _setup_title() -> void:
 	var title := Label.new()
-	title.text = "1 GUY 1 DREAM\nROCKHARD"
+	title.text = "ONE GUY ONE DREAM\nROCK HARD"
+	var title_font: FontFile = load("res://fonts/RockSalt-Regular.ttf")
+	title.add_theme_font_override("font", title_font)
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", Color.WHITE)
 	title.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -406,6 +408,20 @@ func _setup_title() -> void:
 	title.position = spawn_world + Vector2(-400, 130)
 	title.z_index = 1000
 	add_child(title)
+
+# Zoom scales with window width so every monitor shows the same slice of the world.
+# REFERENCE_WIDTH is the resolution the game was tuned at; BASE_ZOOM is the zoom at that size.
+const REFERENCE_WIDTH := 1152.0
+const BASE_ZOOM := .9
+
+func _apply_resolution_zoom() -> void:
+	var w: float = get_viewport_rect().size.x
+	var factor: float = maxf(w / REFERENCE_WIDTH, 0.1)
+	var z := Vector2(BASE_ZOOM * factor, BASE_ZOOM * factor)
+	if the_guy and the_guy.has_node("Camera2D"):
+		the_guy.get_node("Camera2D").zoom = z
+	if free_cam:
+		free_cam.zoom = z
 
 func _format_time(seconds: float) -> String:
 	var total: int = int(seconds)

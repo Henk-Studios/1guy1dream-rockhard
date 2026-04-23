@@ -45,7 +45,7 @@ var upgrades := {
 		"increase": .5,
 		"price": 50,
 		"price_add": 50,
-		"price_mult": 2
+		"price_mult": 1.6
 	},
 	"explosive_chance": {
 		"name": "Explosive Chance",
@@ -54,7 +54,7 @@ var upgrades := {
 		"increase": .5,
 		"price": 5000,
 		"price_add": 1000,
-		"price_mult": 1.5
+		"price_mult": 1.2
 	},
 	"explosive_size": {
 		"name": "Explosion Size",
@@ -63,7 +63,7 @@ var upgrades := {
 		"increase": .5,
 		"price": 10000,
 		"price_add": 750,
-		"price_mult": 1.5
+		"price_mult": 1.2
 	},
 	"damage": {
 		"name": "Bullet Damage",
