@@ -34,14 +34,14 @@ const COLORS := {
 const HP := {
 	Type.GRASS: 1,
 	Type.DIRT: 1,
-	Type.STONE_1: 50,
-	Type.STONE_2: 25,
-	Type.STONE_3: 10,
+	Type.STONE_1: 500,
+	Type.STONE_2: 100,
+	Type.STONE_3: 40,
 	Type.STONE_4: 5,
 	Type.STONE_5: 2,
 	Type.GOLD: 5,
 	Type.DIAMOND: 10,
-	Type.EMERALD: 40,
+	Type.EMERALD: 30,
 	Type.EXPLOSIVE: 1,
 }
 
@@ -49,14 +49,14 @@ const HP := {
 const COIN_VALUES := {
 	Type.GRASS: 0,
 	Type.DIRT: 0,
-	Type.STONE_1: 1,
-	Type.STONE_2: 1,
-	Type.STONE_3: 1,
-	Type.STONE_4: 1,
+	Type.STONE_1: 5,
+	Type.STONE_2: 4,
+	Type.STONE_3: 3,
+	Type.STONE_4: 2,
 	Type.STONE_5: 1,
 	Type.GOLD: 10,
-	Type.DIAMOND: 50,
-	Type.EMERALD: 500,
+	Type.DIAMOND: 25,
+	Type.EMERALD: 100,
 	Type.EXPLOSIVE: 0,
 }
 

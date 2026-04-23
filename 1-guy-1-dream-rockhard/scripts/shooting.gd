@@ -7,6 +7,13 @@ var use_mouse := true
 @export var particle_scene: PackedScene
 
 var _spawn_accumulator := 0.0
+var _shoot_audio: AudioStreamPlayer
+
+func _ready() -> void:
+	_shoot_audio = AudioStreamPlayer.new()
+	_shoot_audio.stream = load("res://audio/laserShoot.wav")
+	_shoot_audio.volume_db = -6
+	add_child(_shoot_audio)
 
 func _process(delta):
 	var direction = get_aim_direction()
@@ -46,3 +53,6 @@ func spawn_particle(base_direction: Vector2):
 	var final_dir = Vector2.from_angle(base_angle + angle_offset)
 
 	particle.initialize(final_dir * Global.particle_speed)
+
+	if _shoot_audio:
+		_shoot_audio.play()

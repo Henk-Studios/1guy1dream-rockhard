@@ -41,28 +41,28 @@ var upgrades := {
 	"particles_per_second": {
 		"name": "Bullet Amount",
 		"target": "particles_per_second",
-		"value": 3,
-		"increase": 3,
+		"value": 5,
+		"increase": .5,
 		"price": 50,
-		"price_add": 10,
-		"price_mult": 1.05
+		"price_add": 50,
+		"price_mult": 2
 	},
 	"explosive_chance": {
 		"name": "Explosive Chance",
 		"target": "bullet_explosive_chance_level",
 		"value": 0,
-		"increase": 1,
-		"price": 400,
-		"price_add": 100,
-		"price_mult": 1.3
+		"increase": .5,
+		"price": 5000,
+		"price_add": 1000,
+		"price_mult": 1.5
 	},
 	"explosive_size": {
 		"name": "Explosion Size",
 		"target": "bullet_explosive_size_level",
 		"value": 0,
-		"increase": 1,
-		"price": 600,
-		"price_add": 200,
+		"increase": .5,
+		"price": 10000,
+		"price_add": 750,
 		"price_mult": 1.5
 	},
 	"damage": {
@@ -72,7 +72,7 @@ var upgrades := {
 		"increase": 1,
 		"price": 10,
 		"price_add": 50,
-		"price_mult": 1.25
+		"price_mult": 1.5
 	}
 }
 
@@ -113,7 +113,7 @@ func create_button_circle():
 	var amount = min(options_to_show, keys.size())
 
 	# optional: shuffle so shop feels random each time
-	keys.shuffle()
+	#keys.shuffle()
 
 	for i in range(amount):
 		var key = keys[i]
