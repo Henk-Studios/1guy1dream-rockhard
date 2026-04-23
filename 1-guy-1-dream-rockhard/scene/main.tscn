@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://def0dga52atjf"]
+
+[ext_resource type="Script" uid="uid://80vx6b2n7l4i" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" uid="uid://xtv65a2ku4yj" path="res://scene/the_guy.tscn" id="4_guy"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_small"]
+radius = 12.8
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_small"]
+radius = 4.0
+height = 19.2
+
+[node name="Main" type="Node2D" unique_id=717164903]
+script = ExtResource("1_main")
+
+[node name="TheGuy" parent="." unique_id=1049185052 instance=ExtResource("4_guy")]
+position = Vector2(0, 7200)
+
+[node name="Sprite2D" parent="TheGuy" index="0" unique_id=1888951784]
+scale = Vector2(0.02, 0.02)
+
+[node name="CollisionShape2D" parent="TheGuy" index="1" unique_id=1438068098]
+position = Vector2(-0.8, 6)
+shape = SubResource("CircleShape2D_small")
+
+[node name="Camera2D" parent="TheGuy" index="2" unique_id=1949905347]
+zoom = Vector2(3, 3)
+
+[node name="square" parent="TheGuy" index="3" unique_id=1096005966]
+position = Vector2(-0.8, 14.8)
+shape = SubResource("CapsuleShape2D_small")
+
+[node name="Sprite2D" parent="TheGuy/the_gun" parent_id_path=PackedInt32Array(1049185052, 247112652) index="0" unique_id=1547750680]
+scale = Vector2(0.02, 0.02)
+
+[editable path="TheGuy"]
+[editable path="TheGuy/the_gun"]

@@ -11,9 +11,14 @@ func initialize(direction: Vector2):
 
 func _physics_process(delta):
 	var collision = move_and_collide(velocity * delta)
-	
+
 	if collision:
-		# Bullet hit something → despawn
+		# Bullet hit something → break if tile, then despawn
+		var collider = collision.get_collider()
+		if collider is Tile:
+			var main = get_tree().current_scene
+			if main.has_method("break_cell"):
+				main.break_cell(collider.cell, 1)
 		queue_free()
 
 func _on_timer_timeout():

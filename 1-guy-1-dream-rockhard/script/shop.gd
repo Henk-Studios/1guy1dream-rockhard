@@ -60,7 +60,6 @@ func _process(delta):
 		return
 		
 	
-
 	handle_joystick_selection()
 
 func toggle_shop():
@@ -194,10 +193,10 @@ func buy_selected():
 
 	# APPLY TO GLOBAL VARIABLE (GENERIC)
 	var target = u["target"]
-	if global.has_method("set"):
-		global.set(target, u["value"])
+	if Global.has_method("set"):
+		Global.set(target, u["value"])
 	else:
-		global.set(target, u["value"])
+		Global.set(target, u["value"])
 
 	# PRICE SCALING
 	u["price"] = int(u["price"] * u["price_mult"] + u["price_add"])
