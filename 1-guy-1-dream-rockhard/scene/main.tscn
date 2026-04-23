@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://def0dga52atjf"]
 
 [ext_resource type="Script" uid="uid://80vx6b2n7l4i" path="res://scripts/main.gd" id="1_main"]
-[ext_resource type="Script" uid="uid://ccjcluay40l2u" path="res://scripts/camera_2d.gd" id="3_h2yge"]
 [ext_resource type="PackedScene" uid="uid://xtv65a2ku4yj" path="res://scene/the_guy.tscn" id="4_guy"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_small"]
@@ -14,11 +13,8 @@ height = 19.2
 [node name="Main" type="Node2D" unique_id=717164903]
 script = ExtResource("1_main")
 
-[node name="Camera2D" type="Camera2D" parent="." unique_id=392427492]
-script = ExtResource("3_h2yge")
-
 [node name="TheGuy" parent="." unique_id=1049185052 instance=ExtResource("4_guy")]
-position = Vector2(0, 80)
+position = Vector2(0, 7200)
 
 [node name="Sprite2D" parent="TheGuy" index="0" unique_id=1888951784]
 scale = Vector2(0.02, 0.02)
@@ -26,6 +22,9 @@ scale = Vector2(0.02, 0.02)
 [node name="CollisionShape2D" parent="TheGuy" index="1" unique_id=1438068098]
 position = Vector2(-0.8, 6)
 shape = SubResource("CircleShape2D_small")
+
+[node name="Camera2D" parent="TheGuy" index="2" unique_id=1949905347]
+zoom = Vector2(3, 3)
 
 [node name="square" parent="TheGuy" index="3" unique_id=1096005966]
 position = Vector2(-0.8, 14.8)

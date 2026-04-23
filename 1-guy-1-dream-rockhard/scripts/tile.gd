@@ -26,6 +26,17 @@ const COLORS := {
 	Type.STONE_5: Color(0.78, 0.78, 0.80),
 }
 
+# Durability per tile type. Stone 1 is hardest; dirt sits below stone 5; grass is softest.
+const HP := {
+	Type.GRASS: 1,
+	Type.DIRT: 1,
+	Type.STONE_1: 50,
+	Type.STONE_2: 25,
+	Type.STONE_3: 10,
+	Type.STONE_4: 5,
+	Type.STONE_5: 2,
+}
+
 static var SHARED_SHAPE: RectangleShape2D = null
 
 var tile_type: Type = Type.STONE_3

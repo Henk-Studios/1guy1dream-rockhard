@@ -46,28 +46,27 @@ const SKY_LOW := Color(0.08, 0.08, 0.10)
 const SKY_DEPTH_START := 0
 const SKY_DEPTH_END := 400
 
+# Spawn the player near the bottom of the world inside a pre-carved pocket.
+const SPAWN_CELL := Vector2i(0, 470)
+const SPAWN_CLEAR_RADIUS := 5
+
 var world_seed: int
 var noise: FastNoiseLite
 var cave_noise: FastNoiseLite
 var surface_noise: FastNoiseLite
 var loaded_chunks: Dictionary = {}  # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
 var active_tiles: Dictionary = {}   # Vector2i cell -> Tile (fast break lookup)
-# Persistent mined cells, grouped by break-group coord: group -> Dictionary[cell, true].
-# One upfront lookup per chunk; fewer outer entries since each group spans many chunks.
+# Per-cell damage, grouped by break-group coord: group -> Dictionary[cell, hp_lost].
+# A cell is fully broken once its hp_lost >= Tile.HP[tile_type]. Partial damage persists
+# across chunk unload/reload so a half-mined block stays half-mined.
 var broken_by_group: Dictionary = {}
 
 var tile_pool: Array[Tile] = []
 
 var fps_label: Label
 
-# Debug instrumentation: totals per 2-second window.
-var _dbg_timer := 0.0
-var _dbg_gen_count := 0
-var _dbg_gen_us := 0
-var _dbg_unload_count := 0
-var _dbg_unload_us := 0
-var _dbg_break_count := 0
-var _dbg_break_us := 0
+@onready var the_guy: Node2D = $TheGuy
+var _last_streamed_chunk: Vector2i = Vector2i(-2147483648, -2147483648)
 
 func _ready() -> void:
 	world_seed = randi()
@@ -90,33 +89,90 @@ func _ready() -> void:
 	surface_noise.frequency = 0.03
 
 	_setup_fps_overlay()
+	_setup_lava()
 
-	update_region(Vector2.ZERO)
+	_clear_spawn_area(SPAWN_CELL, SPAWN_CLEAR_RADIUS)
+	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
+	if the_guy:
+		the_guy.global_position = spawn_world
+	update_region(spawn_world)
 
 func _process(_delta: float) -> void:
 	if fps_label:
 		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
 
-	_dbg_timer += _delta
-	if _dbg_timer >= 2.0:
-		_dbg_timer = 0.0
-		var total_broken := 0
-		for g in broken_by_group.values():
-			total_broken += g.size()
-		print("--- perf 2s window (fps=", Engine.get_frames_per_second(), ") ---")
-		print("  generate: ", _dbg_gen_count, " chunks, ", _dbg_gen_us / 1000.0, " ms total")
-		print("  unload:   ", _dbg_unload_count, " chunks, ", _dbg_unload_us / 1000.0, " ms total")
-		print("  break:    ", _dbg_break_count, " cells, ",  _dbg_break_us / 1000.0, " ms total")
-		print("  loaded_chunks=", loaded_chunks.size(),
-			" active_tiles=", active_tiles.size(),
-			" broken_groups=", broken_by_group.size(),
-			" total_broken=", total_broken)
-		_dbg_gen_count = 0
-		_dbg_gen_us = 0
-		_dbg_unload_count = 0
-		_dbg_unload_us = 0
-		_dbg_break_count = 0
-		_dbg_break_us = 0
+	if the_guy:
+		_update_sky(the_guy.global_position.y)
+		var chunk := _world_to_chunk(the_guy.global_position)
+		if chunk != _last_streamed_chunk:
+			_last_streamed_chunk = chunk
+			update_region(the_guy.global_position)
+
+func _clear_spawn_area(center: Vector2i, radius: int) -> void:
+	for dx in range(-radius, radius + 1):
+		for dy in range(-radius, radius + 1):
+			if dx * dx + dy * dy <= radius * radius:
+				var cell := center + Vector2i(dx, dy)
+				var group := _chunk_to_break_group(_cell_to_chunk(cell))
+				var group_broken: Dictionary = broken_by_group.get(group, {})
+				group_broken[cell] = 99999  # well above any tile's HP → always broken
+				if not broken_by_group.has(group):
+					broken_by_group[group] = group_broken
+
+const LAVA_SHADER_CODE := """
+shader_type canvas_item;
+
+uniform vec4 dark_color : source_color = vec4(0.7, 0.2, 0.0, 1.0);
+uniform vec4 bright_color : source_color = vec4(1.0, 0.55, 0.1, 1.0);
+
+varying vec2 world_pos;
+
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float vnoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	float a = hash(i);
+	float b = hash(i + vec2(1.0, 0.0));
+	float c = hash(i + vec2(0.0, 1.0));
+	float d = hash(i + vec2(1.0, 1.0));
+	vec2 u = f * f * (3.0 - 2.0 * f);
+	return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+void vertex() {
+	world_pos = VERTEX;
+}
+
+void fragment() {
+	float t = TIME * 0.4;
+	vec2 p = world_pos * 0.008;
+	float n = vnoise(p + vec2(t * 0.3, t * 0.2));
+	n = mix(n, vnoise(p * 2.0 - vec2(t * 0.6, t * 0.1)), 0.4);
+	COLOR = mix(dark_color, bright_color, n);
+}
+"""
+
+func _setup_lava() -> void:
+	var lava := Polygon2D.new()
+	var top: float = WORLD_Y_MAX * TILE_SIZE
+	var half_width: float = 100000.0
+	var depth: float = 4000.0
+	lava.polygon = PackedVector2Array([
+		Vector2(-half_width, top),
+		Vector2(half_width, top),
+		Vector2(half_width, top + depth),
+		Vector2(-half_width, top + depth),
+	])
+	var shader := Shader.new()
+	shader.code = LAVA_SHADER_CODE
+	var mat := ShaderMaterial.new()
+	mat.shader = shader
+	lava.material = mat
+	lava.z_index = -10
+	add_child(lava)
 
 func _setup_fps_overlay() -> void:
 	var layer := CanvasLayer.new()
@@ -148,7 +204,6 @@ func _world_to_chunk(world_pos: Vector2) -> Vector2i:
 	return Vector2i(floor(world_pos.x / chunk_pixels), floor(world_pos.y / chunk_pixels))
 
 func _generate_chunk(chunk_coord: Vector2i) -> void:
-	var _t0 := Time.get_ticks_usec()
 	var base := chunk_coord * CHUNK_SIZE
 	var tiles: Dictionary = {}
 	# One upfront lookup; null means no broken cells in this chunk's group (fast path).
@@ -162,9 +217,6 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 				continue
 			if cell.y < surface_y:
 				continue  # above surface: sky
-			if chunk_broken != null and chunk_broken.has(cell):
-				continue  # player has mined this cell previously
-
 			var bulk := noise.get_noise_2d(cell.x, cell.y)
 			var cave := _cave_at(cell)
 			var cave_penalty: float = maxf(cave - CAVE_SPARSITY, 0.0) * CAVE_STRENGTH
@@ -177,6 +229,12 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 			var is_heavy: bool = combined >= HEAVY_THRESHOLD
 			var tile_type: Tile.Type = _tile_type_for(depth, is_heavy)
 
+			# Skip cell if accumulated damage already destroys this tile type.
+			if chunk_broken != null:
+				var hp_lost: int = chunk_broken.get(cell, 0)
+				if hp_lost >= Tile.HP[tile_type]:
+					continue
+
 			var tile := _acquire_tile()
 			tile.configure(tile_type, _cell_angle(cell), _cell_texture_index(cell), cell)
 			tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
@@ -184,37 +242,29 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 			tiles[cell] = tile
 			active_tiles[cell] = tile
 	loaded_chunks[chunk_coord] = tiles
-	_dbg_gen_count += 1
-	_dbg_gen_us += Time.get_ticks_usec() - _t0
 
 func _unload_chunk(chunk_coord: Vector2i) -> void:
-	var _t0 := Time.get_ticks_usec()
 	var chunk_tiles: Dictionary = loaded_chunks[chunk_coord]
 	for cell in chunk_tiles:
 		active_tiles.erase(cell)
 		_release_tile(chunk_tiles[cell])
 	loaded_chunks.erase(chunk_coord)
-	_dbg_unload_count += 1
-	_dbg_unload_us += Time.get_ticks_usec() - _t0
 
-func break_cell(cell: Vector2i) -> void:
-	var _t0 := Time.get_ticks_usec()
+func break_cell(cell: Vector2i, damage: int = 1) -> void:
 	var chunk := _cell_to_chunk(cell)
 	var group := _chunk_to_break_group(chunk)
 	var group_broken: Dictionary = broken_by_group.get(group, {})
-	if group_broken.has(cell):
-		return
-	group_broken[cell] = true
+	var hp_lost: int = group_broken.get(cell, 0) + damage
+	group_broken[cell] = hp_lost
 	if not broken_by_group.has(group):
 		broken_by_group[group] = group_broken
 	if active_tiles.has(cell):
 		var tile: Tile = active_tiles[cell]
-		active_tiles.erase(cell)
-		if loaded_chunks.has(chunk):
-			loaded_chunks[chunk].erase(cell)
-		_release_tile(tile)
-	_dbg_break_count += 1
-	_dbg_break_us += Time.get_ticks_usec() - _t0
+		if hp_lost >= Tile.HP[tile.tile_type]:
+			active_tiles.erase(cell)
+			if loaded_chunks.has(chunk):
+				loaded_chunks[chunk].erase(cell)
+			_release_tile(tile)
 
 # Pool helpers: never queue_free tiles. Remove from tree and reuse later.
 func _acquire_tile() -> Tile:
