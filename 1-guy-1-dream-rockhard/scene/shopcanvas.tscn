@@ -8,11 +8,17 @@
 
 [node name="shop" type="Control" parent="." unique_id=1681782229]
 layout_mode = 3
-anchors_preset = 0
-offset_left = 100.0
-offset_top = 84.0
-offset_right = 1072.0
-offset_bottom = 507.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -486.0
+offset_top = -211.5
+offset_right = 486.0
+offset_bottom = 211.5
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_ry0wc")
 button_scene = ExtResource("2_fgwry")
 
