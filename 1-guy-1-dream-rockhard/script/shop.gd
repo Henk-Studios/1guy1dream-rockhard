@@ -2,7 +2,7 @@ extends Control
 
 @export var button_scene: PackedScene
 @export var radius := 200.0
-@export var options_to_show := 5
+@export var options_to_show := 7
 
 var buttons: Array = []
 var shop_open := false
@@ -46,6 +46,24 @@ var upgrades := {
 		"price": 50,
 		"price_add": 10,
 		"price_mult": 1.05
+	},
+	"explosive_chance": {
+		"name": "Explosive Chance",
+		"target": "bullet_explosive_chance_level",
+		"value": 0,
+		"increase": 1,
+		"price": 400,
+		"price_add": 100,
+		"price_mult": 1.3
+	},
+	"explosive_size": {
+		"name": "Explosion Size",
+		"target": "bullet_explosive_size_level",
+		"value": 0,
+		"increase": 1,
+		"price": 600,
+		"price_add": 200,
+		"price_mult": 1.5
 	},
 	"damage": {
 		"name": "Bullet Damage",
