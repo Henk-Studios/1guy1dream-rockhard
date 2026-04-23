@@ -19,6 +19,10 @@ config/icon="res://icon.svg"
 
 Global="*res://scripts/global.gd"
 
+[gui]
+
+theme/custom_font="uid://it6mah5l5pqf"
+
 [input]
 
 leftjet={
