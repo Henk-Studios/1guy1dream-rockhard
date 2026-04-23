@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://xtv65a2ku4yj" path="res://scene/the_guy.tscn" id="1_dw2lx"]
 [ext_resource type="Texture2D" uid="uid://dsr8t5kdlscbl" path="res://icon.svg" id="2_xigmy"]
-[ext_resource type="PackedScene" uid="uid://d4nre3i6lck1p" path="res://scene/test_block.tscn" id="3_xigmy"]
+[ext_resource type="PackedScene" uid="uid://ed1uc7gjiyy2" path="res://scene/shopcanvas.tscn" id="3_xigmy"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_x8uia"]
 size = Vector2(127.323944, 120)
@@ -22,5 +22,4 @@ texture = ExtResource("2_xigmy")
 position = Vector2(-0.18778896, 0)
 shape = SubResource("RectangleShape2D_x8uia")
 
-[node name="test block" parent="." unique_id=648619312 instance=ExtResource("3_xigmy")]
-position = Vector2(125, -191)
+[node name="shopcanvas" parent="." unique_id=2031217533 instance=ExtResource("3_xigmy")]
