@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://koaqhvc0qs2j" path="res://script/shop.gd" id="1_ry0wc"]
 [ext_resource type="PackedScene" uid="uid://df4ib6fx2xicq" path="res://scene/button.tscn" id="2_fgwry"]
 [ext_resource type="Script" uid="uid://b37amt1qcwq0j" path="res://scene/money.gd" id="3_fgwry"]
-[ext_resource type="Script" uid="uid://ctnhpjw11yfx2" path="res://scene/end_credits.gd" id="4_48kln"]
+[ext_resource type="Script" path="res://scene/end_credits.gd" id="4_48kln"]
 [ext_resource type="AudioStream" uid="uid://d3ms3p1nfc2tp" path="res://textures/Opname (4).mp3" id="4_w75wq"]
 
 [node name="shopcanvas" type="CanvasLayer" unique_id=2031217533]

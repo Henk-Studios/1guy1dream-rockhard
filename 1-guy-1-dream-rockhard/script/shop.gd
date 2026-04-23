@@ -17,7 +17,7 @@ var upgrades := {
 		"increase": 100,
 		"price": 50,
 		"price_add": 5,
-		"price_mult": 1.2
+		"price_mult": 1.4
 		
 	},
 	"bulletspeed": {
@@ -44,8 +44,8 @@ var upgrades := {
 		"value": 5,
 		"increase": .5,
 		"price": 50,
-		"price_add": 50,
-		"price_mult": 1.3
+		"price_add": 20,
+		"price_mult": 1.2
 	},
 	"explosive_chance": {
 		"name": "Explosive Chance",
@@ -71,8 +71,8 @@ var upgrades := {
 		"value": 1,
 		"increase": 1,
 		"price": 10,
-		"price_add": 50,
-		"price_mult": 1.5
+		"price_add": 30,
+		"price_mult": 1.1
 	}
 }
 
