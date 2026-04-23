@@ -150,11 +150,19 @@ func set_selected(index: int):
 func buy_selected():
 	if selected_index < 0 or selected_index >= buttons.size():
 		return
+	
 
 	var button = buttons[selected_index]
 	var key = button.upgrade_key
 	var u = upgrades[key]
 
+	if global.money < u["price"]:
+		return
+	else: 
+		global.money -= u["price"]
+
+	
+	
 	print("Bought:", u["name"])
 
 	# APPLY UPGRADE VALUE
