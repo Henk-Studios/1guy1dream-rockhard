@@ -6,6 +6,7 @@ extends RigidBody2D
 
 
 func _ready():
+	
 	self.linear_damp = 1.5
 	self.angular_damp = 2.0
 
@@ -16,12 +17,12 @@ func _physics_process(delta):
 
 	# LEFT JET
 	if Input.is_action_pressed("leftjet"):
-		apply_force(left_dir * thrust_force)
+		apply_force(left_dir * global.jetpackspeed)
 		apply_torque(-torque_force)
 
 	# RIGHT JET
 	if Input.is_action_pressed("rightjet"):
-		apply_force(right_dir * thrust_force)
+		apply_force(right_dir * global.jetpackspeed)
 		apply_torque(torque_force)
 
 	# Clamp rotation speed
