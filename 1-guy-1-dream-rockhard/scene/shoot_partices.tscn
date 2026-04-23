@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://c2ap1kbaxqjaj"]
 
 [ext_resource type="Texture2D" uid="uid://dqhj4e4vxpd2i" path="res://textures/ragged stone.png" id="1_njl8w"]
+[ext_resource type="Script" uid="uid://c2lua3dp3ikjo" path="res://scene/shoot_particles.gd" id="2_yorcp"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_yorcp"]
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_yorcp"]
 particle_flag_disable_z = true
@@ -15,6 +18,21 @@ scale_min = 0.02
 scale_max = 0.02
 color = Color(0.9999991, 0.33603007, 0.8093048, 1)
 
-[node name="ShootPartices" type="GPUParticles2D" unique_id=574300877]
+[node name="bullet" type="CharacterBody2D" unique_id=1809960514 node_paths=PackedStringArray("timer")]
+collision_layer = 4
+script = ExtResource("2_yorcp")
+timer = NodePath("Timer")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1172149483]
+shape = SubResource("CircleShape2D_yorcp")
+
+[node name="ShootPartices" type="GPUParticles2D" parent="." unique_id=574300877]
+amount = 6
 texture = ExtResource("1_njl8w")
+local_coords = true
 process_material = SubResource("ParticleProcessMaterial_yorcp")
+
+[node name="Timer" type="Timer" parent="." unique_id=192032453]
+wait_time = 5.0
+one_shot = true
+autostart = true
