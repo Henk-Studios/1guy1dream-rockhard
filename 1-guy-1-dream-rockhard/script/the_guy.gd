@@ -26,6 +26,10 @@ func _physics_process(delta):
 	if Input.is_action_pressed("rightjet"):
 		apply_force(right_dir * Global.jetpackspeed)
 		apply_torque(torque_force)
+		audio_player.start_looping_sfx("jetfart")
+		jetting = true
+	if not jetting:
+		audio_player.stop_looping_sfx("jetfart")
 
 	# Clamp rotation speed
 	angular_velocity = clamp(angular_velocity, -max_angular_velocity, max_angular_velocity)

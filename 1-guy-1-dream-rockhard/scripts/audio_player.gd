@@ -8,7 +8,7 @@ var music_player: AudioStreamPlayer
 var sfx_players: Array = []
 
 # How many simultaneous SFX can play
-@export var sfx_pool_size: int = 8
+@export var sfx_pool_size: int = 20
 
 func _ready():
     # Create music player
@@ -47,7 +47,9 @@ func stop_music():
 # --- SOUND EFFECTS ---
 
 func play_sfx(name: String):
+    print("play_sfx: %s" % name)
     if not sounds.has(name):
+        print("SFX not found: %s" % name)
         push_warning("SFX not found: %s" % name)
         return
 
@@ -57,6 +59,7 @@ func play_sfx(name: String):
     for player in sfx_players:
         if not player.playing:
             player.stream = stream
+            print("Playing SFX: %s" % name)
             player.play()
             return
 

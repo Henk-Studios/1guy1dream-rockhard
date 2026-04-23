@@ -1,10 +1,11 @@
 extends Node2D
 
 
-
 var use_mouse := true
 
 @export var particle_scene: PackedScene
+@export var audio_player: Node
+
 
 var _spawn_accumulator := 0.0
 
@@ -35,6 +36,8 @@ func get_aim_direction() -> Vector2:
 
 
 func spawn_particle(base_direction: Vector2):
+	audio_player.play_sfx("explosion")
+	print("spawn particle")
 	var particle = particle_scene.instantiate()
 	get_tree().current_scene.add_child(particle)
 
