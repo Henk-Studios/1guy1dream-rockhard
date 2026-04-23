@@ -115,11 +115,7 @@ func _clear_spawn_area(center: Vector2i, radius: int) -> void:
 				var cell := center + Vector2i(dx, dy)
 				var group := _chunk_to_break_group(_cell_to_chunk(cell))
 				var group_broken: Dictionary = broken_by_group.get(group, {})
-<< << << < HEAD
 				group_broken[cell] = 99999 # well above any tile's HP → always broken
-== == == =
-				group_broken[cell] = 99999 # well above any tile's HP → always broken
->> >> >> > pascal - 2
 				if not broken_by_group.has(group):
 					broken_by_group[group] = group_broken
 
@@ -220,11 +216,7 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 			if cell.y < WORLD_Y_MIN or cell.y > WORLD_Y_MAX:
 				continue
 			if cell.y < surface_y:
-<< << << < HEAD
 				continue # above surface: sky
-== == == =
-				continue # above surface: sky
->> >> >> > pascal - 2
 			var bulk := noise.get_noise_2d(cell.x, cell.y)
 			var cave := _cave_at(cell)
 			var cave_penalty: float = maxf(cave - CAVE_SPARSITY, 0.0) * CAVE_STRENGTH

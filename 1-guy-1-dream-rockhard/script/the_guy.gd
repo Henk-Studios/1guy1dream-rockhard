@@ -14,11 +14,7 @@ func _physics_process(delta):
 	var left_dir = Vector2(1, -1.5).normalized() # up-left
 	var right_dir = Vector2(-1, -1.5).normalized() # up-right
 
-== == == =
-	var left_dir = Vector2(1, -1.5).normalized() # up-left
-	var right_dir = Vector2(-1, -1.5).normalized() # up-right
 	var jetting = false
->> >> >> > Stashedchanges
 	# LEFT JET
 	if Input.is_action_pressed("leftjet"):
 		apply_force(left_dir * Global.jetpackspeed)
