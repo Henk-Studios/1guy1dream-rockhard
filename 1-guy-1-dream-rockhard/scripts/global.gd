@@ -1,5 +1,8 @@
 extends Node
 
+signal credits
+var creditsreached = false
+
 var jetpackspeed = 700
 
 

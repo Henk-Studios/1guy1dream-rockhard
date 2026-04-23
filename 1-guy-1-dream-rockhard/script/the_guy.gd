@@ -9,7 +9,13 @@ func _ready():
 	self.linear_damp = 1.5
 	self.angular_damp = 2.0
 
+
+
 func _physics_process(delta):
+	if position.y < -40 and not Global.creditsreached:
+		Global.creditsreached = true
+		Global.credits.emit()
+	
 	# Define fixed thrust directions
 	var left_dir = Vector2(1, -1.5).normalized() # up-left
 	var right_dir = Vector2(-1, -1.5).normalized() # up-right
