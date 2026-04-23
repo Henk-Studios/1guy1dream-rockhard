@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://ed1uc7gjiyy2"]
 
-[ext_resource type="Script" uid="uid://koaqhvc0qs2j" path="res://scene/shop.gd" id="1_ry0wc"]
+[ext_resource type="Script" uid="uid://koaqhvc0qs2j" path="res://script/shop.gd" id="1_ry0wc"]
 [ext_resource type="PackedScene" uid="uid://df4ib6fx2xicq" path="res://scene/button.tscn" id="2_fgwry"]
 [ext_resource type="Script" uid="uid://b37amt1qcwq0j" path="res://scene/money.gd" id="3_fgwry"]
 

@@ -1,8 +1,6 @@
 extends Node2D
 
-var width := 0.1 # cone half-angle (radians)
-var particles_per_second := 10
-var particle_speed := 600.0
+
 
 var use_mouse := true
 
@@ -15,7 +13,7 @@ func _process(delta):
 	if direction == Vector2.ZERO:
 		return
 
-	_spawn_accumulator += particles_per_second * delta
+	_spawn_accumulator += global.particles_per_second * delta
 
 	while _spawn_accumulator >= 1.0:
 		_spawn_accumulator -= 1.0
@@ -41,7 +39,7 @@ func spawn_particle(base_direction: Vector2):
 
 	# Random angle within cone
 	var base_angle = base_direction.angle()
-	var angle_offset = randf_range(-width, width)
+	var angle_offset = randf_range(-global.width, global.width)
 	var final_dir = Vector2.from_angle(base_angle + angle_offset)
 
-	particle.initialize(final_dir * particle_speed)
+	particle.initialize(final_dir * global.particle_speed)
