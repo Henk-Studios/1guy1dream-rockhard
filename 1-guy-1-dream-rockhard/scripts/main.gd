@@ -4,8 +4,8 @@ const TILE_SIZE := 16
 
 # Tune these for performance. Fewer/smaller chunks = fewer loaded tiles.
 const CHUNK_SIZE := 8
-const LOAD_RADIUS_X := 15 # original is 3
-const LOAD_RADIUS_Y := 15 # original is 2
+const LOAD_RADIUS_X := 4 # original is 3
+const LOAD_RADIUS_Y := 2 # original is 2
 
 const WORLD_Y_MIN := 0
 const WORLD_Y_MAX := 500
@@ -114,7 +114,7 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 			var tile_type: Tile.Type = _tile_type_for(depth, is_heavy)
 
 			var tile := Tile.new()
-			tile.configure(tile_type, _cell_angle(cell))
+			tile.configure(tile_type, _cell_angle(cell), _cell_texture_index(cell))
 			tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
 			add_child(tile)
 			tiles.append(tile)
@@ -155,6 +155,11 @@ func _cell_angle(cell: Vector2i) -> float:
 	# Deterministic per-cell rotation so revisiting a chunk looks identical.
 	var h: int = hash(Vector2i(cell.x, cell.y)) ^ world_seed
 	return (absi(h) % 10000) / 10000.0 * TAU
+
+func _cell_texture_index(cell: Vector2i) -> int:
+	# Deterministic per-cell stone-texture choice.
+	var h: int = hash(Vector2i(cell.x, cell.y)) ^ world_seed ^ 0xA5A5A5A5
+	return absi(h) % 6
 
 func _update_sky(world_y: float) -> void:
 	var y_tiles: float = world_y / TILE_SIZE
