@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://b5r3xnxostxlm"]
+
+[ext_resource type="Script" uid="uid://ol13ghxfiv1q" path="res://scripts/shooting.gd" id="1_4el7k"]
+[ext_resource type="PackedScene" uid="uid://c2ap1kbaxqjaj" path="res://scene/shoot_partices.tscn" id="2_dyrpo"]
+[ext_resource type="Texture2D" uid="uid://ddq6ax4d7hbr2" path="res://textures/gun.png" id="3_ev86e"]
+
+[node name="the_gun" type="Node2D" unique_id=247112652]
+script = ExtResource("1_4el7k")
+particle_scene = ExtResource("2_dyrpo")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1547750680]
+z_index = 3
+position = Vector2(4, -5)
+scale = Vector2(0.05, 0.05)
+texture = ExtResource("3_ev86e")

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cmo0f75krdcgh" path="res://script/the_guy.gd" id="1_mtops"]
 [ext_resource type="Texture2D" uid="uid://dpuh3lnl01woi" path="res://textures/guy.png" id="2_mtops"]
+[ext_resource type="PackedScene" uid="uid://b5r3xnxostxlm" path="res://scene/the_gun.tscn" id="3_wuybt"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_wuybt"]
 radius = 32.01562
@@ -30,3 +31,5 @@ shape = SubResource("CircleShape2D_wuybt")
 position = Vector2(-2, 37.000004)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_lghrq")
+
+[node name="the_gun" parent="." unique_id=247112652 instance=ExtResource("3_wuybt")]
