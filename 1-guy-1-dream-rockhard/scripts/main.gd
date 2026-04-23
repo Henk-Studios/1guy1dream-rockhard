@@ -4,8 +4,8 @@ const TILE_SIZE := 16
 
 # Tune these for performance. Fewer/smaller chunks = fewer loaded tiles.
 const CHUNK_SIZE := 8
-const LOAD_RADIUS_X := 4 # original is 3
-const LOAD_RADIUS_Y := 2 # original is 2
+const LOAD_RADIUS_X := 5
+const LOAD_RADIUS_Y := 3
 const FREE_CAM_RADIUS_MULT := 2.0  # freecam loads a wider area for debugging
 
 const WORLD_Y_MIN := 0
@@ -58,6 +58,7 @@ var surface_noise: FastNoiseLite
 var gold_noise: FastNoiseLite
 var diamond_noise: FastNoiseLite
 var emerald_noise: FastNoiseLite
+var explosive_noise: FastNoiseLite
 var loaded_chunks: Dictionary = {}  # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
 var active_tiles: Dictionary = {}   # Vector2i cell -> Tile (fast break lookup)
 # Per-cell damage, grouped by break-group coord: group -> Dictionary[cell, hp_lost].
@@ -66,8 +67,6 @@ var active_tiles: Dictionary = {}   # Vector2i cell -> Tile (fast break lookup)
 var broken_by_group: Dictionary = {}
 
 var tile_pool: Array[Tile] = []
-
-var fps_label: Label
 
 @onready var the_guy: Node2D = $TheGuy
 @onready var free_cam: Camera2D = $FreeCam
@@ -108,7 +107,11 @@ func _ready() -> void:
 	emerald_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	emerald_noise.frequency = 0.14
 
-	_setup_fps_overlay()
+	explosive_noise = FastNoiseLite.new()
+	explosive_noise.seed = world_seed ^ 0xD4E5F607
+	explosive_noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	explosive_noise.frequency = 0.15
+
 	_setup_lava()
 
 	_clear_spawn_area(SPAWN_CELL, SPAWN_CLEAR_RADIUS)
@@ -118,12 +121,12 @@ func _ready() -> void:
 	update_region(spawn_world)
 
 func _process(_delta: float) -> void:
-	if fps_label:
-		fps_label.text = "FPS: %d" % Engine.get_frames_per_second()
-
 	var tracking_pos: Vector2
 	if free_cam.is_current():
 		tracking_pos = free_cam.global_position
+		# Freecam debug: click or hold left mouse to delete blocks under the cursor.
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			break_cell_at_world_pos(get_global_mouse_position(), EXPLOSION_OVERKILL)
 	elif the_guy:
 		tracking_pos = the_guy.global_position
 	else:
@@ -200,17 +203,6 @@ func _setup_lava() -> void:
 	lava.z_index = -10
 	add_child(lava)
 
-func _setup_fps_overlay() -> void:
-	var layer := CanvasLayer.new()
-	add_child(layer)
-	fps_label = Label.new()
-	fps_label.position = Vector2(8, 4)
-	fps_label.add_theme_color_override("font_color", Color.WHITE)
-	fps_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	fps_label.add_theme_constant_override("outline_size", 4)
-	fps_label.add_theme_font_size_override("font_size", 20)
-	layer.add_child(fps_label)
-
 func update_region(world_pos: Vector2) -> void:
 	_update_sky(world_pos.y)
 	var rx := LOAD_RADIUS_X
@@ -281,7 +273,22 @@ func _unload_chunk(chunk_coord: Vector2i) -> void:
 		_release_tile(chunk_tiles[cell])
 	loaded_chunks.erase(chunk_coord)
 
+const EXPLOSION_BASE_RADIUS := 3.0
+const EXPLOSION_CHAIN_BONUS := 0.55
+const EXPLOSION_CHAIN_DELAY := 0.08  # seconds between successive chain waves
+const EXPLOSION_OVERKILL := 999999
+
 func break_cell(cell: Vector2i, damage: int = 1) -> void:
+	_do_break(cell, damage, 0)
+
+# Triggered by an explosive bullet upgrade. bonus_depth scales the blast radius via chain formula.
+func bullet_explode(cell: Vector2i, bonus_depth: int = 0) -> void:
+	var center_was_explosive: bool = active_tiles.has(cell) and active_tiles[cell].tile_type == Tile.Type.EXPLOSIVE
+	_do_break(cell, EXPLOSION_OVERKILL, bonus_depth)
+	if not center_was_explosive:
+		_explode(cell, bonus_depth)
+
+func _do_break(cell: Vector2i, damage: int, chain_depth: int) -> void:
 	var chunk := _cell_to_chunk(cell)
 	var group := _chunk_to_break_group(chunk)
 	var group_broken: Dictionary = broken_by_group.get(group, {})
@@ -289,14 +296,71 @@ func break_cell(cell: Vector2i, damage: int = 1) -> void:
 	group_broken[cell] = hp_lost
 	if not broken_by_group.has(group):
 		broken_by_group[group] = group_broken
-	if active_tiles.has(cell):
-		var tile: Tile = active_tiles[cell]
-		if hp_lost >= Tile.HP[tile.tile_type]:
-			Global.money += Tile.COIN_VALUES[tile.tile_type]
-			active_tiles.erase(cell)
-			if loaded_chunks.has(chunk):
-				loaded_chunks[chunk].erase(cell)
-			_release_tile(tile)
+
+	if not active_tiles.has(cell):
+		return
+	var tile: Tile = active_tiles[cell]
+	if hp_lost < Tile.HP[tile.tile_type]:
+		return
+
+	var was_explosive: bool = tile.tile_type == Tile.Type.EXPLOSIVE
+	Global.money += Tile.COIN_VALUES[tile.tile_type]
+	active_tiles.erase(cell)
+	if loaded_chunks.has(chunk):
+		loaded_chunks[chunk].erase(cell)
+	_release_tile(tile)
+
+	if was_explosive:
+		_explode(cell, chain_depth)
+
+func _explode(center: Vector2i, chain_depth: int) -> void:
+	var radius: float = EXPLOSION_BASE_RADIUS + float(chain_depth) * EXPLOSION_CHAIN_BONUS
+	_spawn_explosion_fx(center, radius)
+	var r_int: int = ceili(radius)
+	var r_sq: float = radius * radius
+	var chained: Array[Vector2i] = []
+	for dx in range(-r_int, r_int + 1):
+		for dy in range(-r_int, r_int + 1):
+			if dx == 0 and dy == 0:
+				continue
+			if dx * dx + dy * dy > r_sq:
+				continue
+			var target := center + Vector2i(dx, dy)
+			if active_tiles.has(target) and active_tiles[target].tile_type == Tile.Type.EXPLOSIVE:
+				chained.append(target)
+			else:
+				_do_break(target, EXPLOSION_OVERKILL, chain_depth + 1)
+
+	if chained.is_empty():
+		return
+	await get_tree().create_timer(EXPLOSION_CHAIN_DELAY).timeout
+	for c in chained:
+		_do_break(c, EXPLOSION_OVERKILL, chain_depth + 1)
+
+func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
+	var p := CPUParticles2D.new()
+	p.position = Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0)
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.amount = clampi(int(radius * 10), 20, 200)
+	p.lifetime = 0.45
+	p.spread = 180.0
+	p.initial_velocity_min = 60.0 * radius
+	p.initial_velocity_max = 160.0 * radius
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 5.0 + radius
+	p.damping_min = 80.0
+	p.damping_max = 160.0
+	var ramp := Gradient.new()
+	ramp.add_point(0.0, Color(1.0, 0.95, 0.4, 1.0))
+	ramp.add_point(0.25, Color(1.0, 0.5, 0.1, 0.95))
+	ramp.add_point(0.7, Color(0.5, 0.15, 0.05, 0.5))
+	ramp.add_point(1.0, Color(0.1, 0.05, 0.05, 0.0))
+	p.color_ramp = ramp
+	p.z_index = 5
+	add_child(p)
+	p.emitting = true
+	p.finished.connect(p.queue_free)
 
 # Pool helpers: never queue_free tiles. Remove from tree and reuse later.
 func _acquire_tile() -> Tile:
@@ -308,8 +372,8 @@ func _release_tile(tile: Tile) -> void:
 	remove_child(tile)
 	tile_pool.append(tile)
 
-func break_cell_at_world_pos(world_pos: Vector2) -> void:
-	break_cell(Vector2i(floori(world_pos.x / TILE_SIZE), floori(world_pos.y / TILE_SIZE)))
+func break_cell_at_world_pos(world_pos: Vector2, damage: int = 1) -> void:
+	break_cell(Vector2i(floori(world_pos.x / TILE_SIZE), floori(world_pos.y / TILE_SIZE)), damage)
 
 func _cell_to_chunk(cell: Vector2i) -> Vector2i:
 	return Vector2i(floori(float(cell.x) / CHUNK_SIZE), floori(float(cell.y) / CHUNK_SIZE))
@@ -317,11 +381,12 @@ func _cell_to_chunk(cell: Vector2i) -> Vector2i:
 func _chunk_to_break_group(chunk: Vector2i) -> Vector2i:
 	return Vector2i(floori(float(chunk.x) / BREAK_GROUP_CHUNKS), floori(float(chunk.y) / BREAK_GROUP_CHUNKS))
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		break_cell_at_world_pos(get_global_mouse_position())
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_F1:
-		_toggle_free_cam()
+func _input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed:
+		if event.keycode == KEY_F1:
+			_toggle_free_cam()
+		elif event.keycode == KEY_F2:
+			Global.money = 1_000_000_000
 
 func _toggle_free_cam() -> void:
 	var player_cam: Camera2D = the_guy.get_node("Camera2D")
@@ -343,12 +408,15 @@ func _tile_type_for(cell: Vector2i, depth: int, is_heavy: bool) -> Tile.Type:
 		return Tile.Type.GRASS
 	if depth <= DIRT_DEPTH:
 		return Tile.Type.DIRT
-	# Compute underlying stone tier up-front; some ores are gated on it.
-	var below_dirt: int = depth - DIRT_DEPTH - 1
-	var stone_num: int = clampi(below_dirt / STONE_TIER_HEIGHT + 1, 1, 5)
-	# Ore check (replaces stone). Ordered rarest-first.
 	# height_ratio = 0 at the bottom (start), 1 at the top (endgame).
 	var height_ratio: float = clampf(1.0 - float(cell.y) / float(WORLD_Y_MAX), 0.0, 1.0)
+	# Explosives appear only in the stone zone; a touch more common as we go up.
+	var explosive_threshold: float = 0.49 - height_ratio * 0.10
+	if explosive_noise.get_noise_2d(cell.x, cell.y) > explosive_threshold:
+		return Tile.Type.EXPLOSIVE
+	# Compute underlying stone tier; some ores are gated on it.
+	var below_dirt: int = depth - DIRT_DEPTH - 1
+	var stone_num: int = clampi(below_dirt / STONE_TIER_HEIGHT + 1, 1, 5)
 	if is_heavy and stone_num < 5:  # emerald never spawns in the deepest tier
 		var emerald_threshold: float = 0.48 - height_ratio * 0.28  # a touch rarer at the bottom
 		if emerald_noise.get_noise_2d(cell.x, cell.y) > emerald_threshold:

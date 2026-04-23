@@ -26,7 +26,7 @@ position = Vector2(-0.8, 6)
 shape = SubResource("CircleShape2D_small")
 
 [node name="Camera2D" parent="TheGuy" index="2" unique_id=1949905347]
-zoom = Vector2(3, 3)
+zoom = Vector2(2.5, 2.5)
 
 [node name="square" parent="TheGuy" index="3" unique_id=1096005966]
 position = Vector2(-0.8, 14.8)
@@ -37,7 +37,7 @@ scale = Vector2(0.02, 0.02)
 
 [node name="FreeCam" type="Camera2D" parent="." unique_id=709071274]
 enabled = false
-zoom = Vector2(3, 3)
+zoom = Vector2(2.5, 2.5)
 script = ExtResource("5_freecam")
 
 [node name="shopcanvas" parent="." unique_id=2031217533 instance=ExtResource("3_wp4xf")]

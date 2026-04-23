@@ -17,7 +17,13 @@ func _physics_process(delta):
 		var collider = collision.get_collider()
 		if collider is Tile:
 			var main = get_tree().current_scene
-			if main.has_method("break_cell"):
+			var exploded := false
+			if Global.bullet_explosive_chance_level > 0:
+				var chance: float = Global.bullet_explosive_chance_level * 0.01
+				if randf() < chance and main.has_method("bullet_explode"):
+					main.bullet_explode(collider.cell, Global.bullet_explosive_size_level)
+					exploded = true
+			if not exploded and main.has_method("break_cell"):
 				main.break_cell(collider.cell, 1)
 		queue_free()
 

@@ -1,7 +1,7 @@
 extends StaticBody2D
 class_name Tile
 
-enum Type { GRASS, DIRT, STONE_1, STONE_2, STONE_3, STONE_4, STONE_5, GOLD, DIAMOND, EMERALD }
+enum Type { GRASS, DIRT, STONE_1, STONE_2, STONE_3, STONE_4, STONE_5, GOLD, DIAMOND, EMERALD, EXPLOSIVE }
 
 const TILE_SIZE := 16
 const SPRITE_SCALE := 2.5
@@ -27,6 +27,7 @@ const COLORS := {
 	Type.GOLD: Color(1.0, 0.85, 0.2),
 	Type.DIAMOND: Color(0.45, 0.75, 1.0),
 	Type.EMERALD: Color(0.3, 0.95, 0.5),
+	Type.EXPLOSIVE: Color(0.9, 0.15, 0.1),
 }
 
 # Durability per tile type. Stone 1 is hardest; dirt sits below stone 5; grass is softest.
@@ -41,6 +42,7 @@ const HP := {
 	Type.GOLD: 5,
 	Type.DIAMOND: 10,
 	Type.EMERALD: 40,
+	Type.EXPLOSIVE: 1,
 }
 
 # Coin reward when a tile is fully broken.
@@ -55,6 +57,7 @@ const COIN_VALUES := {
 	Type.GOLD: 10,
 	Type.DIAMOND: 50,
 	Type.EMERALD: 500,
+	Type.EXPLOSIVE: 0,
 }
 
 static var SHARED_SHAPE: RectangleShape2D = null
