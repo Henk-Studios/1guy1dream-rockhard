@@ -113,7 +113,7 @@ func create_button_circle():
 	var amount = min(options_to_show, keys.size())
 
 	# optional: shuffle so shop feels random each time
-	keys.shuffle()
+	#keys.shuffle()
 
 	for i in range(amount):
 		var key = keys[i]
