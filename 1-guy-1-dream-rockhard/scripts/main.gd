@@ -68,6 +68,13 @@ var broken_by_group: Dictionary = {}
 
 var tile_pool: Array[Tile] = []
 
+var _explosion_audio: AudioStreamPlayer
+var _music_audio: AudioStreamPlayer
+
+var _timer_label: Label
+var _elapsed: float = 0.0
+var _timer_frozen: bool = false
+
 @onready var the_guy: Node2D = $TheGuy
 @onready var free_cam: Camera2D = $FreeCam
 var _last_streamed_chunk: Vector2i = Vector2i(-2147483648, -2147483648)
@@ -113,6 +120,9 @@ func _ready() -> void:
 	explosive_noise.frequency = 0.15
 
 	_setup_lava()
+	_setup_audio()
+	_setup_timer_overlay()
+	_setup_title()
 
 	_clear_spawn_area(SPAWN_CELL, SPAWN_CLEAR_RADIUS)
 	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
@@ -121,6 +131,11 @@ func _ready() -> void:
 	update_region(spawn_world)
 
 func _process(_delta: float) -> void:
+	if not _timer_frozen:
+		_elapsed += _delta
+	if _timer_label:
+		_timer_label.text = _format_time(_elapsed)
+
 	var tracking_pos: Vector2
 	if free_cam.is_current():
 		tracking_pos = free_cam.global_position
@@ -337,7 +352,71 @@ func _explode(center: Vector2i, chain_depth: int) -> void:
 	for c in chained:
 		_do_break(c, EXPLOSION_OVERKILL, chain_depth + 1)
 
+func _setup_audio() -> void:
+	_explosion_audio = AudioStreamPlayer.new()
+	_explosion_audio.stream = load("res://audio/freesound_community-small-explosion-103931.mp3")
+	_explosion_audio.volume_db = -4
+	add_child(_explosion_audio)
+
+	_music_audio = AudioStreamPlayer.new()
+	var music_stream = load("res://audio/djartmusic-8-bit-console-from-my-childhood-301286.mp3")
+	if music_stream is AudioStreamMP3:
+		music_stream.loop = true
+	_music_audio.stream = music_stream
+	_music_audio.volume_db = -12
+	add_child(_music_audio)
+	_music_audio.play()
+	if Global.has_signal("credits"):
+		Global.credits.connect(_on_credits)
+
+func _on_credits() -> void:
+	if _music_audio:
+		_music_audio.stop()
+	_timer_frozen = true
+
+func _setup_timer_overlay() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	_timer_label = Label.new()
+	_timer_label.anchor_left = 1.0
+	_timer_label.anchor_right = 1.0
+	_timer_label.offset_left = -240.0
+	_timer_label.offset_top = 10.0
+	_timer_label.offset_right = -16.0
+	_timer_label.offset_bottom = 60.0
+	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_timer_label.add_theme_color_override("font_color", Color.WHITE)
+	_timer_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_timer_label.add_theme_constant_override("outline_size", 4)
+	_timer_label.add_theme_font_size_override("font_size", 28)
+	layer.add_child(_timer_label)
+
+func _setup_title() -> void:
+	var title := Label.new()
+	title.text = "1 GUY 1 DREAM\nROCKHARD"
+	title.add_theme_font_size_override("font_size", 64)
+	title.add_theme_color_override("font_color", Color.WHITE)
+	title.add_theme_color_override("font_outline_color", Color.BLACK)
+	title.add_theme_constant_override("outline_size", 10)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+	title.size = Vector2(800, 260)
+	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
+	# Centre horizontally on the spawn, a few tiles below it.
+	title.position = spawn_world + Vector2(-400, 130)
+	title.z_index = 1000
+	add_child(title)
+
+func _format_time(seconds: float) -> String:
+	var total: int = int(seconds)
+	var minutes: int = total / 60
+	var secs: int = total % 60
+	var cs: int = int((seconds - float(total)) * 100.0)
+	return "%02d:%02d.%02d" % [minutes, secs, cs]
+
 func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
+	if _explosion_audio:
+		_explosion_audio.play()
 	var p := CPUParticles2D.new()
 	p.position = Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0)
 	p.one_shot = true

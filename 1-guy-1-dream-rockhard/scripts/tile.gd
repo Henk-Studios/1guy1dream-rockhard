@@ -41,7 +41,7 @@ const HP := {
 	Type.STONE_5: 2,
 	Type.GOLD: 5,
 	Type.DIAMOND: 10,
-	Type.EMERALD: 400,
+	Type.EMERALD: 30,
 	Type.EXPLOSIVE: 1,
 }
 
