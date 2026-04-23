@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c2ap1kbaxqjaj"]
 
 [ext_resource type="Texture2D" uid="uid://dqhj4e4vxpd2i" path="res://textures/ragged stone.png" id="1_njl8w"]
-[ext_resource type="Script" path="res://script/shoot_particles.gd" id="2_yorcp"]
+[ext_resource type="Script" uid="uid://c2lua3dp3ikjo" path="res://script/shoot_particles.gd" id="2_yorcp"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_yorcp"]
 
@@ -19,6 +19,7 @@ scale_max = 0.02
 color = Color(0.9999991, 0.33603007, 0.8093048, 1)
 
 [node name="bullet" type="CharacterBody2D" unique_id=1809960514 node_paths=PackedStringArray("timer")]
+scale = Vector2(0.4, 0.4)
 collision_layer = 4
 script = ExtResource("2_yorcp")
 timer = NodePath("Timer")

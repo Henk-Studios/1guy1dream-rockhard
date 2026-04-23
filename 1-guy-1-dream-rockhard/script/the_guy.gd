@@ -9,7 +9,16 @@ func _ready():
 	self.linear_damp = 1.5
 	self.angular_damp = 2.0
 
+
+
 func _physics_process(delta):
+	if Input.is_action_just_pressed("teleport"):
+		position.y = -30
+	
+	if position.y < -40 and not Global.creditsreached:
+		Global.creditsreached = true
+		Global.credits.emit()
+	
 	# Define fixed thrust directions
 	var left_dir = Vector2(1, -1.5).normalized() # up-left
 	var right_dir = Vector2(-1, -1.5).normalized() # up-right
@@ -23,6 +32,11 @@ func _physics_process(delta):
 	if Input.is_action_pressed("rightjet"):
 		apply_force(right_dir * Global.jetpackspeed)
 		apply_torque(torque_force)
-
+		
+	if Input.is_action_pressed("rightjet") or Input.is_action_pressed("leftjet"):
+		$jetpart.emitting = true
+	else:
+		$jetpart.emitting = false
+		
 	# Clamp rotation speed
 	angular_velocity = clamp(angular_velocity, -max_angular_velocity, max_angular_velocity)

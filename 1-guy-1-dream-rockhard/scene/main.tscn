@@ -16,7 +16,7 @@ height = 19.2
 script = ExtResource("1_main")
 
 [node name="TheGuy" parent="." unique_id=1049185052 instance=ExtResource("4_guy")]
-position = Vector2(0, 7200)
+position = Vector2(0, 7186)
 
 [node name="Sprite2D" parent="TheGuy" index="0" unique_id=1888951784]
 scale = Vector2(0.02, 0.02)
@@ -39,6 +39,9 @@ scale = Vector2(0.02, 0.02)
 enabled = false
 zoom = Vector2(2.5, 2.5)
 script = ExtResource("5_freecam")
+
+[node name="CPUParticles2D" parent="TheGuy" index="5" unique_id=1323313036]
+position = Vector2(-3, 25)
 
 [node name="shopcanvas" parent="." unique_id=2031217533 instance=ExtResource("3_wp4xf")]
 

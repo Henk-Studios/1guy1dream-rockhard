@@ -2,7 +2,7 @@ extends Control
 
 @export var button_scene: PackedScene
 @export var radius := 200.0
-@export var options_to_show := 6
+@export var options_to_show := 7
 
 var buttons: Array = []
 var shop_open := false
@@ -43,7 +43,7 @@ var upgrades := {
 		"target": "particles_per_second",
 		"value": 3,
 		"increase": 3,
-		"price": 100,
+		"price": 50,
 		"price_add": 10,
 		"price_mult": 1.05
 	},
@@ -64,6 +64,15 @@ var upgrades := {
 		"price": 600,
 		"price_add": 200,
 		"price_mult": 1.5
+	},
+	"damage": {
+		"name": "Bullet Damage",
+		"target": "damage",
+		"value": 1,
+		"increase": 1,
+		"price": 10,
+		"price_add": 50,
+		"price_mult": 1.25
 	}
 }
 

@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://koaqhvc0qs2j" path="res://script/shop.gd" id="1_ry0wc"]
 [ext_resource type="PackedScene" uid="uid://df4ib6fx2xicq" path="res://scene/button.tscn" id="2_fgwry"]
 [ext_resource type="Script" uid="uid://b37amt1qcwq0j" path="res://scene/money.gd" id="3_fgwry"]
+[ext_resource type="Script" uid="uid://ctnhpjw11yfx2" path="res://scene/end_credits.gd" id="4_48kln"]
+[ext_resource type="AudioStream" uid="uid://d3ms3p1nfc2tp" path="res://textures/Opname (4).mp3" id="4_w75wq"]
 
 [node name="shopcanvas" type="CanvasLayer" unique_id=2031217533]
 
@@ -31,3 +33,47 @@ theme_override_colors/default_color = Color(0.4229943, 0.5935775, 0.23407158, 1)
 theme_override_font_sizes/normal_font_size = 50
 text = "Money"
 script = ExtResource("3_fgwry")
+
+[node name="EndCredits" type="ColorRect" parent="." unique_id=843225208]
+process_mode = 3
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -1716.0
+offset_top = -1211.0
+offset_right = 1575.0
+offset_bottom = 1324.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+script = ExtResource("4_48kln")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="EndCredits" unique_id=453074860]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -430.5
+offset_top = -203.5
+offset_right = 584.5
+offset_bottom = 140.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/normal_font_size = 30
+text = "Congratulations, you beat the game.
+Thank you for playing.
+
+Jeroen Krijgsman - Slave Owner
+Pascal van Tilborg - Slave
+Quinten van Schelven - God Gamedev
+Ivo - Playtesting"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="EndCredits" unique_id=1213681250]
+stream = ExtResource("4_w75wq")

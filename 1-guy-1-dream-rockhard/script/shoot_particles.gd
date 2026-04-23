@@ -24,7 +24,7 @@ func _physics_process(delta):
 					main.bullet_explode(collider.cell, Global.bullet_explosive_size_level)
 					exploded = true
 			if not exploded and main.has_method("break_cell"):
-				main.break_cell(collider.cell, 1)
+				main.break_cell(collider.cell, Global.damage)
 		queue_free()
 
 func _on_timer_timeout():
