@@ -12,6 +12,9 @@ func _ready():
 
 
 func _physics_process(delta):
+	if Input.is_action_just_pressed("teleport"):
+		position.y = -30
+	
 	if position.y < -40 and not Global.creditsreached:
 		Global.creditsreached = true
 		Global.credits.emit()

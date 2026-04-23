@@ -11,7 +11,7 @@ func start_credits():
 	get_tree().paused = true
 
 	# show UI (must ignore pause)
-	credit_screen.visible = true
+	self.visible = true
 	credit_screen.process_mode = Node.PROCESS_MODE_ALWAYS
 
 	# play audio
@@ -21,7 +21,7 @@ func start_credits():
 	await credit_audio.finished
 
 	# hide UI
-	credit_screen.visible = false
+	self.visible = false
 
 	# resume game
 	get_tree().paused = false
