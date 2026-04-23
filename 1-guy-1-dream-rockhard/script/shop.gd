@@ -43,9 +43,18 @@ var upgrades := {
 		"target": "particles_per_second",
 		"value": 3,
 		"increase": 3,
-		"price": 100,
+		"price": 50,
 		"price_add": 10,
 		"price_mult": 1.05
+	},
+	"damage": {
+		"name": "Bullet Damage",
+		"target": "damage",
+		"value": 1,
+		"increase": 1,
+		"price": 10,
+		"price_add": 50,
+		"price_mult": 1.25
 	}
 }
 
