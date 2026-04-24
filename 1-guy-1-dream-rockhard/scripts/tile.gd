@@ -35,7 +35,7 @@ const HP := {
 	Type.GRASS: 1,
 	Type.DIRT: 1,
 	Type.STONE_1: 500,
-	Type.STONE_2: 80,
+	Type.STONE_2: 50,
 	Type.STONE_3: 20,
 	Type.STONE_4: 6,
 	Type.STONE_5: 2,

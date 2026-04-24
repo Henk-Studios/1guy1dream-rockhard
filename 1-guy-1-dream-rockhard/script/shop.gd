@@ -45,7 +45,7 @@ var upgrades := {
 		"increase": .5,
 		"price": 50,
 		"price_add": 20,
-		"price_mult": 1.2
+		"price_mult": 1.1
 	},
 	"explosive_chance": {
 		"name": "Explosive Chance",
@@ -72,7 +72,7 @@ var upgrades := {
 		"increase": 1,
 		"price": 10,
 		"price_add": 30,
-		"price_mult": 1.1
+		"price_mult": 1.05
 	}
 }
 
