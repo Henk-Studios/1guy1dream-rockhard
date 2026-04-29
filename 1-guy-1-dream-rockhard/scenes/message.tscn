@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://dy5n4up0sjt46"]
+
+[ext_resource type="Script" uid="uid://c7eergxtanxj" path="res://scripts/UI/message.gd" id="1_11qlq"]
+
+[node name="Message" type="MarginContainer" unique_id=1732590553 node_paths=PackedStringArray("message_label")]
+custom_minimum_size = Vector2(450, 20)
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -22.0
+offset_right = 261.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/margin_left = 20
+script = ExtResource("1_11qlq")
+message_label = NodePath("MessageLabel")
+
+[node name="MessageLabel" type="RichTextLabel" parent="." unique_id=1103750695]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 12
+bbcode_enabled = true
+text = "A message should be here"
+fit_content = true
+scroll_active = false

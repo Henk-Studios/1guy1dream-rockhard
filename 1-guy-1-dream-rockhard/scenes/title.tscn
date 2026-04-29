@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://d1u282k4ig2nu"]
+
+[node name="Title" type="VBoxContainer" unique_id=1535050460]
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme_override_constants/separation = -31
+
+[node name="Title" type="RichTextLabel" parent="." unique_id=1293833603]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/outline_size = 20
+bbcode_enabled = true
+text = "[font size=70][font size=90][color=deep_pink]1[/color][/font][wave][color=cyan]guy[/color][/wave][font size=90][color=lime]1[/color][/font][wave][color=yellow]dream"
+fit_content = true
+scroll_active = false
+vertical_alignment = 1
+
+[node name="Title2" type="RichTextLabel" parent="." unique_id=218786971]
+custom_minimum_size = Vector2(568.015, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/outline_size = 20
+bbcode_enabled = true
+text = "[font size=110][shake][color=#b38c60]R[/color][color=#888888]O[/color][color=#555555]C[/color][color=#9c7e5c]K[/color][color=#555555]H[/color][color=#888888]A[/color][color=#8f704d]R[/color][color=#555555]D[/color]"
+fit_content = true
+scroll_active = false
+vertical_alignment = 1

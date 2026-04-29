@@ -1,0 +1,195 @@
+[gd_scene format=3 uid="uid://ba6j28f3johsr"]
+
+[ext_resource type="Script" uid="uid://cm2g1wci436lb" path="res://scripts/UI/settings_menu.gd" id="2_q04j4"]
+[ext_resource type="Script" uid="uid://b345dgo4titpd" path="res://scripts/UI/ui_scale_fixer.gd" id="3_cdyau"]
+
+[node name="SettingsMenu" type="Control" unique_id=1492014258 node_paths=PackedStringArray("master_volume_slider", "music_volume_slider", "sfx_volume_slider", "ui_scale_slider", "fullscreen_toggle", "fps_toggle", "back_button", "click_blocker")]
+custom_minimum_size = Vector2(300, 400)
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -200.0
+offset_right = 150.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_q04j4")
+master_volume_slider = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/MasterSlider")
+music_volume_slider = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/MusicSlider")
+sfx_volume_slider = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/SFXSlider")
+ui_scale_slider = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/ScaleSlider")
+fullscreen_toggle = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/FullscreenToggle")
+fps_toggle = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/FPSToggle")
+back_button = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/BackButton")
+click_blocker = NodePath("ClickBlocker")
+
+[node name="ClickBlocker" type="ColorRect" parent="." unique_id=499946639]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1089.0
+offset_top = -469.0
+offset_right = 1026.0
+offset_bottom = 549.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.635294)
+
+[node name="Background" type="ColorRect" parent="." unique_id=663379372]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.4045111, 0.40451115, 0.4045111, 1)
+
+[node name="Container" type="Container" parent="." unique_id=2016385730]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_cdyau")
+tile_scale = 0.3
+
+[node name="NinePatchRect" type="NinePatchRect" parent="Container" unique_id=1164826046]
+clip_children = 2
+custom_minimum_size = Vector2(900, 1000)
+layout_mode = 2
+region_rect = Rect2(874, 1006, 339, 246)
+patch_margin_left = 153
+patch_margin_top = 104
+patch_margin_right = 153
+patch_margin_bottom = 104
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=290442657]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=185425735]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=1926153657]
+layout_mode = 2
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="Seperator" type="ColorRect" parent="MarginContainer/VBoxContainer" unique_id=318983120]
+custom_minimum_size = Vector2(251, 5)
+layout_mode = 2
+size_flags_horizontal = 0
+color = Color(0, 0, 0, 1)
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer" unique_id=1814917050]
+z_index = 1
+layout_mode = 2
+size_flags_vertical = 3
+vertical_scroll_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBoxContainer/ScrollContainer" unique_id=528906061]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_right = 4
+
+[node name="HBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer" unique_id=949339459]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Control" type="Control" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1219030064]
+layout_mode = 2
+
+[node name="VolumeLabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1588080301]
+layout_mode = 2
+text = "Sounds"
+
+[node name="Seperator2" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1980736697]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="MasterLabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1253896871]
+layout_mode = 2
+text = "Master"
+
+[node name="MasterSlider" type="HSlider" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1591161277]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.5
+
+[node name="MusicLabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1663874751]
+layout_mode = 2
+text = "Music"
+
+[node name="MusicSlider" type="HSlider" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=272012947]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+
+[node name="SFXLabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=151255542]
+layout_mode = 2
+text = "SFX"
+
+[node name="SFXSlider" type="HSlider" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=590161221]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+
+[node name="Seperator3" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=12812306]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="UILabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=95468439]
+layout_mode = 2
+text = "UI"
+
+[node name="Seperator4" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1849121767]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="ScaleLabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=695107284]
+layout_mode = 2
+text = "Scale"
+
+[node name="ScaleSlider" type="HSlider" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=2138449161]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.5
+
+[node name="FullscreenToggle" type="CheckButton" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1350371694]
+layout_mode = 2
+text = "Fullscreen"
+
+[node name="FPSToggle" type="CheckButton" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1849121768]
+layout_mode = 2
+text = "Show FPS"
+
+[node name="Seperator5" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1393973086]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1509982545]
+layout_mode = 2
+text = "Back"

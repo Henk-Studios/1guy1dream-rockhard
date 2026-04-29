@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://dajddbl3qmsff"]
+
+[ext_resource type="Script" uid="uid://bfhqxwrffl8pk" path="res://scripts/main_menu_background.gd" id="1_hdp06"]
+
+[node name="MainMenuBackground" type="Node2D" unique_id=651906437]
+script = ExtResource("1_hdp06")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1949905347]
+position = Vector2(485, 228)
+rotation = 0.5846056
+scale = Vector2(2.185, 2.185)
+zoom = Vector2(0.9, 0.9)

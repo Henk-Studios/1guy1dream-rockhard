@@ -1,7 +1,7 @@
 extends StaticBody2D
 class_name Tile
 
-enum Type { GRASS, DIRT, STONE_1, STONE_2, STONE_3, STONE_4, STONE_5, GOLD, DIAMOND, EMERALD, EXPLOSIVE }
+enum Type {GRASS, DIRT, STONE_1, STONE_2, STONE_3, STONE_4, STONE_5, GOLD, DIAMOND, EMERALD, EXPLOSIVE}
 
 const TILE_SIZE := 16
 const SPRITE_SCALE := 2.5
@@ -66,16 +66,18 @@ var tile_type: Type = Type.STONE_3
 var sprite_angle: float = 0.0
 var texture_index: int = 0
 var cell: Vector2i = Vector2i.ZERO
+var context_tile_size: int = TILE_SIZE
 
 var _sprite: Sprite2D = null
 
-func configure(type: Type, angle: float, tex_idx: int, cell_: Vector2i) -> void:
+func configure(type: Type, angle: float, tex_idx: int, cell_: Vector2i, tile_size: int = TILE_SIZE) -> void:
 	tile_type = type
 	sprite_angle = angle
 	texture_index = tex_idx
 	cell = cell_
+	context_tile_size = tile_size
 	if _sprite != null:
-		_apply_visual()  # reuse path: update existing sprite immediately
+		_apply_visual() # reuse path: update existing sprite immediately
 
 func _ready() -> void:
 	if _sprite != null:
@@ -101,5 +103,5 @@ func _apply_visual() -> void:
 	_sprite.modulate = COLORS[tile_type]
 	_sprite.rotation = sprite_angle
 	var tex_size := _sprite.texture.get_size()
-	var target: float = TILE_SIZE * SPRITE_SCALE
+	var target: float = context_tile_size * SPRITE_SCALE
 	_sprite.scale = Vector2(target / tex_size.x, target / tex_size.y)

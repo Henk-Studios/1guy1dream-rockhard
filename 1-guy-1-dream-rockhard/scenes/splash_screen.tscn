@@ -1,0 +1,76 @@
+[gd_scene format=3 uid="uid://bthktpr27skpx"]
+
+[ext_resource type="PackedScene" uid="uid://d1u282k4ig2nu" path="res://scenes/title.tscn" id="1_n4g2v"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_u5mgf"]
+font_size = 12
+font_color = Color(0.74118966, 0.39157695, 0.08958211, 1)
+
+[node name="SplashScreen" type="Control" unique_id=1275994598]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1169188655]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="StudioLabel" type="Label" parent="." unique_id=470338204]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -62.0
+offset_top = -15.0
+offset_right = 62.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 0
+text = "HenkStudios"
+label_settings = SubResource("LabelSettings_u5mgf")
+horizontal_alignment = 1
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="." unique_id=1376157448]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -94.5
+offset_right = 200.0
+offset_bottom = 94.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = -7
+alignment = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer2" unique_id=812335140]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = -31
+alignment = 1
+
+[node name="Title" parent="VBoxContainer2/VBoxContainer" unique_id=1535050460 instance=ExtResource("1_n4g2v")]
+layout_mode = 2
+
+[node name="Spacing" type="Control" parent="VBoxContainer2/VBoxContainer" unique_id=1418496518]
+custom_minimum_size = Vector2(0, 44.99)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer2/VBoxContainer" unique_id=828437682]
+layout_mode = 2
+text = "Loading..."
+horizontal_alignment = 1

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b5r3xnxostxlm"]
 
 [ext_resource type="Script" uid="uid://ol13ghxfiv1q" path="res://scripts/shooting.gd" id="1_4el7k"]
-[ext_resource type="PackedScene" uid="uid://c2ap1kbaxqjaj" path="res://scene/shoot_partices.tscn" id="2_dyrpo"]
+[ext_resource type="PackedScene" uid="uid://c2ap1kbaxqjaj" path="res://scenes/shoot_partices.tscn" id="2_dyrpo"]
 [ext_resource type="Texture2D" uid="uid://ddq6ax4d7hbr2" path="res://textures/gun.png" id="3_ev86e"]
 
 [node name="the_gun" type="Node2D" unique_id=247112652]

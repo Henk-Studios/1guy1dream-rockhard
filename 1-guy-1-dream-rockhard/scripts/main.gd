@@ -6,7 +6,7 @@ const TILE_SIZE := 16
 const CHUNK_SIZE := 8
 const LOAD_RADIUS_X := 5
 const LOAD_RADIUS_Y := 3
-const FREE_CAM_RADIUS_MULT := 2.0  # freecam loads a wider area for debugging
+const FREE_CAM_RADIUS_MULT := 2.0 # freecam loads a wider area for debugging
 
 const WORLD_Y_MIN := 0
 const WORLD_Y_MAX := 500
@@ -28,7 +28,7 @@ const SURFACE_AMPLITUDE := 6
 
 # Layer depths below the surface.
 const DIRT_DEPTH := 50
-const STONE_TIER_HEIGHT := 90  # each of the 5 stone tiers spans this many cells
+const STONE_TIER_HEIGHT := 90 # each of the 5 stone tiers spans this many cells
 
 # Broken-cell storage grouping: each group spans BREAK_GROUP_CHUNKS x BREAK_GROUP_CHUNKS chunks.
 # Coarser groups = fewer outer dict entries as the world fills up with mined cells.
@@ -59,8 +59,8 @@ var gold_noise: FastNoiseLite
 var diamond_noise: FastNoiseLite
 var emerald_noise: FastNoiseLite
 var explosive_noise: FastNoiseLite
-var loaded_chunks: Dictionary = {}  # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
-var active_tiles: Dictionary = {}   # Vector2i cell -> Tile (fast break lookup)
+var loaded_chunks: Dictionary = {} # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
+var active_tiles: Dictionary = {} # Vector2i cell -> Tile (fast break lookup)
 # Per-cell damage, grouped by break-group coord: group -> Dictionary[cell, hp_lost].
 # A cell is fully broken once its hp_lost >= Tile.HP[tile_type]. Partial damage persists
 # across chunk unload/reload so a half-mined block stays half-mined.
@@ -161,7 +161,7 @@ func _clear_spawn_area(center: Vector2i, radius: int) -> void:
 				var cell := center + Vector2i(dx, dy)
 				var group := _chunk_to_break_group(_cell_to_chunk(cell))
 				var group_broken: Dictionary = broken_by_group.get(group, {})
-				group_broken[cell] = 99999  # well above any tile's HP → always broken
+				group_broken[cell] = 99999 # well above any tile's HP → always broken
 				if not broken_by_group.has(group):
 					broken_by_group[group] = group_broken
 
@@ -256,7 +256,7 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 			if cell.y < WORLD_Y_MIN or cell.y > WORLD_Y_MAX:
 				continue
 			if cell.y < surface_y:
-				continue  # above surface: sky
+				continue # above surface: sky
 			var bulk := noise.get_noise_2d(cell.x, cell.y)
 			var cave := _cave_at(cell)
 			var cave_penalty: float = maxf(cave - CAVE_SPARSITY, 0.0) * CAVE_STRENGTH
@@ -292,7 +292,7 @@ func _unload_chunk(chunk_coord: Vector2i) -> void:
 
 const EXPLOSION_BASE_RADIUS := 3.0
 const EXPLOSION_CHAIN_BONUS := 0.55
-const EXPLOSION_CHAIN_DELAY := 0.08  # seconds between successive chain waves
+const EXPLOSION_CHAIN_DELAY := 0.08 # seconds between successive chain waves
 const EXPLOSION_OVERKILL := 999999
 
 func break_cell(cell: Vector2i, damage: int = 1) -> void:
@@ -359,15 +359,6 @@ func _setup_audio() -> void:
 	_explosion_audio.stream = load("res://audio/freesound_community-small-explosion-103931.mp3")
 	_explosion_audio.volume_db = -4
 	add_child(_explosion_audio)
-
-	_music_audio = AudioStreamPlayer.new()
-	var music_stream = load("res://audio/djartmusic-8-bit-console-from-my-childhood-301286.mp3")
-	if music_stream is AudioStreamMP3:
-		music_stream.loop = true
-	_music_audio.stream = music_stream
-	_music_audio.volume_db = -12
-	add_child(_music_audio)
-	_music_audio.play()
 	if Global.has_signal("credits"):
 		Global.credits.connect(_on_credits)
 
@@ -393,8 +384,8 @@ func _setup_timer_overlay() -> void:
 
 func _setup_title() -> void:
 	var title := Label.new()
-	title.text = "ONE GUY ONE DREAM\nROCK HARD"
-	var title_font: FontFile = load("res://fonts/RockSalt-Regular.ttf")
+	title.text = "1guy1dream\nROCK HARD"
+	var title_font: FontFile = load("res://fonts/CabinSketch-Bold.ttf")
 	title.add_theme_font_override("font", title_font)
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", Color.WHITE)
@@ -512,16 +503,16 @@ func _tile_type_for(cell: Vector2i, depth: int, is_heavy: bool) -> Tile.Type:
 	# Compute underlying stone tier; some ores are gated on it.
 	var below_dirt: int = depth - DIRT_DEPTH - 1
 	var stone_num: int = clampi(below_dirt / STONE_TIER_HEIGHT + 1, 1, 5)
-	if is_heavy and stone_num < 5:  # emerald never spawns in the deepest tier
-		var emerald_threshold: float = 0.48 - height_ratio * 0.28  # a touch rarer at the bottom
+	if is_heavy and stone_num < 5: # emerald never spawns in the deepest tier
+		var emerald_threshold: float = 0.48 - height_ratio * 0.28 # a touch rarer at the bottom
 		if emerald_noise.get_noise_2d(cell.x, cell.y) > emerald_threshold:
 			return Tile.Type.EMERALD
 	var diamond_threshold: float = 0.45 - height_ratio * 0.15
 	if is_heavy:
-		diamond_threshold -= 0.12  # more common inside heavy rock pouches
+		diamond_threshold -= 0.12 # more common inside heavy rock pouches
 	if diamond_noise.get_noise_2d(cell.x, cell.y) > diamond_threshold:
 		return Tile.Type.DIAMOND
-	var gold_threshold: float = 0.35 + height_ratio * 0.10  # rarer / smaller veins near top
+	var gold_threshold: float = 0.35 + height_ratio * 0.10 # rarer / smaller veins near top
 	if gold_noise.get_noise_2d(cell.x, cell.y) > gold_threshold:
 		return Tile.Type.GOLD
 	# Dark spot: a heavy cell in stone N shows the previous (darker) tier.

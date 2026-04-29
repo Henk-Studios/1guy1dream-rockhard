@@ -11,17 +11,22 @@ config_version=5
 [application]
 
 config/name="1guy1dream-ROCKHARD"
-run/main_scene="res://scene/main.tscn"
+run/main_scene="uid://daoibv2bqtsn5"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
 Global="*res://scripts/global.gd"
+Manager="*uid://e0rbodau73ne"
+
+[display]
+
+window/stretch/mode="canvas_items"
 
 [gui]
 
-theme/custom_font="uid://it6mah5l5pqf"
+theme/custom_font="uid://cq41xqrha5vdn"
 
 [input]
 

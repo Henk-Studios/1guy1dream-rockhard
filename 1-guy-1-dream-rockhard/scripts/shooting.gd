@@ -1,7 +1,6 @@
 extends Node2D
 
 
-
 var use_mouse := true
 
 @export var particle_scene: PackedScene
@@ -43,7 +42,7 @@ func get_aim_direction() -> Vector2:
 
 func spawn_particle(base_direction: Vector2):
 	var particle = particle_scene.instantiate()
-	get_tree().current_scene.add_child(particle)
+	Manager.scene.current_scene.add_child(particle)
 
 	particle.global_position = global_position
 
