@@ -11,18 +11,32 @@ var music_player: AudioStreamPlayer
 const MUSIC_FADE_DURATION: float = 2.0
 var music_fade_tween: Tween
 
-# Sound effect players pool
-var sfx_players: Array[AudioStreamPlayer] = []
-var sfx_3d_players: Array[AudioStreamPlayer3D] = []
+# Sound effect players pool - available for reuse
+var sfx_player_pool: Array[AudioStreamPlayer] = []
+var sfx_3d_player_pool: Array[AudioStreamPlayer3D] = []
+
+# Active sound effect players - currently playing
+var active_sfx_players: Array[AudioStreamPlayer] = []
+var active_sfx_3d_players: Array[AudioStreamPlayer3D] = []
 
 # Looping SFX players pool (identified by string keys)
 var looping_sfx_players: Dictionary[String, AudioStreamPlayer] = {}
 var looping_sfx_3d_players: Dictionary[String, AudioStreamPlayer3D] = {}
+var looping_sfx_keys: Dictionary[String, String] = {} # Maps loop_id to audio key
+var looping_sfx_3d_keys: Dictionary[String, String] = {} # Maps loop_id to audio key
 
 # Audio bus indices
 var master_bus_index: int
 var music_bus_index: int
 var sfx_bus_index: int
+
+# Pooling settings
+const MAX_ACTIVE_PLAYERS: int = 40
+const MAX_PLAYERS_PER_SOUND: int = 6
+
+# Track active players per sound key
+var sfx_per_key_count: Dictionary[String, int] = {}
+var sfx_3d_per_key_count: Dictionary[String, int] = {}
 
 func _ready() -> void:
 	_setup_audio_buses()
@@ -50,6 +64,98 @@ func _setup_audio_buses() -> void:
 		AudioServer.set_bus_name(2, "SFX")
 		AudioServer.set_bus_send(2, "Master")
 	sfx_bus_index = AudioServer.get_bus_index("SFX")
+
+# Pool Management Functions
+
+func _get_sfx_player(key: String, force: bool = false) -> AudioStreamPlayer:
+	"""Get an AudioStreamPlayer from the pool or create a new one.
+	Returns null if limits are exceeded (unless force=true).
+	"""
+	# Check global limit
+	if not force and len(active_sfx_players) >= MAX_ACTIVE_PLAYERS:
+		print("Warning: Max active SFX players reached (%d). Ignoring request for: %s" % [MAX_ACTIVE_PLAYERS, key])
+		return null
+	
+	# Check per-sound limit (always enforced)
+	if sfx_per_key_count.get(key, 0) >= MAX_PLAYERS_PER_SOUND:
+		print("Warning: Max players for sound '%s' reached (%d). Ignoring request." % [key, MAX_PLAYERS_PER_SOUND])
+		return null
+	
+	# Get player from pool or create new one
+	var player: AudioStreamPlayer
+	if len(sfx_player_pool) > 0:
+		player = sfx_player_pool.pop_back()
+	else:
+		player = AudioStreamPlayer.new()
+		player.bus = "SFX"
+		add_child(player)
+	
+	# Track active player
+	active_sfx_players.append(player)
+	sfx_per_key_count[key] = sfx_per_key_count.get(key, 0) + 1
+	
+	return player
+
+func _return_sfx_player(player: AudioStreamPlayer, key: String) -> void:
+	"""Return an AudioStreamPlayer to the pool."""
+	if player in active_sfx_players:
+		active_sfx_players.erase(player)
+	
+	# Decrement per-sound count
+	if key in sfx_per_key_count:
+		sfx_per_key_count[key] -= 1
+		if sfx_per_key_count[key] <= 0:
+			sfx_per_key_count.erase(key)
+	
+	# Reset player state and return to pool
+	player.stop()
+	player.stream = null
+	sfx_player_pool.append(player)
+
+func _get_sfx_3d_player(key: String, force: bool = false) -> AudioStreamPlayer3D:
+	"""Get an AudioStreamPlayer3D from the pool or create a new one.
+	Returns null if limits are exceeded (unless force=true).
+	"""
+	# Check global limit
+	if not force and len(active_sfx_3d_players) >= MAX_ACTIVE_PLAYERS:
+		print("Warning: Max active 3D SFX players reached (%d). Ignoring request for: %s" % [MAX_ACTIVE_PLAYERS, key])
+		return null
+	
+	# Check per-sound limit (always enforced)
+	if sfx_3d_per_key_count.get(key, 0) >= MAX_PLAYERS_PER_SOUND:
+		print("Warning: Max players for 3D sound '%s' reached (%d). Ignoring request." % [key, MAX_PLAYERS_PER_SOUND])
+		return null
+	
+	# Get player from pool or create new one
+	var player: AudioStreamPlayer3D
+	if len(sfx_3d_player_pool) > 0:
+		player = sfx_3d_player_pool.pop_back()
+	else:
+		player = AudioStreamPlayer3D.new()
+		player.bus = "SFX"
+		add_child(player)
+	
+	# Track active player
+	active_sfx_3d_players.append(player)
+	sfx_3d_per_key_count[key] = sfx_3d_per_key_count.get(key, 0) + 1
+	
+	return player
+
+func _return_sfx_3d_player(player: AudioStreamPlayer3D, key: String) -> void:
+	"""Return an AudioStreamPlayer3D to the pool."""
+	if player in active_sfx_3d_players:
+		active_sfx_3d_players.erase(player)
+	
+	# Decrement per-sound count
+	if key in sfx_3d_per_key_count:
+		sfx_3d_per_key_count[key] -= 1
+		if sfx_3d_per_key_count[key] <= 0:
+			sfx_3d_per_key_count.erase(key)
+	
+	# Reset player state and return to pool
+	player.stop()
+	player.stream = null
+	sfx_3d_player_pool.append(player)
 
 # Volume Control
 
@@ -96,6 +202,7 @@ func play_music(key: String, fade_out: bool = false) -> void:
 	music_player.stream = props.stream
 	music_player.volume_db = linear_to_db(props.volume)
 	music_player.play()
+	await music_player.finished
 
 func pause_music() -> void:
 	if music_player and music_player.playing:
@@ -127,7 +234,7 @@ func is_music_playing() -> bool:
 
 # Sound Effects Management
 
-func play_sfx(key: String) -> void:
+func play_sfx(key: String, force: bool = false) -> void:
 	if not audio_properties.has(key):
 		print("Warning: No audio for key ", key)
 		return
@@ -137,16 +244,17 @@ func play_sfx(key: String) -> void:
 		print("Warning: No audio stream for ", key)
 		return
 	
-	var player: AudioStreamPlayer = AudioStreamPlayer.new()
+	var player = _get_sfx_player(key, force)
+	if not player:
+		return
+	
 	player.stream = props.stream
 	player.volume_db = linear_to_db(props.volume)
-	player.bus = "SFX"
-	add_child(player)
-	player.finished.connect(_on_sfx_finished.bind(player))
+	player.finished.connect(_on_sfx_finished.bind(player, key))
 	player.play()
-	sfx_players.append(player)
+	await player.finished
 
-func play_sfx_at_position(key: String, position: Vector3, max_distance: float = 0.0) -> void:
+func play_sfx_at_position(key: String, position: Vector3, max_distance: float = 0.0, force: bool = false) -> void:
 	if not audio_properties.has(key):
 		print("Warning: No audio for key ", key)
 		return
@@ -156,9 +264,11 @@ func play_sfx_at_position(key: String, position: Vector3, max_distance: float = 
 		print("Warning: No audio stream for ", key)
 		return
 	
-	var player: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+	var player = _get_sfx_3d_player(key, force)
+	if not player:
+		return
+	
 	player.stream = props.stream
-	player.bus = "SFX"
 	player.position = position
 	player.volume_db = linear_to_db(props.volume)
 	
@@ -169,65 +279,74 @@ func play_sfx_at_position(key: String, position: Vector3, max_distance: float = 
 		player.max_distance = 0.0
 		player.unit_size = 10
 	
-	add_child(player)
-	player.finished.connect(_on_sfx_3d_finished.bind(player))
+	player.finished.connect(_on_sfx_3d_finished.bind(player, key))
 	player.play()
-	
-	sfx_3d_players.append(player)
+	await player.finished
 
 func pause_all_sfx() -> void:
-	for player in sfx_players:
+	for player in active_sfx_players:
 		if player and player.playing:
 			player.stream_paused = true
 
 func pause_all_sfx_3d() -> void:
-	for player in sfx_3d_players:
+	for player in active_sfx_3d_players:
 		if player and player.playing:
 			player.stream_paused = true
 
 func resume_all_sfx() -> void:
-	for player in sfx_players:
+	for player in active_sfx_players:
 		if player and player.stream_paused:
 			player.stream_paused = false
 
 func resume_all_sfx_3d() -> void:
-	for player in sfx_3d_players:
+	for player in active_sfx_3d_players:
 		if player and player.stream_paused:
 			player.stream_paused = false
 
 func stop_all_sfx() -> void:
-	for player in sfx_players:
+	for player in active_sfx_players:
 		if player:
 			player.stop()
 	_cleanup_sfx_players()
 
 func stop_all_sfx_3d() -> void:
-	for player in sfx_3d_players:
+	for player in active_sfx_3d_players:
 		if player:
 			player.stop()
 	_cleanup_sfx_3d_players()
 
-func _on_sfx_finished(player: AudioStreamPlayer) -> void:
-	if player in sfx_players:
-		sfx_players.erase(player)
-	player.queue_free()
+func _on_sfx_finished(player: AudioStreamPlayer, key: String) -> void:
+	player.finished.disconnect(_on_sfx_finished)
+	_return_sfx_player(player, key)
 
-func _on_sfx_3d_finished(player: AudioStreamPlayer3D) -> void:
-	if player in sfx_3d_players:
-		sfx_3d_players.erase(player)
-	player.queue_free()
+func _on_sfx_3d_finished(player: AudioStreamPlayer3D, key: String) -> void:
+	player.finished.disconnect(_on_sfx_3d_finished)
+	_return_sfx_3d_player(player, key)
 
 func _cleanup_sfx_players() -> void:
-	sfx_players.clear()
+	# Return all active players to pool
+	var players_to_return = active_sfx_players.duplicate()
+	for player in players_to_return:
+		# Find the key for this player (iterate through counts to find it)
+		for key in sfx_per_key_count.keys():
+			_return_sfx_player(player, key)
+			break
 
 func _cleanup_sfx_3d_players() -> void:
-	sfx_3d_players.clear()
+	# Return all active players to pool
+	var players_to_return = active_sfx_3d_players.duplicate()
+	for player in players_to_return:
+		# Find the key for this player (iterate through counts to find it)
+		for key in sfx_3d_per_key_count.keys():
+			_return_sfx_3d_player(player, key)
+			break
 
 # Looping Sound Effects Management
 
-func play_looping_sfx(key: String, loop_id: String) -> void:
+func play_looping_sfx(key: String, loop_id: String, force: bool = false) -> void:
 	"""Play a looping SFX that can be controlled independently
 	loop_id: Unique identifier for this looping sound instance
+	force: If true, allows exceeding the 40-player limit
 	"""
 	if not audio_properties.has(key):
 		print("Warning: No audio for key ", key)
@@ -242,14 +361,16 @@ func play_looping_sfx(key: String, loop_id: String) -> void:
 	if loop_id in looping_sfx_players:
 		stop_looping_sfx(loop_id)
 	
-	var player: AudioStreamPlayer = AudioStreamPlayer.new()
+	var player = _get_sfx_player(key, force)
+	if not player:
+		return
+	
 	player.stream = props.stream
 	player.volume_db = linear_to_db(props.volume)
-	player.bus = "SFX"
 	player.stream_paused = false
-	add_child(player)
 	player.play()
 	looping_sfx_players[loop_id] = player
+	looping_sfx_keys[loop_id] = key
 
 func stop_looping_sfx(loop_id: String) -> void:
 	"""Stop a looping SFX by its ID"""
@@ -257,10 +378,11 @@ func stop_looping_sfx(loop_id: String) -> void:
 		return
 	
 	var player = looping_sfx_players[loop_id]
+	var key = looping_sfx_keys.get(loop_id, "unknown")
 	if player:
-		player.stop()
-		player.queue_free()
+		_return_sfx_player(player, key)
 	looping_sfx_players.erase(loop_id)
+	looping_sfx_keys.erase(loop_id)
 
 func pause_looping_sfx(loop_id: String) -> void:
 	"""Pause a looping SFX by its ID"""
@@ -288,9 +410,10 @@ func is_looping_sfx_playing(loop_id: String) -> bool:
 	var player = looping_sfx_players[loop_id]
 	return player and player.playing and not player.stream_paused
 
-func play_looping_sfx_at_position(key: String, loop_id: String, position: Vector3, max_distance: float = 0.0) -> void:
+func play_looping_sfx_at_position(key: String, loop_id: String, position: Vector3, max_distance: float = 0.0, force: bool = false) -> void:
 	"""Play a 3D looping SFX that can be controlled independently
 	loop_id: Unique identifier for this looping sound instance
+	force: If true, allows exceeding the 40-player limit
 	"""
 	if not audio_properties.has(key):
 		print("Warning: No audio for key ", key)
@@ -305,9 +428,11 @@ func play_looping_sfx_at_position(key: String, loop_id: String, position: Vector
 	if loop_id in looping_sfx_3d_players:
 		stop_looping_sfx_at_position(loop_id)
 	
-	var player: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+	var player = _get_sfx_3d_player(key, force)
+	if not player:
+		return
+	
 	player.stream = props.stream
-	player.bus = "SFX"
 	player.position = position
 	player.volume_db = linear_to_db(props.volume)
 	player.stream_paused = false
@@ -319,9 +444,9 @@ func play_looping_sfx_at_position(key: String, loop_id: String, position: Vector
 		player.max_distance = 0.0
 		player.unit_size = 10
 	
-	add_child(player)
 	player.play()
 	looping_sfx_3d_players[loop_id] = player
+	looping_sfx_3d_keys[loop_id] = key
 
 func stop_looping_sfx_at_position(loop_id: String) -> void:
 	"""Stop a 3D looping SFX by its ID"""
@@ -329,10 +454,11 @@ func stop_looping_sfx_at_position(loop_id: String) -> void:
 		return
 	
 	var player = looping_sfx_3d_players[loop_id]
+	var key = looping_sfx_3d_keys.get(loop_id, "unknown")
 	if player:
-		player.stop()
-		player.queue_free()
+		_return_sfx_3d_player(player, key)
 	looping_sfx_3d_players.erase(loop_id)
+	looping_sfx_3d_keys.erase(loop_id)
 
 func pause_looping_sfx_at_position(loop_id: String) -> void:
 	"""Pause a 3D looping SFX by its ID"""
@@ -386,46 +512,45 @@ func resume_all_looping_sfx_at_position() -> void:
 
 func stop_all_looping_sfx() -> void:
 	"""Stop all active looping SFX"""
-	for player in looping_sfx_players.values():
-		if player:
-			player.stop()
-			player.queue_free()
-	looping_sfx_players.clear()
+	var loop_ids_to_stop = looping_sfx_players.keys().duplicate()
+	for loop_id in loop_ids_to_stop:
+		stop_looping_sfx(loop_id)
 
 func stop_all_looping_sfx_at_position() -> void:
 	"""Stop all active 3D looping SFX"""
-	for player in looping_sfx_3d_players.values():
-		if player:
-			player.stop()
-			player.queue_free()
-	looping_sfx_3d_players.clear()
+	var loop_ids_to_stop = looping_sfx_3d_players.keys().duplicate()
+	for loop_id in loop_ids_to_stop:
+		stop_looping_sfx_at_position(loop_id)
 
 # Helper Functions
 
 func play_main_music() -> void:
-	play_music("upbeat_music")
+	await play_music("upbeat_music")
+
+func play_credit_music() -> void:
+	await play_music("credits", true)
 
 func play_click_sfx() -> void:
-	play_sfx("click")
+	await play_sfx("click")
 
 func play_hover_sfx() -> void:
-	play_sfx("hover")
+	await play_sfx("hover")
 
 func play_click_sfx_at_pos(pos: Vector3) -> void:
-	play_sfx_at_position("click", pos)
+	await play_sfx_at_position("click", pos)
 
 func play_hover_sfx_at_pos(pos: Vector3) -> void:
-	play_sfx_at_position("hover", pos)
+	await play_sfx_at_position("hover", pos)
 
 func play_explosion_sfx() -> void:
-	play_sfx("explosion")
+	await play_sfx("explosion")
 
 func play_shoot_sfx() -> void:
-	play_sfx("shoot")
+	await play_sfx("shoot")
 
 func start_jetfart_sfx(loop_id: String) -> void:
 	print("Starting jetfart sfx with loop_id: " + loop_id)
-	play_looping_sfx("jetfart", loop_id)
+	await play_looping_sfx("jetfart", loop_id)
 
 func stop_jetfart_sfx(loop_id: String) -> void:
 	stop_looping_sfx(loop_id)

@@ -1,31 +1,8 @@
-extends ColorRect
-@onready var credit_screen = $RichTextLabel
-@onready var credit_audio = $AudioStreamPlayer
+extends Control
+@export var guy: TheGuy
+@onready var time_label: RichTextLabel = $VBoxContainer/TimeLabel
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	Global.credits.connect(start_credits)
-
-
-func start_credits():
-	get_tree().paused = true
-
-	# show UI (must ignore pause)
-	self.visible = true
-	credit_screen.process_mode = Node.PROCESS_MODE_ALWAYS
-
-	# play audio
-	credit_audio.play()
-
-	# wait for audio to finish
-	await credit_audio.finished
-
-	# hide UI
-	self.visible = false
-
-	# resume game
-	get_tree().paused = false
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	pass
+	# smoothly follow the guy (x pos only), but with a slight delay for a more dynamic feel
+	var target_x = guy.position.x
+	position.x = lerp(position.x, target_x, 0.05)

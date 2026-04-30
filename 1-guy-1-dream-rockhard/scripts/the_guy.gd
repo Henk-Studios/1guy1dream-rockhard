@@ -1,9 +1,11 @@
 extends RigidBody2D
+class_name TheGuy
 
 @export var thrust_force := 900.0
 @export var torque_force := 900.0
 @export var max_angular_velocity := 5.0
 var was_jetting: bool = false
+@onready var jetpart: CPUParticles2D = $jetpart
 func _ready():
 	self.linear_damp = 1.5
 	self.angular_damp = 2.0
@@ -18,7 +20,7 @@ func _physics_process(__):
 	if Input.is_action_just_pressed("teleport"):
 		position.y = -30
 	
-	if position.y < -40 and not Global.creditsreached:
+	if position.y < 0 and not Global.creditsreached:
 		Global.creditsreached = true
 		Global.credits.emit()
 	
@@ -37,7 +39,7 @@ func _physics_process(__):
 		apply_torque(torque_force)
 		
 	var jetting: bool = Input.is_action_pressed("rightjet") or Input.is_action_pressed("leftjet")
-	if jetting and not Global.creditsreached and not was_jetting:
+	if jetting and not was_jetting:
 		$jetpart.emitting = true
 		Manager.audio.start_jetfart_sfx("1")
 		was_jetting = true

@@ -8,7 +8,6 @@ func _ready() -> void:
 
 
 func _on_pressed():
-	print("shop button pressed")
 	var shop = get_parent()
 	if shop and shop.has_method("buy_from_button"):
 		shop.buy_from_button(nr)

@@ -67,7 +67,6 @@ var active_tiles: Dictionary = {} # Vector2i cell -> Tile (fast break lookup)
 var broken_by_group: Dictionary = {}
 
 var tile_pool: Array[Tile] = []
-
 var _timer_label: Label
 var _elapsed: float = 0.0
 var _timer_frozen: bool = false
@@ -75,10 +74,16 @@ var _timer_frozen: bool = false
 @onready var the_guy: Node2D = $TheGuy
 @onready var free_cam: Camera2D = $FreeCam
 @onready var break_particle_pool: Node2D = $BreakParticlePool
+@onready var credits: Node = $Credits
+@onready var title: Control = $Title
+@onready var explode_particle_pool: Node2D = $ExplodeParticlePool
 var _last_streamed_chunk: Vector2i = Vector2i(-2147483648, -2147483648)
 
-func _ready() -> void:
-	world_seed = randi()
+func setup(params: Dictionary) -> void:
+	if params.has("seed") and params["seed"] is int:
+		world_seed = params["seed"]
+	else:
+		world_seed = randi()
 
 	noise = FastNoiseLite.new()
 	noise.seed = world_seed
@@ -129,6 +134,7 @@ func _ready() -> void:
 	if the_guy:
 		the_guy.global_position = spawn_world
 	update_region(spawn_world)
+	Manager.scene.finish_loading()
 
 func _process(_delta: float) -> void:
 	if not _timer_frozen:
@@ -298,10 +304,8 @@ func break_cell(cell: Vector2i, damage: int = 1) -> void:
 
 # Triggered by an explosive bullet upgrade. bonus_depth scales the blast radius via chain formula.
 func bullet_explode(cell: Vector2i, bonus_depth: int = 0) -> void:
-	var center_was_explosive: bool = active_tiles.has(cell) and active_tiles[cell].tile_type == Tile.Type.EXPLOSIVE
 	_do_break(cell, EXPLOSION_OVERKILL, bonus_depth)
-	if not center_was_explosive:
-		_explode(cell, bonus_depth)
+	_explode(cell, bonus_depth)
 
 func _do_break(cell: Vector2i, damage: int, chain_depth: int) -> void:
 	var chunk := _cell_to_chunk(cell)
@@ -348,18 +352,27 @@ func _explode(center: Vector2i, chain_depth: int) -> void:
 
 	if chained.is_empty():
 		return
-	await get_tree().create_timer(EXPLOSION_CHAIN_DELAY).timeout
+	await get_tree().process_frame # reduced lag
 	for c in chained:
 		_do_break(c, EXPLOSION_OVERKILL, chain_depth + 1)
+		# await get_tree().process_frame # zero lag but ugly
 
 func _setup_audio() -> void:
 	if Global.has_signal("credits"):
 		Global.credits.connect(_on_credits)
 
 func _on_credits() -> void:
-	Manager.audio.stop_music()
 	_timer_frozen = true
-
+	# Update personal record if this run is better
+	credits.time_label.text = "[color=blue]Time: %s[/color]" % _format_time(_elapsed)
+	var current_record: float = Manager.utility.get_personal_record()
+	if _elapsed < current_record:
+		Manager.utility.set_personal_record(_elapsed)
+		credits.time_label.text += " [color=deep_pink][wave](New Record!)[/wave][/color]"
+	else:
+		credits.time_label.text += " (PR: %s)" % _format_time(current_record)
+	await Manager.audio.play_credit_music()
+	Manager.audio.play_main_music()
 func _setup_timer_overlay() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
@@ -376,20 +389,9 @@ func _setup_timer_overlay() -> void:
 	layer.add_child(_timer_label)
 
 func _setup_title() -> void:
-	var title := Label.new()
-	title.text = "1guy1dream\nROCK HARD"
-	var title_font: FontFile = load("res://fonts/CabinSketch-Bold.ttf")
-	title.add_theme_font_override("font", title_font)
-	title.add_theme_font_size_override("font_size", 64)
-	title.add_theme_color_override("font_color", Color.WHITE)
-	title.add_theme_color_override("font_outline_color", Color.BLACK)
-	title.add_theme_constant_override("outline_size", 10)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	title.size = Vector2(800, 260)
 	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
 	# Centre horizontally on the spawn, a few tiles below it.
-	title.position = spawn_world + Vector2(-400, 130)
+	title.position = spawn_world + Vector2(0, 230)
 	title.z_index = 1000
 	add_child(title)
 
@@ -416,29 +418,16 @@ func _format_time(seconds: float) -> String:
 
 func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
 	Manager.audio.play_explosion_sfx()
-	var p := CPUParticles2D.new()
-	p.position = Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0)
-	p.one_shot = true
-	p.explosiveness = 1.0
+	var p = explode_particle_pool.put_particle_at(Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0))
+	if not p:
+		return
+	# p.position = Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0)
 	p.amount = clampi(int(radius * 10), 20, 200)
-	p.lifetime = 0.45
-	p.spread = 180.0
 	p.initial_velocity_min = 60.0 * radius
 	p.initial_velocity_max = 160.0 * radius
 	p.scale_amount_min = 2.0
 	p.scale_amount_max = 5.0 + radius
-	p.damping_min = 80.0
-	p.damping_max = 160.0
-	var ramp := Gradient.new()
-	ramp.add_point(0.0, Color(1.0, 0.95, 0.4, 1.0))
-	ramp.add_point(0.25, Color(1.0, 0.5, 0.1, 0.95))
-	ramp.add_point(0.7, Color(0.5, 0.15, 0.05, 0.5))
-	ramp.add_point(1.0, Color(0.1, 0.05, 0.05, 0.0))
-	p.color_ramp = ramp
-	p.z_index = 5
-	add_child(p)
 	p.emitting = true
-	p.finished.connect(p.queue_free)
 
 # Pool helpers: never queue_free tiles. Remove from tree and reuse later.
 func _acquire_tile() -> Tile:
@@ -467,6 +456,15 @@ func _input(event: InputEvent) -> void:
 			_toggle_free_cam()
 		elif event.keycode == KEY_F2:
 			Global.money = 1_000_000_000
+		elif event.keycode == KEY_F4:
+			# Max out everything
+			Global.damage = 999
+			Global.jetpackspeed = 1400
+			Global.width = 3.14
+			Global.particles_per_second = 1000
+			Global.particle_speed = 2000
+			Global.bullet_explosive_chance_level = 100
+			Global.bullet_explosive_size_level = 100
 
 func _toggle_free_cam() -> void:
 	var player_cam: Camera2D = the_guy.get_node("Camera2D")

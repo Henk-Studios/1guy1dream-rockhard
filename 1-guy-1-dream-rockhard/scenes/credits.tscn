@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://ccgicpw0bjxvq"]
+
+[ext_resource type="Script" uid="uid://ctnhpjw11yfx2" path="res://scripts/end_credits.gd" id="1_0bpdh"]
+[ext_resource type="PackedScene" uid="uid://d1u282k4ig2nu" path="res://scenes/title.tscn" id="2_2ckv8"]
+
+[node name="Credits" type="Control" unique_id=1299189433]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_0bpdh")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=893767457]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" parent="VBoxContainer" unique_id=1535050460 instance=ExtResource("2_2ckv8")]
+layout_mode = 2
+
+[node name="CreditsText" type="RichTextLabel" parent="VBoxContainer" unique_id=1057552560]
+z_index = -2
+custom_minimum_size = Vector2(500, 300)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 30
+text = "Congratulations, you beat the game.
+Thank you for playing.
+
+Jeroen Krijgsman - Slave Owner
+Pascal van Tilborg - Slave
+Quinten van Schelven - God Gamedev
+Ivo - Playtesting"
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TimeLabel" type="RichTextLabel" parent="VBoxContainer" unique_id=694917745]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 30
+bbcode_enabled = true
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 1

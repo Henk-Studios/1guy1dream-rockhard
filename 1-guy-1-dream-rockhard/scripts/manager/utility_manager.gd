@@ -4,12 +4,17 @@ class_name UtilityManager
 
 signal player_name_changed(new_name: String)
 signal tutorial_completed_changed(completed: bool)
+signal personal_record_updated(time_seconds: float)
 
 # Settings file path
 const SETTINGS_PATH := "user://game_settings.cfg"
+const PLAYER_DATA_PATH := "user://player_data.cfg"
 
 const UI_SECTION := "ui"
 const FPS_COUNTER_KEY := "fps_visible"
+
+const PLAYER_SECTION := "player"
+const PERSONAL_RECORD_KEY := "personal_record"
 
 var fps_visible: bool = false
 var fps_message_timer: Timer
@@ -88,6 +93,46 @@ func has_setting(section: String, key: String) -> bool:
 	"""Check if a setting exists"""
 	var config := ConfigFile.new()
 	var err := config.load(SETTINGS_PATH)
+	
+	if err == OK:
+		return config.has_section_key(section, key)
+	return false
+
+# Player Data Management
+
+func get_personal_record() -> float:
+	"""Get the player's personal best time in seconds. Returns INF if no record exists."""
+	return load_player_data(PLAYER_SECTION, PERSONAL_RECORD_KEY, INF)
+
+func set_personal_record(time_seconds: float) -> void:
+	"""Update the personal record if the new time is better (lower)"""
+	save_player_data(PLAYER_SECTION, PERSONAL_RECORD_KEY, time_seconds)
+	personal_record_updated.emit(time_seconds)
+
+func save_player_data(section: String, key: String, value: Variant) -> void:
+	"""Save player data to the player data file"""
+	var config := ConfigFile.new()
+	config.load(PLAYER_DATA_PATH) # Load existing data
+	config.set_value(section, key, value)
+	
+	var err := config.save(PLAYER_DATA_PATH)
+	if err != OK:
+		push_error("Failed to save player data: %s/%s" % [section, key])
+
+func load_player_data(section: String, key: String, default_value: Variant) -> Variant:
+	"""Load player data from the player data file"""
+	var config := ConfigFile.new()
+	var err := config.load(PLAYER_DATA_PATH)
+	
+	if err == OK:
+		return config.get_value(section, key, default_value)
+	else:
+		return default_value
+
+func has_player_data(section: String, key: String) -> bool:
+	"""Check if player data exists"""
+	var config := ConfigFile.new()
+	var err := config.load(PLAYER_DATA_PATH)
 	
 	if err == OK:
 		return config.has_section_key(section, key)

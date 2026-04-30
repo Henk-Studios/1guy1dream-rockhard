@@ -208,13 +208,10 @@ func buy_selected():
 
 	if Global.money < u["price"]:
 		return
-	else: 
+	else:
 		Global.money -= u["price"]
 
 	
-	
-	print("Bought:", u["name"])
-
 	# APPLY UPGRADE VALUE
 	u["value"] += u["increase"]
 
@@ -232,6 +229,5 @@ func buy_selected():
 	update_button_text(button)
 
 func buy_from_button(bint):
-	print("buybutton")
 	set_selected(bint)
 	buy_selected()

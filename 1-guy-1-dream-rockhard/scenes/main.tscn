@@ -20,15 +20,20 @@ script = ExtResource("2_eb6dy")
 stream = ExtResource("3_85g3d")
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
+[sub_resource type="Resource" id="Resource_0ld40"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("9_a8y0u")
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
+[sub_resource type="Resource" id="Resource_dp3eg"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("8_jkv2x")
+volume = 0.7
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
 [sub_resource type="Resource" id="Resource_jkv2x"]
 script = ExtResource("2_eb6dy")
 stream = ExtResource("4_choun")
-metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
-
-[sub_resource type="Resource" id="Resource_ya4ey"]
-script = ExtResource("2_eb6dy")
-stream = ExtResource("5_choun")
-volume = 0.5
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
 [sub_resource type="Resource" id="Resource_jbj1t"]
@@ -42,18 +47,14 @@ stream = ExtResource("7_a8y0u")
 volume = 0.6
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
-[sub_resource type="Resource" id="Resource_dp3eg"]
+[sub_resource type="Resource" id="Resource_ya4ey"]
 script = ExtResource("2_eb6dy")
-stream = ExtResource("8_jkv2x")
-volume = 0.7
-metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
-
-[sub_resource type="Resource" id="Resource_0ld40"]
-script = ExtResource("2_eb6dy")
-stream = ExtResource("9_a8y0u")
+stream = ExtResource("5_choun")
+volume = 0.5
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
 [node name="Main" type="Node" unique_id=767152644]
+process_mode = 3
 
 [node name="AudioManager" type="Node" parent="." unique_id=815207516]
 script = ExtResource("1_o5qli")
@@ -68,6 +69,7 @@ audio_properties = Dictionary[String, ExtResource("2_eb6dy")]({
 })
 
 [node name="SceneManager" type="Node" parent="." unique_id=1512345824]
+process_mode = 1
 script = ExtResource("2_0wfyh")
 main_scene_path = "res://scenes/main_menu.tscn"
 

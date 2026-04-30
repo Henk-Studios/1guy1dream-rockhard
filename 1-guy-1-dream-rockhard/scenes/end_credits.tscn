@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://bfxpoqdl6xdpx"]
+
+[ext_resource type="Script" uid="uid://ctnhpjw11yfx2" path="res://scripts/end_credits.gd" id="1_dhn2b"]
+
+[node name="EndCredits" type="ColorRect" unique_id=1700535052]
+process_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -1716.0
+offset_top = -1211.0
+offset_right = 1575.0
+offset_bottom = 1324.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+script = ExtResource("1_dhn2b")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="." unique_id=1418918087]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -430.5
+offset_top = -203.5
+offset_right = 584.5
+offset_bottom = 140.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/normal_font_size = 30
+text = "Congratulations, you beat the game.
+Thank you for playing.
+
+Jeroen Krijgsman - Slave Owner
+Pascal van Tilborg - Slave
+Quinten van Schelven - God Gamedev
+Ivo - Playtesting"
+horizontal_alignment = 1
+vertical_alignment = 1

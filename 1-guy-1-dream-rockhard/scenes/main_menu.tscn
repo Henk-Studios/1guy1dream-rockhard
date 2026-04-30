@@ -96,7 +96,7 @@ scale_amount_min = 0.0
 scale_amount_max = 0.1
 color_ramp = SubResource("Gradient_flqon")
 
-[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_button", "settings_button", "quit_button", "settings_menu")]
+[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_button", "settings_button", "quit_button", "seed_input", "settings_menu")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -109,6 +109,7 @@ script = ExtResource("1_yqeox")
 play_button = NodePath("Control/MenuContainer/VBoxContainer2/PlayButton")
 settings_button = NodePath("Control/MenuContainer/VBoxContainer2/SettingsButton")
 quit_button = NodePath("Control/MenuContainer/VBoxContainer2/QuitButton")
+seed_input = NodePath("Control/MenuContainer/VBoxContainer2/LineEdit")
 settings_menu = NodePath("SettingsMenu")
 
 [node name="Vignette" type="ColorRect" parent="CanvasLayer/Menu" unique_id=1123369898]
@@ -161,6 +162,11 @@ size_flags_horizontal = 4
 theme = SubResource("Theme_lgwnu")
 text = "Play game"
 flat = true
+
+[node name="LineEdit" type="LineEdit" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=1915889]
+layout_mode = 2
+placeholder_text = "Seed"
+alignment = 1
 
 [node name="SettingsButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=420548488]
 unique_name_in_owner = true

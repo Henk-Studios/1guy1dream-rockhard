@@ -12,6 +12,12 @@ func spawn_particles_at(pos: Vector2, count: int, color: Color) -> void:
 			particle.global_position = pos
 			particle.emitting = true
 
+func put_particle_at(pos: Vector2) -> CPUParticles2D:
+	var particle = _get_available_particle()
+	if particle:
+		particle.global_position = pos
+	return particle
+
 
 func _get_available_particle() -> CPUParticles2D:
 	for child in get_children():
