@@ -68,15 +68,13 @@ var broken_by_group: Dictionary = {}
 
 var tile_pool: Array[Tile] = []
 
-var _explosion_audio: AudioStreamPlayer
-var _music_audio: AudioStreamPlayer
-
 var _timer_label: Label
 var _elapsed: float = 0.0
 var _timer_frozen: bool = false
-
+@export var tile_scene: PackedScene
 @onready var the_guy: Node2D = $TheGuy
 @onready var free_cam: Camera2D = $FreeCam
+@onready var break_particle_pool: Node2D = $BreakParticlePool
 var _last_streamed_chunk: Vector2i = Vector2i(-2147483648, -2147483648)
 
 func _ready() -> void:
@@ -318,14 +316,14 @@ func _do_break(cell: Vector2i, damage: int, chain_depth: int) -> void:
 		return
 	var tile: Tile = active_tiles[cell]
 	if hp_lost < Tile.HP[tile.tile_type]:
+		tile.animate_hit(hp_lost)
 		return
-
 	var was_explosive: bool = tile.tile_type == Tile.Type.EXPLOSIVE
 	Global.money += Tile.COIN_VALUES[tile.tile_type]
 	active_tiles.erase(cell)
 	if loaded_chunks.has(chunk):
 		loaded_chunks[chunk].erase(cell)
-	_release_tile(tile)
+	_release_tile(tile, true)
 
 	if was_explosive:
 		_explode(cell, chain_depth)
@@ -355,16 +353,11 @@ func _explode(center: Vector2i, chain_depth: int) -> void:
 		_do_break(c, EXPLOSION_OVERKILL, chain_depth + 1)
 
 func _setup_audio() -> void:
-	_explosion_audio = AudioStreamPlayer.new()
-	_explosion_audio.stream = load("res://audio/freesound_community-small-explosion-103931.mp3")
-	_explosion_audio.volume_db = -4
-	add_child(_explosion_audio)
 	if Global.has_signal("credits"):
 		Global.credits.connect(_on_credits)
 
 func _on_credits() -> void:
-	if _music_audio:
-		_music_audio.stop()
+	Manager.audio.stop_music()
 	_timer_frozen = true
 
 func _setup_timer_overlay() -> void:
@@ -422,8 +415,7 @@ func _format_time(seconds: float) -> String:
 	return "%02d:%02d.%02d" % [minutes, secs, cs]
 
 func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
-	if _explosion_audio:
-		_explosion_audio.play()
+	Manager.audio.play_explosion_sfx()
 	var p := CPUParticles2D.new()
 	p.position = Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0)
 	p.one_shot = true
@@ -451,10 +443,12 @@ func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
 # Pool helpers: never queue_free tiles. Remove from tree and reuse later.
 func _acquire_tile() -> Tile:
 	if tile_pool.is_empty():
-		return Tile.new()
+		return tile_scene.instantiate() as Tile
 	return tile_pool.pop_back()
 
-func _release_tile(tile: Tile) -> void:
+func _release_tile(tile: Tile, animate: bool = false) -> void:
+	if animate:
+		await tile.animate_break()
 	remove_child(tile)
 	tile_pool.append(tile)
 

@@ -6,18 +6,20 @@ var use_mouse := true
 @export var particle_scene: PackedScene
 
 var _spawn_accumulator := 0.0
-var _shoot_audio: AudioStreamPlayer
-
-func _ready() -> void:
-	_shoot_audio = AudioStreamPlayer.new()
-	_shoot_audio.stream = load("res://audio/laserShoot.wav")
-	_shoot_audio.volume_db = -6
-	add_child(_shoot_audio)
+var sprite_offset_1: Vector2 = Vector2(300, -512)
+var sprite_offset_2: Vector2 = Vector2(-300, -512)
+@onready var sprite = $Sprite2D
 
 func _process(delta):
 	var direction = get_aim_direction()
-	rotation = direction.angle()
-	# $Sprite2D.flip_v = direction.x > 0
+	global_rotation = direction.angle()
+	if direction.x > 0:
+		sprite.flip_h = true
+		sprite.offset = sprite_offset_2
+	else:
+		global_rotation += PI
+		sprite.flip_h = false
+		sprite.offset = sprite_offset_1
 	if direction == Vector2.ZERO:
 		return
 
@@ -25,7 +27,7 @@ func _process(delta):
 
 	while _spawn_accumulator >= 1.0:
 		_spawn_accumulator -= 1.0
-		spawn_particle(direction)
+		shoot(direction)
 
 
 func get_aim_direction() -> Vector2:
@@ -40,7 +42,7 @@ func get_aim_direction() -> Vector2:
 		return input_vec.normalized()
 
 
-func spawn_particle(base_direction: Vector2):
+func shoot(base_direction: Vector2):
 	var particle = particle_scene.instantiate()
 	Manager.scene.current_scene.add_child(particle)
 
@@ -53,5 +55,14 @@ func spawn_particle(base_direction: Vector2):
 
 	particle.initialize(final_dir * Global.particle_speed)
 
-	if _shoot_audio:
-		_shoot_audio.play()
+	Manager.audio.play_shoot_sfx()
+	
+	# animate recoil by briefly moving the sprite in the opposite direction
+	var recoil_distance = 100.0
+	var recoil_x = - final_dir.x * recoil_distance
+	
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite, "position:x", recoil_x, 0.05)
+	tween.tween_property(sprite, "position:x", 0.0, 0.1)

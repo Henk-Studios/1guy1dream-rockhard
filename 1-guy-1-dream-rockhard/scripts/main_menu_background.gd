@@ -57,6 +57,8 @@ var generated_cells: Dictionary = {} # Vector2i(grid_x, grid_y) -> true
 const REFERENCE_WIDTH := 1152.0
 const BASE_ZOOM := 0.9
 
+@export var tile_scene: PackedScene
+
 func _ready() -> void:
 	world_seed = randi()
 	_setup_noise()
@@ -261,7 +263,7 @@ func _update_tile_positions() -> void:
 # Object pooling
 func _acquire_tile() -> Tile:
 	if tile_pool.is_empty():
-		return Tile.new()
+		return tile_scene.instantiate() as Tile
 	return tile_pool.pop_back()
 
 func _release_tile(tile: Tile) -> void:

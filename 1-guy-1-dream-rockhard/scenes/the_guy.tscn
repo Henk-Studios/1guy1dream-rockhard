@@ -6,11 +6,11 @@
 [ext_resource type="Texture2D" uid="uid://dqhj4e4vxpd2i" path="res://textures/ragged stone.png" id="4_lghrq"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_wuybt"]
-radius = 32.01562
+radius = 12.08
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_lghrq"]
-radius = 9.980688
-height = 47.978737
+radius = 4.0
+height = 19.2
 
 [sub_resource type="Gradient" id="Gradient_lghrq"]
 offsets = PackedFloat32Array(0, 0.9581281)
@@ -23,26 +23,29 @@ gravity_scale = 0.834
 script = ExtResource("1_mtops")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1888951784]
-position = Vector2(-0.9999981, 3.999998)
-scale = Vector2(0.05, 0.05)
+position = Vector2(0, 4)
+scale = Vector2(0.02, 0.02)
 texture = ExtResource("2_mtops")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1438068098]
-position = Vector2(-2, 15)
+position = Vector2(0, 6)
 shape = SubResource("CircleShape2D_wuybt")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1949905347]
+zoom = Vector2(2.5, 2.5)
 
 [node name="square" type="CollisionShape2D" parent="." unique_id=1096005966]
-position = Vector2(-2, 37.000004)
+position = Vector2(0, 14.8)
 rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_lghrq")
 
 [node name="the_gun" parent="." unique_id=247112652 instance=ExtResource("3_wuybt")]
+position = Vector2(-3, 12)
+scale = Vector2(0.02, 0.02)
 
 [node name="jetpart" type="CPUParticles2D" parent="." unique_id=1323313036]
 z_index = -1
-position = Vector2(-2, 51)
+position = Vector2(0, 25)
 amount = 50
 texture = ExtResource("4_lghrq")
 direction = Vector2(0, 1)

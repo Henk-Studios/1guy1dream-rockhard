@@ -4,7 +4,7 @@ class_name Tile
 enum Type {GRASS, DIRT, STONE_1, STONE_2, STONE_3, STONE_4, STONE_5, GOLD, DIAMOND, EMERALD, EXPLOSIVE}
 
 const TILE_SIZE := 16
-const SPRITE_SCALE := 2.5
+const SPRITE_SCALE := 0.01
 
 const STONE_TEXTURES: Array[Texture2D] = [
 	preload("res://textures/ugly stone.png"),
@@ -60,7 +60,8 @@ const COIN_VALUES := {
 	Type.EXPLOSIVE: 0,
 }
 
-static var SHARED_SHAPE: RectangleShape2D = null
+@onready var _shape_node: CollisionShape2D = $CollisionShape2D
+@onready var _sprite_node: Sprite2D = $Sprite2D
 
 var tile_type: Type = Type.STONE_3
 var sprite_angle: float = 0.0
@@ -68,40 +69,35 @@ var texture_index: int = 0
 var cell: Vector2i = Vector2i.ZERO
 var context_tile_size: int = TILE_SIZE
 
-var _sprite: Sprite2D = null
-
 func configure(type: Type, angle: float, tex_idx: int, cell_: Vector2i, tile_size: int = TILE_SIZE) -> void:
 	tile_type = type
 	sprite_angle = angle
 	texture_index = tex_idx
 	cell = cell_
 	context_tile_size = tile_size
-	if _sprite != null:
-		_apply_visual() # reuse path: update existing sprite immediately
+	if _sprite_node:
+		_apply_visual()
 
 func _ready() -> void:
-	if _sprite != null:
-		# Already built in a previous life (pooled then re-added). Just refresh.
-		_apply_visual()
-		return
-	if SHARED_SHAPE == null:
-		SHARED_SHAPE = RectangleShape2D.new()
-		SHARED_SHAPE.size = Vector2(TILE_SIZE, TILE_SIZE)
-	var shape_node := CollisionShape2D.new()
-	shape_node.shape = SHARED_SHAPE
-	add_child(shape_node)
-
-	_sprite = Sprite2D.new()
-	add_child(_sprite)
+	_shape_node.shape.size = Vector2(context_tile_size, context_tile_size)
+	_sprite_node.scale = Vector2(float(context_tile_size) / 400, float(context_tile_size) / 400)
 	_apply_visual()
 
 func _apply_visual() -> void:
 	if tile_type == Type.GRASS or tile_type == Type.DIRT:
-		_sprite.texture = ROUNDISH_STONE
+		_sprite_node.texture = ROUNDISH_STONE
 	else:
-		_sprite.texture = STONE_TEXTURES[texture_index % STONE_TEXTURES.size()]
-	_sprite.modulate = COLORS[tile_type]
-	_sprite.rotation = sprite_angle
-	var tex_size := _sprite.texture.get_size()
-	var target: float = context_tile_size * SPRITE_SCALE
-	_sprite.scale = Vector2(target / tex_size.x, target / tex_size.y)
+		_sprite_node.texture = STONE_TEXTURES[texture_index % STONE_TEXTURES.size()]
+	_sprite_node.modulate = COLORS[tile_type]
+	_sprite_node.rotation = sprite_angle
+
+func animate_hit(hp_lost: int) -> void:
+	# reduce size more and more based on damage taken, with a minimum size limit
+	var damage_ratio: float = clampf(float(hp_lost) / float(HP[tile_type]), 0.0, 1.0)
+	var scale_factor: float = 1.0 - damage_ratio * 0.5
+	_sprite_node.scale = Vector2(float(context_tile_size) / 400, float(context_tile_size) / 400) * scale_factor
+	Manager.scene.current_scene.break_particle_pool.spawn_particles_at(global_position, 1, COLORS[tile_type])
+
+func animate_break() -> void:
+	Manager.scene.current_scene.break_particle_pool.spawn_particles_at(global_position, 3, COLORS[tile_type])
+	return

@@ -8,7 +8,11 @@
 [ext_resource type="AudioStream" uid="uid://0kts67wut2vi" path="res://sounds/hover.wav" id="4_choun"]
 [ext_resource type="Script" uid="uid://ccj6uygo18pgu" path="res://scripts/manager/message_manager.gd" id="4_jyhfs"]
 [ext_resource type="AudioStream" uid="uid://um4f2uhc28dh" path="res://audio/djartmusic-8-bit-console-from-my-childhood-301286.mp3" id="5_choun"]
+[ext_resource type="AudioStream" uid="uid://c05p3do0x32v6" path="res://audio/jetfart.mp3" id="6_trceg"]
+[ext_resource type="AudioStream" uid="uid://bdwjpu85epwox" path="res://audio/laserShoot.wav" id="7_a8y0u"]
+[ext_resource type="AudioStream" uid="uid://csueundcky6ww" path="res://audio/freesound_community-small-explosion-103931.mp3" id="8_jkv2x"]
 [ext_resource type="Script" uid="uid://dluweam0ku7ds" path="res://scripts/manager/time_manager.gd" id="8_tipki"]
+[ext_resource type="AudioStream" uid="uid://d3ms3p1nfc2tp" path="res://audio/Opname (4).mp3" id="9_a8y0u"]
 [ext_resource type="PackedScene" uid="uid://bthktpr27skpx" path="res://scenes/splash_screen.tscn" id="11_a8y0u"]
 
 [sub_resource type="Resource" id="Resource_a8y0u"]
@@ -27,13 +31,39 @@ stream = ExtResource("5_choun")
 volume = 0.5
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
+[sub_resource type="Resource" id="Resource_jbj1t"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("6_trceg")
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
+[sub_resource type="Resource" id="Resource_muem4"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("7_a8y0u")
+volume = 0.6
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
+[sub_resource type="Resource" id="Resource_dp3eg"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("8_jkv2x")
+volume = 0.7
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
+[sub_resource type="Resource" id="Resource_0ld40"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("9_a8y0u")
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
 [node name="Main" type="Node" unique_id=767152644]
 
 [node name="AudioManager" type="Node" parent="." unique_id=815207516]
 script = ExtResource("1_o5qli")
 audio_properties = Dictionary[String, ExtResource("2_eb6dy")]({
 "click": SubResource("Resource_a8y0u"),
+"credits": SubResource("Resource_0ld40"),
+"explosion": SubResource("Resource_dp3eg"),
 "hover": SubResource("Resource_jkv2x"),
+"jetfart": SubResource("Resource_jbj1t"),
+"shoot": SubResource("Resource_muem4"),
 "upbeat_music": SubResource("Resource_ya4ey")
 })
 
