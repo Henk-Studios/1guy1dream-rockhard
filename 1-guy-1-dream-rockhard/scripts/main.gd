@@ -141,7 +141,7 @@ func _process(_delta: float) -> void:
 		_elapsed += _delta
 	if _timer_label:
 		_timer_label.text = _format_time(_elapsed)
-
+	_apply_resolution_zoom()
 	var tracking_pos: Vector2
 	if free_cam.is_current():
 		tracking_pos = free_cam.global_position
@@ -403,7 +403,7 @@ const BASE_ZOOM := .9
 func _apply_resolution_zoom() -> void:
 	var w: float = get_viewport_rect().size.x
 	var factor: float = maxf(w / REFERENCE_WIDTH, 0.1)
-	var z := Vector2(BASE_ZOOM * factor, BASE_ZOOM * factor)
+	var z := Vector2(BASE_ZOOM * factor, BASE_ZOOM * factor) / Global.vision
 	if the_guy and the_guy.has_node("Camera2D"):
 		the_guy.get_node("Camera2D").zoom = z
 	if free_cam:

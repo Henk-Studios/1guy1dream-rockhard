@@ -234,7 +234,7 @@ func is_music_playing() -> bool:
 
 # Sound Effects Management
 
-func play_sfx(key: String, force: bool = false) -> void:
+func play_sfx(key: String, force: bool = false, pitch_scale: float = 1.0) -> void:
 	if not audio_properties.has(key):
 		print("Warning: No audio for key ", key)
 		return
@@ -250,11 +250,12 @@ func play_sfx(key: String, force: bool = false) -> void:
 	
 	player.stream = props.stream
 	player.volume_db = linear_to_db(props.volume)
+	player.pitch_scale = pitch_scale
 	player.finished.connect(_on_sfx_finished.bind(player, key))
 	player.play()
 	await player.finished
 
-func play_sfx_at_position(key: String, position: Vector3, max_distance: float = 0.0, force: bool = false) -> void:
+func play_sfx_at_position(key: String, position: Vector3, max_distance: float = 0.0, force: bool = false, pitch_scale: float = 1.0) -> void:
 	if not audio_properties.has(key):
 		print("Warning: No audio for key ", key)
 		return
@@ -271,6 +272,7 @@ func play_sfx_at_position(key: String, position: Vector3, max_distance: float = 
 	player.stream = props.stream
 	player.position = position
 	player.volume_db = linear_to_db(props.volume)
+	player.pitch_scale = pitch_scale
 	
 	if max_distance > 0.0:
 		player.max_distance = max_distance
@@ -343,10 +345,11 @@ func _cleanup_sfx_3d_players() -> void:
 
 # Looping Sound Effects Management
 
-func play_looping_sfx(key: String, loop_id: String, force: bool = false) -> void:
+func play_looping_sfx(key: String, loop_id: String, force: bool = false, pitch_scale: float = 1.0) -> void:
 	"""Play a looping SFX that can be controlled independently
 	loop_id: Unique identifier for this looping sound instance
 	force: If true, allows exceeding the 40-player limit
+	pitch_scale: Pitch multiplier for the sound (1.0 = normal, 0.5 = half, 2.0 = double)
 	"""
 	if not audio_properties.has(key):
 		print("Warning: No audio for key ", key)
@@ -367,6 +370,7 @@ func play_looping_sfx(key: String, loop_id: String, force: bool = false) -> void
 	
 	player.stream = props.stream
 	player.volume_db = linear_to_db(props.volume)
+	player.pitch_scale = pitch_scale
 	player.stream_paused = false
 	player.play()
 	looping_sfx_players[loop_id] = player
@@ -410,10 +414,11 @@ func is_looping_sfx_playing(loop_id: String) -> bool:
 	var player = looping_sfx_players[loop_id]
 	return player and player.playing and not player.stream_paused
 
-func play_looping_sfx_at_position(key: String, loop_id: String, position: Vector3, max_distance: float = 0.0, force: bool = false) -> void:
+func play_looping_sfx_at_position(key: String, loop_id: String, position: Vector3, max_distance: float = 0.0, force: bool = false, pitch_scale: float = 1.0) -> void:
 	"""Play a 3D looping SFX that can be controlled independently
 	loop_id: Unique identifier for this looping sound instance
 	force: If true, allows exceeding the 40-player limit
+	pitch_scale: Pitch multiplier for the sound (1.0 = normal, 0.5 = half, 2.0 = double)
 	"""
 	if not audio_properties.has(key):
 		print("Warning: No audio for key ", key)
@@ -435,6 +440,7 @@ func play_looping_sfx_at_position(key: String, loop_id: String, position: Vector
 	player.stream = props.stream
 	player.position = position
 	player.volume_db = linear_to_db(props.volume)
+	player.pitch_scale = pitch_scale
 	player.stream_paused = false
 	
 	if max_distance > 0.0:
@@ -530,27 +536,44 @@ func play_main_music() -> void:
 func play_credit_music() -> void:
 	await play_music("credits", true)
 
-func play_click_sfx() -> void:
-	await play_sfx("click")
+func play_click_sfx(pitch_scale: float = 1.0) -> void:
+	await play_sfx("click", false, pitch_scale)
 
-func play_hover_sfx() -> void:
-	await play_sfx("hover")
+func play_hover_sfx(pitch_scale: float = 1.0) -> void:
+	await play_sfx("hover", false, pitch_scale)
 
-func play_click_sfx_at_pos(pos: Vector3) -> void:
-	await play_sfx_at_position("click", pos)
+func play_click_sfx_at_pos(pos: Vector3, pitch_scale: float = 1.0) -> void:
+	await play_sfx_at_position("click", pos, 0.0, false, pitch_scale)
 
-func play_hover_sfx_at_pos(pos: Vector3) -> void:
-	await play_sfx_at_position("hover", pos)
+func play_hover_sfx_at_pos(pos: Vector3, pitch_scale: float = 1.0) -> void:
+	await play_sfx_at_position("hover", pos, 0.0, false, pitch_scale)
 
-func play_explosion_sfx() -> void:
-	await play_sfx("explosion")
+func play_explosion_sfx(pitch_scale: float = 1.0) -> void:
+	await play_sfx("explosion", false, pitch_scale)
 
 func play_shoot_sfx() -> void:
-	await play_sfx("shoot")
+	# random pitch
+	var pitch_scale = randf_range(0.9, 1.1)
+	await play_sfx("shoot", false, pitch_scale)
 
-func start_jetfart_sfx(loop_id: String) -> void:
+func start_jetfart_sfx(loop_id: String, pitch_scale: float = 1.0) -> void:
 	print("Starting jetfart sfx with loop_id: " + loop_id)
-	await play_looping_sfx("jetfart", loop_id)
+	await play_looping_sfx("jetfart", loop_id, false, pitch_scale)
 
 func stop_jetfart_sfx(loop_id: String) -> void:
 	stop_looping_sfx(loop_id)
+
+func play_bling_sfx(pitch_scale: float = 1.0) -> void:
+	# play random bling sound from bling_1 to bling_4
+	var bling_index = randi() % 4 + 1
+	await play_sfx("bling%d" % bling_index, false, pitch_scale)
+
+func play_dirt_sfx(pitch_scale: float = 1.0) -> void:
+	# play random dirt sound from dirt_1 to dirt_5
+	var dirt_index = randi() % 5 + 1
+	await play_sfx("dirt%d" % dirt_index, false, pitch_scale)
+
+func play_rock_sfx(pitch_scale: float = 1.0) -> void:
+	# play random rock sound from rock_1 to rock_6
+	var rock_index = randi() % 6 + 1
+	await play_sfx("rock%d" % rock_index, false, pitch_scale)

@@ -1,22 +1,37 @@
 [gd_scene format=3 uid="uid://c2ap1kbaxqjaj"]
 
-[ext_resource type="Texture2D" uid="uid://dqhj4e4vxpd2i" path="res://textures/ragged stone.png" id="1_njl8w"]
+[ext_resource type="Texture2D" uid="uid://bglf3ok8w66pe" path="res://textures/roundish stone.png" id="2_wwmxv"]
 [ext_resource type="Script" uid="uid://c2lua3dp3ikjo" path="res://scripts/shoot_particles.gd" id="2_yorcp"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_yorcp"]
 
+[sub_resource type="Gradient" id="Gradient_wwmxv"]
+offsets = PackedFloat32Array(0, 0.08169935, 1)
+colors = PackedColorArray(1, 1, 1, 1, 1, 0, 1, 1, 0.75416094, 0.46497518, 0.98921806, 1)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_tuu48"]
+gradient = SubResource("Gradient_wwmxv")
+
+[sub_resource type="Curve" id="Curve_wwmxv"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.50783), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="CurveTexture" id="CurveTexture_tuu48"]
+curve = SubResource("Curve_wwmxv")
+
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_yorcp"]
 particle_flag_disable_z = true
-angle_min = 1.0728835e-05
-angle_max = 360.00003
+angle_min = -720.0
+angle_max = 720.0
 gravity = Vector3(0, 0, 0)
-radial_accel_min = -2.2351742e-06
-radial_accel_max = 9.999997
-tangential_accel_min = -2.2351742e-06
-tangential_accel_max = 9.999997
+radial_accel_min = -1000.0
+radial_accel_max = -1000.0
+tangential_accel_min = 99.99999
+tangential_accel_max = 99.99999
 scale_min = 0.02
 scale_max = 0.02
-color = Color(0.9999991, 0.33603007, 0.8093048, 1)
+scale_curve = SubResource("CurveTexture_tuu48")
+color_ramp = SubResource("GradientTexture1D_tuu48")
 
 [node name="bullet" type="CharacterBody2D" unique_id=1809960514 node_paths=PackedStringArray("timer")]
 scale = Vector2(0.4, 0.4)
@@ -28,8 +43,10 @@ timer = NodePath("Timer")
 shape = SubResource("CircleShape2D_yorcp")
 
 [node name="ShootPartices" type="GPUParticles2D" parent="." unique_id=574300877]
-amount = 6
-texture = ExtResource("1_njl8w")
+amount = 1
+texture = ExtResource("2_wwmxv")
+lifetime = 5.0
+explosiveness = 1.0
 local_coords = true
 process_material = SubResource("ParticleProcessMaterial_yorcp")
 

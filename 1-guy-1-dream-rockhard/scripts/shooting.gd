@@ -4,23 +4,34 @@ extends Node2D
 var use_mouse := true
 
 @export var particle_scene: PackedScene
-
+@export var muzzle_particles: Array[CPUParticles2D]
 var _spawn_accumulator := 0.0
 var sprite_offset_1: Vector2 = Vector2(300, -512)
 var sprite_offset_2: Vector2 = Vector2(-300, -512)
 @onready var sprite = $Sprite2D
+var prev_aim_direction: Vector2 = Vector2.ZERO
 
 func _process(delta):
 	var direction = get_aim_direction()
+	prev_aim_direction = direction
 	global_rotation = direction.angle()
 	if direction.x > 0:
 		sprite.flip_h = true
 		sprite.offset = sprite_offset_2
+		for particles in muzzle_particles:
+			particles.rotation = 0
+			particles.position.x = 700
 	else:
 		global_rotation += PI
 		sprite.flip_h = false
 		sprite.offset = sprite_offset_1
+		for particles in muzzle_particles:
+			particles.rotation = PI
+			particles.position.x = -700
 	if direction == Vector2.ZERO:
+		sprite.flip_h = false
+		sprite.offset = sprite_offset_1
+		global_rotation = 0
 		return
 
 	_spawn_accumulator += Global.particles_per_second * delta
@@ -39,13 +50,20 @@ func get_aim_direction() -> Vector2:
 			Input.get_action_strength("aim_right") - Input.get_action_strength("aim_left"),
 			Input.get_action_strength("aim_down") - Input.get_action_strength("aim_up")
 		)
+		
 		return input_vec.normalized()
 
 
 func shoot(base_direction: Vector2):
 	var particle = particle_scene.instantiate()
 	Manager.scene.current_scene.add_child(particle)
-
+	# Choose the first shoot particle that is not currently emitting, or default to the first one if all are busy
+	var shoot_particle
+	for p in muzzle_particles:
+		if not p.emitting:
+			shoot_particle = p
+			break
+	shoot_particle.emitting = true
 	particle.global_position = global_position
 
 	# Random angle within cone

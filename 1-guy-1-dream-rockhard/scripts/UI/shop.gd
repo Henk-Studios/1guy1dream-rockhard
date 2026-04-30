@@ -2,7 +2,7 @@ extends Control
 
 @export var button_scene: PackedScene
 @export var radius := 200.0
-@export var options_to_show := 7
+@export var options_to_show := 8
 
 var buttons: Array = []
 var shop_open := false
@@ -17,7 +17,8 @@ var upgrades := {
 		"increase": 100,
 		"price": 50,
 		"price_add": 5,
-		"price_mult": 1.4
+		"price_mult": 1.4,
+		"max": 999
 		
 	},
 	"bulletspeed": {
@@ -27,7 +28,8 @@ var upgrades := {
 		"increase": 50,
 		"price": 30,
 		"price_add": 0,
-		"price_mult": 1.5
+		"price_mult": 1.5,
+		"max": 999
 	},
 	"width": {
 		"name": "Spray",
@@ -36,7 +38,8 @@ var upgrades := {
 		"increase": 0.1,
 		"price": 300,
 		"price_add": 100,
-		"price_mult": 2
+		"price_mult": 2,
+		"max": 3.1
 	},
 	"particles_per_second": {
 		"name": "Bullet Amount",
@@ -45,7 +48,8 @@ var upgrades := {
 		"increase": .5,
 		"price": 50,
 		"price_add": 20,
-		"price_mult": 1.1
+		"price_mult": 1.1,
+		"max": 999
 	},
 	"explosive_chance": {
 		"name": "Explosive Chance",
@@ -54,7 +58,8 @@ var upgrades := {
 		"increase": 1,
 		"price": 5000,
 		"price_add": 1000,
-		"price_mult": 1.2
+		"price_mult": 1.2,
+		"max": 100
 	},
 	"explosive_size": {
 		"name": "Explosion Size",
@@ -63,7 +68,8 @@ var upgrades := {
 		"increase": .5,
 		"price": 6000,
 		"price_add": 750,
-		"price_mult": 1.2
+		"price_mult": 1.2,
+		"max": 999
 	},
 	"damage": {
 		"name": "Bullet Damage",
@@ -72,7 +78,18 @@ var upgrades := {
 		"increase": 1,
 		"price": 10,
 		"price_add": 30,
-		"price_mult": 1.05
+		"price_mult": 1.05,
+		"max": 999
+	},
+	"vision": {
+		"name": "Vision",
+		"target": "vision",
+		"value": 0.3,
+		"increase": 0.1,
+		"price": 200,
+		"price_add": 50,
+		"price_mult": 1.2,
+		"max": 1.0
 	}
 }
 
@@ -206,6 +223,10 @@ func buy_selected():
 	var key = button.upgrade_key
 	var u = upgrades[key]
 
+	# Check if upgrade is at maximum
+	if u["value"] + u["increase"] > u["max"]:
+		return
+	
 	if Global.money < u["price"]:
 		return
 	else:

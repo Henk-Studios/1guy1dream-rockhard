@@ -80,7 +80,6 @@ func configure(type: Type, angle: float, tex_idx: int, cell_: Vector2i, tile_siz
 
 func _ready() -> void:
 	_shape_node.shape.size = Vector2(context_tile_size, context_tile_size)
-	_sprite_node.scale = Vector2(float(context_tile_size) / 400, float(context_tile_size) / 400)
 	_apply_visual()
 
 func _apply_visual() -> void:
@@ -88,6 +87,7 @@ func _apply_visual() -> void:
 		_sprite_node.texture = ROUNDISH_STONE
 	else:
 		_sprite_node.texture = STONE_TEXTURES[texture_index % STONE_TEXTURES.size()]
+	_sprite_node.scale = Vector2(float(context_tile_size) / 400, float(context_tile_size) / 400)
 	_sprite_node.modulate = COLORS[tile_type]
 	_sprite_node.rotation = sprite_angle
 
@@ -96,8 +96,32 @@ func animate_hit(hp_lost: int) -> void:
 	var damage_ratio: float = clampf(float(hp_lost) / float(HP[tile_type]), 0.0, 1.0)
 	var scale_factor: float = 1.0 - damage_ratio * 0.5
 	_sprite_node.scale = Vector2(float(context_tile_size) / 400, float(context_tile_size) / 400) * scale_factor
+	play_sfx()
 	Manager.scene.current_scene.break_particle_pool.spawn_particles_at(global_position, 1, COLORS[tile_type])
 
+
 func animate_break() -> void:
+	play_sfx()
 	Manager.scene.current_scene.break_particle_pool.spawn_particles_at(global_position, 3, COLORS[tile_type])
 	return
+
+func play_sfx() -> void:
+	match tile_type:
+		Type.GRASS, Type.DIRT:
+			Manager.audio.play_dirt_sfx()
+		Type.STONE_1:
+			Manager.audio.play_rock_sfx(0.4)
+		Type.STONE_2:
+			Manager.audio.play_rock_sfx(0.55)
+		Type.STONE_3:
+			Manager.audio.play_rock_sfx(0.7)
+		Type.STONE_4:
+			Manager.audio.play_rock_sfx(0.85)
+		Type.STONE_5:
+			Manager.audio.play_rock_sfx(1.0)
+		Type.GOLD:
+			Manager.audio.play_bling_sfx(1.0)
+		Type.DIAMOND:
+			Manager.audio.play_bling_sfx(0.8)
+		Type.EMERALD:
+			Manager.audio.play_bling_sfx(0.6)
