@@ -1,4 +1,13 @@
 extends Node2D
+class_name ParticlePool
+@export var pool_size: int = 20
+@export var particle_scene: PackedScene
+
+func _ready():
+	for i in range(pool_size):
+		var particle = particle_scene.instantiate()
+		add_child(particle)
+		particle.emitting = false
 
 func spawn_particles_at(pos: Vector2, count: int, color: Color) -> void:
 	for i in range(count):

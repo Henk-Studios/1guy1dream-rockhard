@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://c4qt5xjbrg2sq"]
+
+[ext_resource type="Script" uid="uid://c4xhqmljvclk3" path="res://scripts/radial_menu.gd" id="1_a2ygn"]
+[ext_resource type="PackedScene" uid="uid://cua3d057yuhi" path="res://scenes/wheel_button.tscn" id="2_ycxv0"]
+
+[node name="RadialMenu" type="Node2D" unique_id=816008284]
+script = ExtResource("1_a2ygn")
+button_scene = ExtResource("2_ycxv0")
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="." unique_id=1749091159]
+copy_mode = 2

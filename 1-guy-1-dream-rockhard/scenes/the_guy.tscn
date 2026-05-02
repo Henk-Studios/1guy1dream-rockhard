@@ -46,6 +46,7 @@ scale = Vector2(0.02, 0.02)
 [node name="jetpart" type="CPUParticles2D" parent="." unique_id=1323313036]
 z_index = -1
 position = Vector2(0, 25)
+emitting = false
 amount = 50
 texture = ExtResource("4_lghrq")
 direction = Vector2(0, 1)

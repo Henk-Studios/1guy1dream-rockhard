@@ -2,12 +2,17 @@ extends Node
 
 signal credits
 var creditsreached = false
-
+var shop_open := false
 var jetpackspeed = 700
+signal money_changed(money)
 
-
-var money = 0
+var money: int:
+    set(value):
+        money = value
+        money_changed.emit(money)
 var damage = 1
+var piercing = 0
+var ricochet = 0
 var width := 0.1 # cone half-angle (radians)
 var particles_per_second := 5
 var particle_speed := 300.0

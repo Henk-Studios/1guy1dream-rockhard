@@ -97,6 +97,7 @@ func animate_hit(hp_lost: int) -> void:
 	var scale_factor: float = 1.0 - damage_ratio * 0.5
 	_sprite_node.scale = Vector2(float(context_tile_size) / 400, float(context_tile_size) / 400) * scale_factor
 	play_sfx()
+	# shake()
 	Manager.scene.current_scene.break_particle_pool.spawn_particles_at(global_position, 1, COLORS[tile_type])
 
 
@@ -125,3 +126,16 @@ func play_sfx() -> void:
 			Manager.audio.play_bling_sfx(0.8)
 		Type.EMERALD:
 			Manager.audio.play_bling_sfx(0.6)
+
+# func shake() -> void:
+# 	var original_position = global_position
+# 	var shake_amount = 1.5
+# 	var tween = create_tween()
+# 	tween.set_trans(Tween.TRANS_SINE)
+# 	tween.set_ease(Tween.EASE_IN_OUT)
+	
+# 	for i in range(4):
+# 		var random_offset = Vector2(randf_range(-shake_amount, shake_amount), randf_range(-shake_amount, shake_amount))
+# 		tween.tween_property(_sprite_node, "global_position", original_position + random_offset, 0.025)
+# 	tween.tween_callback(func(): global_position = original_position)
+# 	return

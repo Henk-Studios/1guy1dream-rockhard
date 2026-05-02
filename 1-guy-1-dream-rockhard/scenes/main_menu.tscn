@@ -26,6 +26,8 @@ shader_parameter/vignette_color = Color(0, 0, 0, 1)
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_oa1go"]
 shader = ExtResource("4_rtw2f")
 shader_parameter/lod = 2.398000113905
+shader_parameter/mix_color = Color(1, 1, 1, 1)
+shader_parameter/add_color = Color(0, 0, 0, 0)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5dd4i"]
 content_margin_left = 4.0
@@ -59,7 +61,7 @@ scale = Vector2(1.225, 1.225)
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1864605010]
 
 [node name="TheGuy" type="Node2D" parent="CanvasLayer" unique_id=377845684]
-z_index = 190
+z_index = 1
 position = Vector2(718, 284.99997)
 rotation = 0.5846056
 scale = Vector2(2.185, 2.185)
@@ -208,4 +210,5 @@ label_settings = SubResource("LabelSettings_616w3")
 [node name="SettingsMenu" parent="CanvasLayer/Menu" unique_id=1557815145 instance=ExtResource("5_sf4ia")]
 unique_name_in_owner = true
 visible = false
+z_index = 6
 layout_mode = 1

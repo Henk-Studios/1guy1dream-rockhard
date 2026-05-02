@@ -9,12 +9,6 @@ var was_jetting: bool = false
 func _ready():
 	self.linear_damp = 1.5
 	self.angular_damp = 2.0
-	if Global.has_signal("credits"):
-		Global.credits.connect(_on_credits)
-
-func _on_credits() -> void:
-	Manager.audio.stop_jetfart_sfx("1")
-
 
 func _physics_process(__):
 	if Input.is_action_just_pressed("teleport"):

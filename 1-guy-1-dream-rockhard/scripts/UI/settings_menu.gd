@@ -9,6 +9,7 @@ extends Control
 @export var ui_scale_slider: HSlider
 @export var fullscreen_toggle: CheckButton
 @export var fps_toggle: CheckButton
+@export var clear_player_data_button: Button
 @export var back_button: Button
 @export var click_blocker: ColorRect
 
@@ -30,6 +31,8 @@ func _ready():
 	_load_and_apply_volumes()
 	
 	# Connect button signals
+	clear_player_data_button.pressed.connect(_on_clear_player_data_pressed)
+	clear_player_data_button.mouse_entered.connect(_on_button_mouse_entered)
 	back_button.pressed.connect(_on_back_button_pressed)
 	back_button.mouse_entered.connect(_on_button_mouse_entered)
 	click_blocker.gui_input.connect(_on_click_blocker_input)
@@ -153,3 +156,7 @@ func _apply_fullscreen(toggled_on: bool) -> void:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+
+func _on_clear_player_data_pressed() -> void:
+	Manager.audio.play_click_sfx()
+	Manager.utility.clear_player_data()

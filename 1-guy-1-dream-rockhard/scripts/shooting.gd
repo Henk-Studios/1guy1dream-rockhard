@@ -43,7 +43,7 @@ func _process(delta):
 
 func get_aim_direction() -> Vector2:
 	# if using mouse and mouse down
-	if use_mouse and Input.is_action_pressed("aim_mouse"):
+	if use_mouse and Input.is_action_pressed("aim_mouse") and not Global.shop_open:
 		return (get_global_mouse_position() - global_position).normalized()
 	else:
 		var input_vec = Vector2(
@@ -62,8 +62,8 @@ func shoot(base_direction: Vector2):
 	for p in muzzle_particles:
 		if not p.emitting:
 			shoot_particle = p
+			shoot_particle.emitting = true
 			break
-	shoot_particle.emitting = true
 	particle.global_position = global_position
 
 	# Random angle within cone

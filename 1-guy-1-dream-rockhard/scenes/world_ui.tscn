@@ -1,0 +1,182 @@
+[gd_scene format=3 uid="uid://ed1uc7gjiyy2"]
+
+[ext_resource type="Script" uid="uid://kljpct75r3jx" path="res://scripts/time_label.gd" id="3_6wqhg"]
+[ext_resource type="Script" uid="uid://b37amt1qcwq0j" path="res://scripts/money.gd" id="3_fgwry"]
+[ext_resource type="PackedScene" uid="uid://c4qt5xjbrg2sq" path="res://scenes/radial_menu.tscn" id="4_3fd61"]
+[ext_resource type="Script" uid="uid://b33lrt2b30tie" path="res://scripts/pause_menu.gd" id="4_jjcv0"]
+[ext_resource type="Theme" uid="uid://cy1xg3e1f5n68" path="res://styles/settings.tres" id="5_5nafa"]
+[ext_resource type="Shader" uid="uid://bn5rfvynd4ao2" path="res://shaders/blur.gdshader" id="6_oyvde"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lwwgp"]
+shader = ExtResource("6_oyvde")
+shader_parameter/lod = 2.6400001254
+shader_parameter/mix_color = Color(0.6847319, 0.6847319, 0.6847319, 1)
+shader_parameter/add_color = Color(0.2382622, 0.2382622, 0.23826218, 0)
+
+[node name="WorldUI" type="CanvasLayer" unique_id=2031217533]
+
+[node name="CenterControl" type="Control" parent="." unique_id=1994121772]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(1.5, 1.5)
+mouse_filter = 2
+
+[node name="RadialMenu" parent="CenterControl" unique_id=816008284 instance=ExtResource("4_3fd61")]
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1454079206]
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1249877283]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = -14
+
+[node name="MoneyLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer" unique_id=928853571]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_colors/default_color = Color(0.4229943, 0.5935775, 0.23407158, 1)
+theme_override_font_sizes/normal_font_size = 50
+text = "Money"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+script = ExtResource("3_fgwry")
+
+[node name="TimeLabel" type="RichTextLabel" parent="MarginContainer/VBoxContainer" unique_id=1337455021]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/normal_font_size = 30
+text = "time"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+script = ExtResource("3_6wqhg")
+
+[node name="PauseMenu" type="Control" parent="." unique_id=1492014258 node_paths=PackedStringArray("back_button", "quit_button", "click_blocker")]
+process_mode = 3
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -100.0
+offset_right = 100.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_jjcv0")
+back_button = NodePath("MarginContainer/VBoxContainer/HBoxContainer/BackButton")
+quit_button = NodePath("MarginContainer/VBoxContainer/HBoxContainer/QuitButton")
+click_blocker = NodePath("ClickBlocker")
+
+[node name="ClickBlocker" type="ColorRect" parent="PauseMenu" unique_id=499946639]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1089.0
+offset_top = -469.0
+offset_right = 1026.0
+offset_bottom = 549.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.635294)
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="PauseMenu" unique_id=1673729353]
+copy_mode = 2
+
+[node name="Panel" type="Panel" parent="PauseMenu/BackBufferCopy" unique_id=1935468147]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 9.0
+offset_right = -10.0
+offset_bottom = -11.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("5_5nafa")
+
+[node name="MarginContainer2" type="MarginContainer" parent="PauseMenu/BackBufferCopy/Panel" unique_id=589935819]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Background" type="Panel" parent="PauseMenu/BackBufferCopy/Panel/MarginContainer2" unique_id=2012154424]
+material = SubResource("ShaderMaterial_lwwgp")
+layout_mode = 2
+theme = ExtResource("5_5nafa")
+
+[node name="MarginContainer" type="MarginContainer" parent="PauseMenu" unique_id=290442657]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu/MarginContainer" unique_id=185425735]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TitleLabel" type="Label" parent="PauseMenu/MarginContainer/VBoxContainer" unique_id=1926153657]
+layout_mode = 2
+text = "Game Paused"
+horizontal_alignment = 1
+
+[node name="Seperator" type="ColorRect" parent="PauseMenu/MarginContainer/VBoxContainer" unique_id=318983120]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="HBoxContainer" type="VBoxContainer" parent="PauseMenu/MarginContainer/VBoxContainer" unique_id=949339459]
+layout_mode = 2
+
+[node name="Control" type="Control" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1219030064]
+layout_mode = 2
+
+[node name="QuitButton" type="Button" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=212503419]
+layout_mode = 2
+theme = ExtResource("5_5nafa")
+text = "Quit"
+
+[node name="Seperator6" type="ColorRect" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=443462374]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="BackButton" type="Button" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1509982545]
+layout_mode = 2
+theme = ExtResource("5_5nafa")
+text = "Continue"

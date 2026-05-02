@@ -67,6 +67,13 @@ func is_mouse_over_ui(ui_nodes: Array) -> bool:
 				return true
 	return false
 
+func format_time(seconds: float) -> String:
+	var total: int = int(seconds)
+	var minutes: int = total / 60
+	var secs: int = total % 60
+	var cs: int = int((seconds - float(total)) * 100.0)
+	return "%02d:%02d.%02d" % [minutes, secs, cs]
+
 # Settings Management
 
 func save_setting(section: String, key: String, value: Variant) -> void:
@@ -137,3 +144,11 @@ func has_player_data(section: String, key: String) -> bool:
 	if err == OK:
 		return config.has_section_key(section, key)
 	return false
+
+func clear_player_data() -> void:
+	"""Clear all player data"""
+	var config := ConfigFile.new()
+	config.load(PLAYER_DATA_PATH)
+	config.clear()
+	config.save(PLAYER_DATA_PATH)
+	Manager.message.info(" All player data cleared")

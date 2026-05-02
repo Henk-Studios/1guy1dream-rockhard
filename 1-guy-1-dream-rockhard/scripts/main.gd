@@ -1,4 +1,5 @@
 extends Node2D
+class_name World
 
 const TILE_SIZE := 16
 
@@ -67,8 +68,7 @@ var active_tiles: Dictionary = {} # Vector2i cell -> Tile (fast break lookup)
 var broken_by_group: Dictionary = {}
 
 var tile_pool: Array[Tile] = []
-var _timer_label: Label
-var _elapsed: float = 0.0
+var elapsed: float = 0.0
 var _timer_frozen: bool = false
 @export var tile_scene: PackedScene
 @onready var the_guy: Node2D = $TheGuy
@@ -84,6 +84,13 @@ func setup(params: Dictionary) -> void:
 		world_seed = params["seed"]
 	else:
 		world_seed = randi()
+
+	Manager.message.info(" Use [color=lime]A[/color], [color=lime]D[/color], or [color=lime]<-, ->[/color], (keyboard) or [color=lime]RT[/color], [color=lime]LT[/color] (gamepad) to [color=yellow]move", 20)
+	Manager.message.info(" Use [color=lime]Mouse[/color] or [color=lime]Right Stick [/color] (gamepad) to [color=magenta]aim and shoot", 20)
+	Manager.message.info(" Press [color=lime]E[/color] (keyboard) or [color=lime]Y + Left Stick[/color] (gamepad) to open the [color=cyan]upgrade menu", 20)
+	Manager.message.info(" Press [color=lime]ESC[/color] (keyboard) or [color=lime]Start[/color] (gamepad) to [color=orange]pause", 20)
+	Manager.message.info(" [color=magenta][wave amp=10.0]Now be the 1guy and achieve your 1dream!!![/wave][/color]", 20)
+	Manager.message.info(" Generated world with seed: %d" % world_seed)
 
 	noise = FastNoiseLite.new()
 	noise.seed = world_seed
@@ -124,10 +131,9 @@ func setup(params: Dictionary) -> void:
 
 	_setup_lava()
 	_setup_audio()
-	_setup_timer_overlay()
 	_setup_title()
-	_apply_resolution_zoom()
-	get_viewport().size_changed.connect(_apply_resolution_zoom)
+	apply_resolution_zoom()
+	get_viewport().size_changed.connect(apply_resolution_zoom)
 
 	_clear_spawn_area(SPAWN_CELL, SPAWN_CLEAR_RADIUS)
 	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
@@ -138,10 +144,7 @@ func setup(params: Dictionary) -> void:
 
 func _process(_delta: float) -> void:
 	if not _timer_frozen:
-		_elapsed += _delta
-	if _timer_label:
-		_timer_label.text = _format_time(_elapsed)
-	_apply_resolution_zoom()
+		elapsed += _delta
 	var tracking_pos: Vector2
 	if free_cam.is_current():
 		tracking_pos = free_cam.global_position
@@ -364,29 +367,15 @@ func _setup_audio() -> void:
 func _on_credits() -> void:
 	_timer_frozen = true
 	# Update personal record if this run is better
-	credits.time_label.text = "[color=blue]Time: %s[/color]" % _format_time(_elapsed)
+	credits.time_label.text = "[color=blue]Time: %s[/color]" % Manager.utility.format_time(elapsed)
 	var current_record: float = Manager.utility.get_personal_record()
-	if _elapsed < current_record:
-		Manager.utility.set_personal_record(_elapsed)
+	if elapsed < current_record:
+		Manager.utility.set_personal_record(elapsed)
 		credits.time_label.text += " [color=deep_pink][wave](New Record!)[/wave][/color]"
 	else:
-		credits.time_label.text += " (PR: %s)" % _format_time(current_record)
+		credits.time_label.text += " (PR: %s)" % Manager.utility.format_time(current_record)
 	await Manager.audio.play_credit_music()
 	Manager.audio.play_main_music()
-func _setup_timer_overlay() -> void:
-	var layer := CanvasLayer.new()
-	add_child(layer)
-	_timer_label = Label.new()
-	_timer_label.offset_left = 30.0
-	_timer_label.offset_top = 110.0
-	_timer_label.offset_right = 330.0
-	_timer_label.offset_bottom = 160.0
-	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_timer_label.add_theme_color_override("font_color", Color.WHITE)
-	_timer_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	_timer_label.add_theme_constant_override("outline_size", 4)
-	_timer_label.add_theme_font_size_override("font_size", 28)
-	layer.add_child(_timer_label)
 
 func _setup_title() -> void:
 	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
@@ -400,7 +389,7 @@ func _setup_title() -> void:
 const REFERENCE_WIDTH := 1152.0
 const BASE_ZOOM := .9
 
-func _apply_resolution_zoom() -> void:
+func apply_resolution_zoom() -> void:
 	var w: float = get_viewport_rect().size.x
 	var factor: float = maxf(w / REFERENCE_WIDTH, 0.1)
 	var z := Vector2(BASE_ZOOM * factor, BASE_ZOOM * factor) / Global.vision
@@ -408,13 +397,6 @@ func _apply_resolution_zoom() -> void:
 		the_guy.get_node("Camera2D").zoom = z
 	if free_cam:
 		free_cam.zoom = z
-
-func _format_time(seconds: float) -> String:
-	var total: int = int(seconds)
-	var minutes: int = total / 60
-	var secs: int = total % 60
-	var cs: int = int((seconds - float(total)) * 100.0)
-	return "%02d:%02d.%02d" % [minutes, secs, cs]
 
 func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
 	Manager.audio.play_explosion_sfx()
@@ -437,7 +419,7 @@ func _acquire_tile() -> Tile:
 
 func _release_tile(tile: Tile, animate: bool = false) -> void:
 	if animate:
-		await tile.animate_break()
+		tile.animate_break()
 	remove_child(tile)
 	tile_pool.append(tile)
 

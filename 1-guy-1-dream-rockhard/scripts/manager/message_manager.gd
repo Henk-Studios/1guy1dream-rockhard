@@ -84,6 +84,13 @@ func _remove_oldest_message() -> void:
 		var oldest = self.active_messages[0]
 		_remove_message(oldest)
 
+func clear() -> void:
+	for message in self.active_messages:
+		if message and is_instance_valid(message):
+			message.queue_free()
+	self.active_messages.clear()
+	self.message_repeat_counts.clear()
+
 # Public methods for different message types
 
 func info(text: String, duration: float = MESSAGE_DURATION) -> void:

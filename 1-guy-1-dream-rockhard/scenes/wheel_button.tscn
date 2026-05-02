@@ -1,0 +1,130 @@
+[gd_scene format=3 uid="uid://cua3d057yuhi"]
+
+[ext_resource type="Script" uid="uid://c3xdnyb683h8j" path="res://scripts/wheel_button.gd" id="1_1540m"]
+[ext_resource type="Shader" uid="uid://bn5rfvynd4ao2" path="res://shaders/blur.gdshader" id="2_blur"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_blur"]
+resource_local_to_scene = true
+shader = ExtResource("2_blur")
+shader_parameter/lod = 4.3170002050575
+shader_parameter/mix_color = Color(0.7514611, 0.751461, 0.7514612, 1)
+shader_parameter/add_color = Color(0.20784314, 0.20784314, 0.20784314, 0.05882353)
+
+[node name="WheelButton" type="Node2D" unique_id=3124797]
+z_index = 2
+script = ExtResource("1_1540m")
+
+[node name="Control" type="Control" parent="." unique_id=1039848015]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -80.0
+offset_top = -80.0
+offset_right = 80.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+scale = Vector2(0.25, 0.25)
+pivot_offset_ratio = Vector2(0.5, 0.5)
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_filter = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Control" unique_id=52782515]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = -15
+alignment = 1
+
+[node name="TitleLabel" type="RichTextLabel" parent="Control/VBoxContainer" unique_id=325979619]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+text = "test"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacing" type="Control" parent="Control/VBoxContainer" unique_id=625626648]
+custom_minimum_size = Vector2(0, 26.605)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Seperator" type="ColorRect" parent="Control/VBoxContainer" unique_id=682873608]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Spacing2" type="Control" parent="Control/VBoxContainer" unique_id=1849271769]
+custom_minimum_size = Vector2(0, 25.13)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PriceLabel" type="RichTextLabel" parent="Control/VBoxContainer" unique_id=1532057535]
+layout_mode = 2
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 50
+bbcode_enabled = true
+text = "$20"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacing4" type="Control" parent="Control/VBoxContainer" unique_id=295409006]
+custom_minimum_size = Vector2(0, 20.23)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Seperator2" type="ColorRect" parent="Control/VBoxContainer" unique_id=355344286]
+custom_minimum_size = Vector2(0, 2)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Spacing3" type="Control" parent="Control/VBoxContainer" unique_id=1612218302]
+custom_minimum_size = Vector2(0, 27.295)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="InfoLabel" type="RichTextLabel" parent="Control/VBoxContainer" unique_id=580481823]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/default_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/normal_font_size = 24
+bbcode_enabled = true
+text = "test"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OutlinePolygon2D" type="Polygon2D" parent="." unique_id=1338246700]
+z_index = -1
+color = Color(0, 0, 0, 1)
+
+[node name="Polygon2D" type="Polygon2D" parent="OutlinePolygon2D" unique_id=1686382994]
+material = SubResource("ShaderMaterial_blur")
+color = Color(0, 0, 0, 0)
+
+[node name="Area2D" type="Area2D" parent="OutlinePolygon2D/Polygon2D" unique_id=233505987]
+collision_layer = 256
+collision_mask = 256
+monitoring = false
+monitorable = false
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="OutlinePolygon2D/Polygon2D/Area2D" unique_id=2127563240]

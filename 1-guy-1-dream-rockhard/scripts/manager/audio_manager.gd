@@ -32,7 +32,7 @@ var sfx_bus_index: int
 
 # Pooling settings
 const MAX_ACTIVE_PLAYERS: int = 40
-const MAX_PLAYERS_PER_SOUND: int = 6
+const MAX_PLAYERS_PER_SOUND: int = 12
 
 # Track active players per sound key
 var sfx_per_key_count: Dictionary[String, int] = {}
@@ -557,8 +557,7 @@ func play_shoot_sfx() -> void:
 	await play_sfx("shoot", false, pitch_scale)
 
 func start_jetfart_sfx(loop_id: String, pitch_scale: float = 1.0) -> void:
-	print("Starting jetfart sfx with loop_id: " + loop_id)
-	await play_looping_sfx("jetfart", loop_id, false, pitch_scale)
+	play_looping_sfx("jetfart", loop_id, false, pitch_scale)
 
 func stop_jetfart_sfx(loop_id: String) -> void:
 	stop_looping_sfx(loop_id)
