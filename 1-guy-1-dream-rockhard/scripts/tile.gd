@@ -4,7 +4,6 @@ class_name Tile
 enum Type {GRASS, DIRT, STONE_1, STONE_2, STONE_3, STONE_4, STONE_5, GOLD, DIAMOND, EMERALD, EXPLOSIVE}
 
 const TILE_SIZE := 16
-const SPRITE_SCALE := 0.01
 
 const STONE_TEXTURES: Array[Texture2D] = [
 	preload("res://textures/ugly stone.png"),
@@ -62,6 +61,9 @@ const COIN_VALUES := {
 
 @onready var _shape_node: CollisionShape2D = $CollisionShape2D
 @onready var _sprite_node: Sprite2D = $Sprite2D
+@onready var _cracks_sprite_node: Sprite2D = $Sprite2D/GrainSprite2D
+@export var crack_textures: Array[Texture2D]
+var crack_texture_probabilities: Array[float] = [0.0, 0.0, 0.2, 0.6, 0.2]
 
 var tile_type: Type = Type.STONE_3
 var sprite_angle: float = 0.0
@@ -87,15 +89,38 @@ func _apply_visual() -> void:
 		_sprite_node.texture = ROUNDISH_STONE
 	else:
 		_sprite_node.texture = STONE_TEXTURES[texture_index % STONE_TEXTURES.size()]
-	_sprite_node.scale = Vector2(float(context_tile_size) / 400, float(context_tile_size) / 400)
-	_sprite_node.modulate = COLORS[tile_type]
+	_sprite_node.scale = Vector2(float(context_tile_size) / 100, float(context_tile_size) / 100)
+	_sprite_node.self_modulate = COLORS[tile_type]
 	_sprite_node.rotation = sprite_angle
+	# Randomly select a crack texture based on defined probabilities
+	var rand = randf()
+	var cumulative_probability = 0.0
+	var selected_texture: Texture2D = null
+	for i in range(crack_textures.size()):
+		cumulative_probability += crack_texture_probabilities[i]
+		if rand < cumulative_probability:
+			selected_texture = crack_textures[i]
+			break
+	if not selected_texture:
+		selected_texture = crack_textures[crack_textures.size() - 1]
+	_cracks_sprite_node.texture = selected_texture
+	# random scale
+	_cracks_sprite_node.scale = Vector2.ONE * randf_range(0.5, 1.5)
+	_cracks_sprite_node.rotation = randf_range(0, PI * 2)
+	var crack_color = COLORS[tile_type]
+	crack_color.a = randf_range(0.5, 1.0)
+	if (randi() % 20 == 0 and not (tile_type == Type.GRASS or tile_type == Type.DIRT)) or tile_type == Type.EXPLOSIVE or tile_type == Type.GOLD or tile_type == Type.DIAMOND or tile_type == Type.EMERALD:
+		_cracks_sprite_node.texture = crack_textures[4]
+		crack_color = crack_color.lightened(randf_range(0.0, 1.0))
+	else:
+		crack_color = crack_color.darkened(randf_range(0.0, 1.0))
+	_cracks_sprite_node.self_modulate = crack_color
 
 func animate_hit(hp_lost: int) -> void:
 	# reduce size more and more based on damage taken, with a minimum size limit
 	var damage_ratio: float = clampf(float(hp_lost) / float(HP[tile_type]), 0.0, 1.0)
 	var scale_factor: float = 1.0 - damage_ratio * 0.5
-	_sprite_node.scale = Vector2(float(context_tile_size) / 400, float(context_tile_size) / 400) * scale_factor
+	_sprite_node.scale = Vector2(float(context_tile_size) / 100, float(context_tile_size) / 100) * scale_factor
 	play_sfx()
 	# shake()
 	Manager.scene.current_scene.break_particle_pool.spawn_particles_at(global_position, 1, COLORS[tile_type])

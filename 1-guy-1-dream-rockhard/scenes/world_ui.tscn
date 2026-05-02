@@ -6,6 +6,15 @@
 [ext_resource type="Script" uid="uid://b33lrt2b30tie" path="res://scripts/pause_menu.gd" id="4_jjcv0"]
 [ext_resource type="Theme" uid="uid://cy1xg3e1f5n68" path="res://styles/settings.tres" id="5_5nafa"]
 [ext_resource type="Shader" uid="uid://bn5rfvynd4ao2" path="res://shaders/blur.gdshader" id="6_oyvde"]
+[ext_resource type="Shader" uid="uid://cxu0duo2mtc8b" path="res://shaders/vignette.gdshader" id="7_5nafa"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_oyvde"]
+shader = ExtResource("7_5nafa")
+shader_parameter/inner_radius = 0.1
+shader_parameter/outer_radius = 1.0
+shader_parameter/vignette_strength = 1.0
+shader_parameter/dither_strength = 0.03
+shader_parameter/vignette_color = Color(0, 0, 0, 1)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_lwwgp"]
 shader = ExtResource("6_oyvde")
@@ -14,6 +23,15 @@ shader_parameter/mix_color = Color(0.6847319, 0.6847319, 0.6847319, 1)
 shader_parameter/add_color = Color(0.2382622, 0.2382622, 0.23826218, 0)
 
 [node name="WorldUI" type="CanvasLayer" unique_id=2031217533]
+
+[node name="Vignette" type="ColorRect" parent="." unique_id=20853088]
+material = SubResource("ShaderMaterial_oyvde")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
 [node name="CenterControl" type="Control" parent="." unique_id=1994121772]
 layout_mode = 3

@@ -403,12 +403,11 @@ func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
 	var p = explode_particle_pool.put_particle_at(Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0))
 	if not p:
 		return
-	# p.position = Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0)
-	p.amount = clampi(int(radius * 10), 20, 200)
+	p.amount = clampi(int(radius * 20), 20, 200)
 	p.initial_velocity_min = 60.0 * radius
 	p.initial_velocity_max = 160.0 * radius
-	p.scale_amount_min = 2.0
-	p.scale_amount_max = 5.0 + radius
+	p.scale_amount_min = 0.01
+	p.scale_amount_max = 0.3
 	p.emitting = true
 
 # Pool helpers: never queue_free tiles. Remove from tree and reuse later.
@@ -518,3 +517,4 @@ func _update_sky(world_y: float) -> void:
 	var y_tiles: float = world_y / TILE_SIZE
 	var t: float = clampf((y_tiles - SKY_DEPTH_START) / float(SKY_DEPTH_END - SKY_DEPTH_START), 0.0, 1.0)
 	RenderingServer.set_default_clear_color(SKY_HIGH.lerp(SKY_LOW, t))
+	get_node("WorldUI/Vignette").material.set_shader_parameter("vignette_strength", t)

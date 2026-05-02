@@ -6,8 +6,8 @@ var use_mouse := true
 @export var particle_scene: PackedScene
 @export var muzzle_particles: Array[CPUParticles2D]
 var _spawn_accumulator := 0.0
-var sprite_offset_1: Vector2 = Vector2(300, -512)
-var sprite_offset_2: Vector2 = Vector2(-300, -512)
+var sprite_offset_1: Vector2 = Vector2(0, 0)
+var sprite_offset_2: Vector2 = Vector2(0, 0)
 @onready var sprite = $Sprite2D
 var prev_aim_direction: Vector2 = Vector2.ZERO
 
@@ -20,14 +20,14 @@ func _process(delta):
 		sprite.offset = sprite_offset_2
 		for particles in muzzle_particles:
 			particles.rotation = 0
-			particles.position.x = 700
+			particles.position.x = 260
 	else:
 		global_rotation += PI
 		sprite.flip_h = false
 		sprite.offset = sprite_offset_1
 		for particles in muzzle_particles:
 			particles.rotation = PI
-			particles.position.x = -700
+			particles.position.x = -260
 	if direction == Vector2.ZERO:
 		sprite.flip_h = false
 		sprite.offset = sprite_offset_1

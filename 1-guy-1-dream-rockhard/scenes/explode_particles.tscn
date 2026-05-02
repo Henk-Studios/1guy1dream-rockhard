@@ -1,13 +1,19 @@
 [gd_scene format=3 uid="uid://cx7r3nwbsp45b"]
 
+[ext_resource type="Texture2D" uid="uid://gh4jxl40oah" path="res://textures/sharp stone.png" id="1_ttoyj"]
+
+[sub_resource type="Curve" id="Curve_ttoyj"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
 [sub_resource type="Gradient" id="Gradient_1m171"]
-offsets = PackedFloat32Array(0, 0.33743843, 0.64285713, 1)
-colors = PackedColorArray(1, 0.9776916, 0.6651851, 1, 1, 0.735357, 0.3491902, 0.95000005, 0.735357, 0.42358288, 0.24780053, 0.5, 0.3491902, 0.24780053, 0.24780053, 0)
+offsets = PackedFloat32Array(0, 0.06968215, 0.18704157, 0.33743843, 0.49022004, 0.74938875, 0.9865526)
+colors = PackedColorArray(1, 1, 1, 1, 1, 0.22935726, 0, 0.99000007, 1, 0.87321603, 0.5289531, 0.978444, 1, 0.735357, 0.3491902, 0.95000005, 0.98483473, 0.89485645, 0.8186955, 0.7212911, 1, 1, 1, 0.5, 1, 1, 1, 0)
 
 [node name="ExplodeParticles" type="CPUParticles2D" unique_id=904329760]
 emitting = false
 amount = 30
-lifetime = 0.45
+texture = ExtResource("1_ttoyj")
 one_shot = true
 explosiveness = 1.0
 lifetime_randomness = 0.5
@@ -21,6 +27,9 @@ radial_accel_min = 15.08
 radial_accel_max = 16.68
 damping_min = 80.0
 damping_max = 160.0
-scale_amount_min = 2.0
-scale_amount_max = 5.0
+angle_min = -720.0
+angle_max = 720.0
+scale_amount_min = 0.01
+scale_amount_max = 0.05
+scale_amount_curve = SubResource("Curve_ttoyj")
 color_ramp = SubResource("Gradient_1m171")

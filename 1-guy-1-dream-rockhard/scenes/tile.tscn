@@ -1,14 +1,25 @@
 [gd_scene format=3 uid="uid://b40ejr6it842w"]
 
 [ext_resource type="Script" uid="uid://0kmah4dbk3pm" path="res://scripts/tile.gd" id="1_3dk36"]
+[ext_resource type="Texture2D" uid="uid://cansn0ontkhjc" path="res://textures/cracks.png" id="2_ywnoi"]
+[ext_resource type="Texture2D" uid="uid://6r5vtchijh1c" path="res://textures/cracks2.png" id="3_jy7pm"]
+[ext_resource type="Texture2D" uid="uid://y67dsbmj0i8p" path="res://textures/cracks3.png" id="4_6p3j2"]
+[ext_resource type="Texture2D" uid="uid://yb0y67ioaut5" path="res://textures/cracks4.png" id="5_gtpg2"]
+[ext_resource type="Texture2D" uid="uid://mbqb6yk1rmgp" path="res://textures/cracks5.png" id="6_gtpg2"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uiyn6"]
 size = Vector2(0, 0)
 
 [node name="Tile" type="StaticBody2D" unique_id=17894588]
 script = ExtResource("1_3dk36")
+crack_textures = Array[Texture2D]([ExtResource("2_ywnoi"), ExtResource("3_jy7pm"), ExtResource("4_6p3j2"), ExtResource("5_gtpg2"), ExtResource("6_gtpg2")])
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1798677204]
+
+[node name="GrainSprite2D" type="Sprite2D" parent="Sprite2D" unique_id=1570640373]
+modulate = Color(1, 1, 1, 0.45882353)
+z_index = 40
+texture = ExtResource("2_ywnoi")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1014153742]
 shape = SubResource("RectangleShape2D_uiyn6")
