@@ -8,7 +8,7 @@
 shader = ExtResource("2_labj1")
 shader_parameter/lod = 2.6400001254
 shader_parameter/mix_color = Color(0.6847319, 0.6847319, 0.6847319, 1)
-shader_parameter/add_color = Color(0, 0, 0, 0)
+shader_parameter/add_color = Color(0.22959325, 0.22959325, 0.22959322, 0)
 
 [node name="SettingsMenu" type="Control" unique_id=1492014258 node_paths=PackedStringArray("master_volume_slider", "music_volume_slider", "sfx_volume_slider", "ui_scale_slider", "fullscreen_toggle", "fps_toggle", "clear_player_data_button", "back_button", "click_blocker")]
 custom_minimum_size = Vector2(300, 400)

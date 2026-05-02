@@ -11,7 +11,7 @@
 [ext_resource type="Shader" uid="uid://cxu0duo2mtc8b" path="res://shaders/vignette.gdshader" id="5_8ln24"]
 [ext_resource type="PackedScene" uid="uid://ba6j28f3johsr" path="res://scenes/settings_menu.tscn" id="5_sf4ia"]
 
-[sub_resource type="Gradient" id="Gradient_flqon"]
+[sub_resource type="Gradient" id="Gradient_lghrq"]
 offsets = PackedFloat32Array(0, 0.9581281)
 colors = PackedColorArray(1, 1, 1, 1, 0.6, 0.3372549, 0.1764706, 1)
 
@@ -45,6 +45,48 @@ corner_detail = 5
 Button/constants/outline_size = 9
 Button/styles/normal = SubResource("StyleBoxFlat_5dd4i")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lgwnu"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(1, 1, 1, 0.75)
+draw_center = false
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_detail = 5
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_flqon"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 0.6)
+corner_detail = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rcqid"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.1, 0.1, 0.1, 0.3)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 0.3)
+corner_detail = 5
+
+[sub_resource type="Theme" id="Theme_flqon"]
+LineEdit/styles/focus = SubResource("StyleBoxFlat_lgwnu")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_flqon")
+LineEdit/styles/read_only = SubResource("StyleBoxFlat_rcqid")
+
 [sub_resource type="LabelSettings" id="LabelSettings_ywuof"]
 font_size = 12
 font_color = Color(3.513545e-06, 0.64607185, 0, 1)
@@ -60,31 +102,30 @@ scale = Vector2(1.225, 1.225)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1864605010]
 
-[node name="TheGuy" type="Node2D" parent="CanvasLayer" unique_id=377845684]
-z_index = 1
-position = Vector2(718, 284.99997)
-rotation = 0.5846056
-scale = Vector2(2.185, 2.185)
+[node name="TheGuy" type="Node2D" parent="CanvasLayer" unique_id=858231511]
+z_index = 2
+position = Vector2(718, 285)
+rotation = 0.5846853
+scale = Vector2(4, 4)
 script = ExtResource("2_5dd4i")
 
-[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/TheGuy" unique_id=418938132]
-position = Vector2(-0.9999981, 3.999998)
-scale = Vector2(0.05, 0.05)
+[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/TheGuy" unique_id=1888951784]
+position = Vector2(0, 4)
+scale = Vector2(0.07, 0.07)
 texture = ExtResource("2_jk1qb")
 
-[node name="the_gun" type="Node2D" parent="CanvasLayer/TheGuy" unique_id=805092300]
-position = Vector2(-13, 28)
+[node name="the_gun" type="Node2D" parent="CanvasLayer/TheGuy" unique_id=247112652]
+position = Vector2(-3, 12)
+scale = Vector2(0.07, 0.07)
 
-[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/TheGuy/the_gun" unique_id=480444371]
+[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/TheGuy/the_gun" unique_id=1547750680]
 z_index = 3
-position = Vector2(9.536743e-07, -1.0000019)
-scale = Vector2(0.05, 0.05)
 texture = ExtResource("3_5dd4i")
-offset = Vector2(300, -380)
+flip_h = true
 
-[node name="jetpart" type="CPUParticles2D" parent="CanvasLayer/TheGuy" unique_id=1108070919]
+[node name="jetpart" type="CPUParticles2D" parent="CanvasLayer/TheGuy" unique_id=1323313036]
 z_index = -1
-position = Vector2(-2, 51)
+position = Vector2(0, 15.825)
 amount = 50
 texture = ExtResource("4_lgwnu")
 direction = Vector2(0, 1)
@@ -94,9 +135,9 @@ initial_velocity_min = 51.59
 initial_velocity_max = 215.84
 angular_velocity_min = 51.43
 angular_velocity_max = 154.29
-scale_amount_min = 0.0
-scale_amount_max = 0.1
-color_ramp = SubResource("Gradient_flqon")
+scale_amount_min = 0.1
+scale_amount_max = 0.3
+color_ramp = SubResource("Gradient_lghrq")
 
 [node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_button", "settings_button", "quit_button", "seed_input", "settings_menu")]
 layout_mode = 3
@@ -167,6 +208,7 @@ flat = true
 
 [node name="LineEdit" type="LineEdit" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=1915889]
 layout_mode = 2
+theme = SubResource("Theme_flqon")
 placeholder_text = "Seed"
 alignment = 1
 
