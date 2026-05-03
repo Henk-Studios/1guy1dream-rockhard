@@ -20,7 +20,7 @@ const MAX_UI_SCALE := 1.3
 const DEFAULT_UI_SCALE := 1.0
 const FULLSCREEN_SECTION := "display"
 const FULLSCREEN_KEY := "fullscreen"
-const FULLSCREEN_DEFAULT := false
+const FULLSCREEN_DEFAULT := true
 
 func _ready():
 	# Load UI scale setting on startup

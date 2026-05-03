@@ -11,7 +11,7 @@ func _ready():
 	self.angular_damp = 2.0
 
 func _physics_process(__):
-	if Input.is_action_just_pressed("teleport"):
+	if Input.is_action_just_pressed("teleport") and Global.dev_mode:
 		position.y = -30
 	
 	if position.y < 0 and not Global.creditsreached:

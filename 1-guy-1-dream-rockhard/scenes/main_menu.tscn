@@ -139,20 +139,22 @@ scale_amount_min = 0.1
 scale_amount_max = 0.3
 color_ramp = SubResource("Gradient_lghrq")
 
-[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_button", "settings_button", "quit_button", "seed_input", "settings_menu")]
+[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_button", "settings_button", "quit_button", "seed_input", "dev_button", "settings_menu")]
+custom_minimum_size = Vector2(10, 10)
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
+size_flags_horizontal = 8
+size_flags_vertical = 0
 script = ExtResource("1_yqeox")
 play_button = NodePath("Control/MenuContainer/VBoxContainer2/PlayButton")
 settings_button = NodePath("Control/MenuContainer/VBoxContainer2/SettingsButton")
 quit_button = NodePath("Control/MenuContainer/VBoxContainer2/QuitButton")
 seed_input = NodePath("Control/MenuContainer/VBoxContainer2/LineEdit")
+dev_button = NodePath("DevButton")
 settings_menu = NodePath("SettingsMenu")
 
 [node name="Vignette" type="ColorRect" parent="CanvasLayer/Menu" unique_id=1123369898]
@@ -163,6 +165,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="Blur" type="ColorRect" parent="CanvasLayer/Menu" unique_id=674752353]
 material = SubResource("ShaderMaterial_oa1go")
@@ -172,6 +175,17 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+
+[node name="DevButton" type="Button" parent="CanvasLayer/Menu" unique_id=519928845]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -8.0
+offset_bottom = 8.0
+grow_horizontal = 0
+flat = true
 
 [node name="Control" type="MarginContainer" parent="CanvasLayer/Menu" unique_id=1154264687]
 layout_mode = 1
@@ -180,6 +194,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20

@@ -6,6 +6,7 @@ class_name Menu
 @export var settings_button: Button
 @export var quit_button: Button
 @export var seed_input: LineEdit
+@export var dev_button: Button
 
 @export var settings_menu: SettingsMenu
 
@@ -16,6 +17,9 @@ func _ready() -> void:
 	play_button.mouse_entered.connect(_on_button_mouse_entered)
 	settings_button.mouse_entered.connect(_on_button_mouse_entered)
 	quit_button.mouse_entered.connect(_on_button_mouse_entered)
+	dev_button.pressed.connect(_on_dev_button_pressed)
+
+	play_button.grab_focus()
 			
 func _on_play_button_pressed() -> void:
 	Manager.audio.play_click_sfx()
@@ -38,6 +42,14 @@ func _on_quit_button_pressed() -> void:
 
 func _on_button_mouse_entered() -> void:
 	Manager.audio.play_hover_sfx()
+
+var dev_click_count: int = 0
+
+func _on_dev_button_pressed() -> void:
+	dev_click_count += 1
+	if dev_click_count >= 3:
+		Manager.message.info("???")
+		Global.dev_mode = not Global.dev_mode
 
 func intify(text: String) -> int:
 	var result: int = 0

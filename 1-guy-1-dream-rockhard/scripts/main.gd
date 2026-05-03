@@ -432,7 +432,7 @@ func _chunk_to_break_group(chunk: Vector2i) -> Vector2i:
 	return Vector2i(floori(float(chunk.x) / BREAK_GROUP_CHUNKS), floori(float(chunk.y) / BREAK_GROUP_CHUNKS))
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed:
+	if event is InputEventKey and event.pressed and Global.dev_mode:
 		if event.keycode == KEY_F1:
 			_toggle_free_cam()
 		elif event.keycode == KEY_F2:

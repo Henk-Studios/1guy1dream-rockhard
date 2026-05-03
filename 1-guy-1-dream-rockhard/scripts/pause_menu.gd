@@ -16,14 +16,14 @@ func _ready():
 
 # input
 func _input(event: InputEvent):
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_ESCAPE and not visible:
-			show_pause_menu()
-		elif event.keycode == KEY_ESCAPE and visible:
-			hide_pause_menu()
+	if event.is_action_pressed("pause") and not visible:
+		show_pause_menu()
+	elif event.is_action_pressed("pause") and visible:
+		hide_pause_menu()
 
 func show_pause_menu():
 	visible = true
+	back_button.grab_focus()
 	get_tree().paused = true
 	
 func hide_pause_menu():

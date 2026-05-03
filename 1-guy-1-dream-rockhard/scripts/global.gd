@@ -5,7 +5,8 @@ var creditsreached = false
 var shop_open := false
 var jetpackspeed = 700
 signal money_changed(money)
-
+# enable dev mode by clicking the top right corner 3 times in the main menu (??? message will appear when toggled)
+var dev_mode := false
 var money: int:
     set(value):
         money = value
