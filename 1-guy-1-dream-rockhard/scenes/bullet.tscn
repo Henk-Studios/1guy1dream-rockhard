@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://c2ap1kbaxqjaj"]
 
-[ext_resource type="Texture2D" uid="uid://bglf3ok8w66pe" path="res://textures/roundish stone.png" id="2_wwmxv"]
-[ext_resource type="Script" uid="uid://c2lua3dp3ikjo" path="res://scripts/shoot_particles.gd" id="2_yorcp"]
+[ext_resource type="Script" uid="uid://c2lua3dp3ikjo" path="res://scripts/bullet.gd" id="1_y25gk"]
+[ext_resource type="Texture2D" uid="uid://bglf3ok8w66pe" path="res://textures/roundish stone.png" id="2_l5glv"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_yorcp"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_y25gk"]
 
 [sub_resource type="Gradient" id="Gradient_wwmxv"]
 offsets = PackedFloat32Array(0, 0.045961004, 1)
@@ -36,15 +36,15 @@ color_ramp = SubResource("GradientTexture1D_tuu48")
 [node name="bullet" type="CharacterBody2D" unique_id=1809960514 node_paths=PackedStringArray("timer")]
 scale = Vector2(0.4, 0.4)
 collision_layer = 4
-script = ExtResource("2_yorcp")
+script = ExtResource("1_y25gk")
 timer = NodePath("Timer")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1172149483]
-shape = SubResource("CircleShape2D_yorcp")
+shape = SubResource("RectangleShape2D_y25gk")
 
 [node name="ShootPartices" type="GPUParticles2D" parent="." unique_id=574300877]
 amount = 1
-texture = ExtResource("2_wwmxv")
+texture = ExtResource("2_l5glv")
 lifetime = 5.0
 explosiveness = 1.0
 local_coords = true
