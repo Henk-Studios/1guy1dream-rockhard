@@ -1,7 +1,7 @@
 extends StaticBody2D
 class_name Tile
 
-enum Type {GRASS, DIRT, STONE_1, STONE_2, STONE_3, STONE_4, STONE_5, GOLD, DIAMOND, EMERALD, EXPLOSIVE}
+enum Type {GRASS, DIRT, STONE_1, STONE_2, STONE_3, STONE_4, STONE_5, UNBREAKABLE, GOLD, DIAMOND, EMERALD, EXPLOSIVE}
 
 const TILE_SIZE := 16
 
@@ -23,6 +23,7 @@ const COLORS := {
 	Type.STONE_3: Color(0.42, 0.42, 0.44),
 	Type.STONE_4: Color(0.58, 0.58, 0.60),
 	Type.STONE_5: Color(0.78, 0.78, 0.80),
+	Type.UNBREAKABLE: Color(0.2, 0.1, 0.1),
 	Type.GOLD: Color(1.0, 0.85, 0.2),
 	Type.DIAMOND: Color(0.45, 0.75, 1.0),
 	Type.EMERALD: Color(0.3, 0.95, 0.5),
@@ -31,16 +32,17 @@ const COLORS := {
 
 # Durability per tile type. Stone 1 is hardest; dirt sits below stone 5; grass is softest.
 const HP := {
-	Type.GRASS: 1,
-	Type.DIRT: 1,
-	Type.STONE_1: 500,
-	Type.STONE_2: 50,
-	Type.STONE_3: 20,
-	Type.STONE_4: 6,
-	Type.STONE_5: 2,
-	Type.GOLD: 5,
-	Type.DIAMOND: 10,
-	Type.EMERALD: 30,
+	Type.GRASS: 100,
+	Type.DIRT: 100,
+	Type.STONE_1: 50000,
+	Type.STONE_2: 5000,
+	Type.STONE_3: 2000,
+	Type.STONE_4: 600,
+	Type.STONE_5: 200,
+	Type.UNBREAKABLE: 9999,
+	Type.GOLD: 500,
+	Type.DIAMOND: 1000,
+	Type.EMERALD: 3000,
 	Type.EXPLOSIVE: 1,
 }
 
@@ -57,6 +59,22 @@ const COIN_VALUES := {
 	Type.DIAMOND: 25,
 	Type.EMERALD: 500,
 	Type.EXPLOSIVE: 0,
+	Type.UNBREAKABLE: 0,
+}
+
+const STRING_NAMES := {
+	Type.GRASS: "Grass",
+	Type.DIRT: "Dirt",
+	Type.STONE_1: "Stone 1",
+	Type.STONE_2: "Stone 2",
+	Type.STONE_3: "Stone 3",
+	Type.STONE_4: "Stone 4",
+	Type.STONE_5: "Stone 5",
+	Type.UNBREAKABLE: "Unbreakable",
+	Type.GOLD: "Gold",
+	Type.DIAMOND: "Diamond",
+	Type.EMERALD: "Emerald",
+	Type.EXPLOSIVE: "Explosive",
 }
 
 @onready var _shape_node: CollisionShape2D = $CollisionShape2D
@@ -77,6 +95,7 @@ func configure(type: Type, angle: float, tex_idx: int, cell_: Vector2i, tile_siz
 	texture_index = tex_idx
 	cell = cell_
 	context_tile_size = tile_size
+	name = "%s_%d,%d" % [STRING_NAMES[tile_type], cell.x, cell.y]
 	if _sprite_node:
 		_apply_visual()
 
@@ -123,12 +142,12 @@ func animate_hit(hp_lost: int) -> void:
 	_sprite_node.scale = Vector2(float(context_tile_size) / 100, float(context_tile_size) / 100) * scale_factor
 	play_sfx()
 	# shake()
-	Manager.scene.current_scene.break_particle_pool.spawn_particles_at(global_position, 1, COLORS[tile_type])
+	World.break_particle_pool.spawn_particles_at(global_position, 1, COLORS[tile_type])
 
 
 func animate_break() -> void:
 	play_sfx()
-	Manager.scene.current_scene.break_particle_pool.spawn_particles_at(global_position, 3, COLORS[tile_type])
+	World.break_particle_pool.spawn_particles_at(global_position, 3, COLORS[tile_type])
 	return
 
 func play_sfx() -> void:

@@ -5,6 +5,10 @@
 [ext_resource type="PackedScene" uid="uid://b5r3xnxostxlm" path="res://scenes/the_gun.tscn" id="3_wuybt"]
 [ext_resource type="Texture2D" uid="uid://dqhj4e4vxpd2i" path="res://textures/ragged stone.png" id="4_lghrq"]
 
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_eluou"]
+friction = 0.2
+bounce = 0.2
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_wuybt"]
 radius = 12.08
 
@@ -18,9 +22,13 @@ colors = PackedColorArray(1, 1, 1, 1, 0.6, 0.3372549, 0.1764706, 1)
 
 [node name="TheGuy" type="RigidBody2D" unique_id=1780183407]
 collision_layer = 2
-mass = 1.001
+mass = 1.3
+physics_material_override = SubResource("PhysicsMaterial_eluou")
 gravity_scale = 0.834
+contact_monitor = true
+max_contacts_reported = 10
 script = ExtResource("1_mtops")
+physics_material = SubResource("PhysicsMaterial_eluou")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1888951784]
 position = Vector2(0, 4)
@@ -30,9 +38,6 @@ texture = ExtResource("2_mtops")
 [node name="TopCollisionShape2D" type="CollisionShape2D" parent="." unique_id=1438068098]
 position = Vector2(0, 6)
 shape = SubResource("CircleShape2D_wuybt")
-
-[node name="Camera2D" type="Camera2D" parent="." unique_id=1949905347]
-zoom = Vector2(2.5, 2.5)
 
 [node name="BottomCollisionShape2D" type="CollisionShape2D" parent="." unique_id=1096005966]
 position = Vector2(0, 14.8)

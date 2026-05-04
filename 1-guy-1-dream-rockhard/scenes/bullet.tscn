@@ -5,52 +5,15 @@
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_y25gk"]
 
-[sub_resource type="Gradient" id="Gradient_wwmxv"]
-offsets = PackedFloat32Array(0, 0.045961004, 1)
-colors = PackedColorArray(1, 1, 1, 1, 1, 0, 0.4788676, 1, 0.7541437, 0.4649247, 0.48452926, 1)
-
-[sub_resource type="GradientTexture1D" id="GradientTexture1D_tuu48"]
-gradient = SubResource("Gradient_wwmxv")
-
-[sub_resource type="Curve" id="Curve_wwmxv"]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0.50783), 0.0, 0.0, 0, 0]
-point_count = 2
-
-[sub_resource type="CurveTexture" id="CurveTexture_tuu48"]
-curve = SubResource("Curve_wwmxv")
-
-[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_yorcp"]
-particle_flag_disable_z = true
-angle_min = -720.0
-angle_max = 720.0
-gravity = Vector3(0, 0, 0)
-radial_accel_min = -1000.0
-radial_accel_max = -1000.0
-tangential_accel_min = 99.99999
-tangential_accel_max = 99.99999
-scale_min = 0.07
-scale_max = 0.07
-scale_curve = SubResource("CurveTexture_tuu48")
-color_ramp = SubResource("GradientTexture1D_tuu48")
-
-[node name="bullet" type="CharacterBody2D" unique_id=1809960514 node_paths=PackedStringArray("timer")]
+[node name="bullet" type="CharacterBody2D" unique_id=1809960514]
 scale = Vector2(0.4, 0.4)
 collision_layer = 4
 script = ExtResource("1_y25gk")
-timer = NodePath("Timer")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1172149483]
 shape = SubResource("RectangleShape2D_y25gk")
 
-[node name="ShootPartices" type="GPUParticles2D" parent="." unique_id=574300877]
-amount = 1
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=539398967]
+modulate = Color(0.78716755, 1.7808378e-06, 0.4545669, 1)
+scale = Vector2(0.1, 0.1)
 texture = ExtResource("2_l5glv")
-lifetime = 5.0
-explosiveness = 1.0
-local_coords = true
-process_material = SubResource("ParticleProcessMaterial_yorcp")
-
-[node name="Timer" type="Timer" parent="." unique_id=192032453]
-wait_time = 5.0
-one_shot = true
-autostart = true

@@ -81,7 +81,7 @@ func _on_explosion_size_pressed(p) -> int:
 
 func _on_vision_range_pressed(p) -> int:
 	Global.vision += 0.1
-	Manager.scene.current_scene.apply_resolution_zoom()
+	World.camera.apply_resolution_zoom()
 	return increase_price(p, 50, 1.2)
 
 func _on_jetpack_speed_pressed(p) -> int:

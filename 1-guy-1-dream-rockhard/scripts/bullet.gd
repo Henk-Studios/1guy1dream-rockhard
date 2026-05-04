@@ -1,15 +1,20 @@
 extends CharacterBody2D
 
-@export var timer: Timer
 var prev_collision: Object = null
-func _ready():
-	if timer:
-		timer.timeout.connect(_on_timer_timeout)
+var distance_traveled: float = 0.0
 
 func initialize(direction: Vector2):
 	velocity = direction
+	distance_traveled = 0.0
+	prev_collision = null
 
 func _physics_process(delta):
+	distance_traveled += velocity.length() * delta
+
+	if distance_traveled > 2000:
+		_return_to_pool()
+		return
+
 	var collision = move_and_collide(velocity * delta)
 
 	if collision:
@@ -17,7 +22,7 @@ func _physics_process(delta):
 		var collider = collision.get_collider()
 		if collider is Tile and collider != prev_collision:
 			prev_collision = collider
-			var main = Manager.scene.current_scene
+			var main = World.terrain
 			var exploded := false
 			if Global.bullet_explosive_chance_level > 0:
 				var chance: float = Global.bullet_explosive_chance_level * 0.01
@@ -32,8 +37,9 @@ func _physics_process(delta):
 		elif randf() < Global.ricochet:
 			velocity = velocity.rotated(PI + randf_range(-PI / 4, PI / 4))
 		else:
-			queue_free()
+			_return_to_pool()
 
-func _on_timer_timeout():
-	# Timer ran out → despawn
-	queue_free()
+
+func _return_to_pool():
+	prev_collision = null
+	World.bullet_pool.return_bullet(self )

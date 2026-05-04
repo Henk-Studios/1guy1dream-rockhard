@@ -1,17 +1,16 @@
 extends Node
 
-signal credits
-var creditsreached = false
 var shop_open := false
 var jetpackspeed = 700
 signal money_changed(money)
 # enable dev mode by clicking the top right corner 3 times in the main menu (??? message will appear when toggled)
 var dev_mode := false
+var debugging := true
 var money: int:
     set(value):
         money = value
         money_changed.emit(money)
-var damage = 1
+var damage = 100
 var piercing = 0
 var ricochet = 0
 var width := 0.1 # cone half-angle (radians)

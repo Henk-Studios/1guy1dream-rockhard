@@ -3,7 +3,6 @@ extends Node2D
 
 var use_mouse := true
 
-@export var particle_scene: PackedScene
 @export var muzzle_particles: Array[CPUParticles2D]
 var _spawn_accumulator := 0.0
 var sprite_offset_1: Vector2 = Vector2(0, 0)
@@ -55,8 +54,7 @@ func get_aim_direction() -> Vector2:
 
 
 func shoot(base_direction: Vector2):
-	var particle = particle_scene.instantiate()
-	Manager.scene.current_scene.add_child(particle)
+	var bullet = World.bullet_pool.get_bullet()
 	# Choose the first shoot particle that is not currently emitting, or default to the first one if all are busy
 	var shoot_particle
 	for p in muzzle_particles:
@@ -64,14 +62,14 @@ func shoot(base_direction: Vector2):
 			shoot_particle = p
 			shoot_particle.emitting = true
 			break
-	particle.global_position = global_position
+	bullet.global_position = global_position
 
 	# Random angle within cone
 	var base_angle = base_direction.angle()
 	var angle_offset = randf_range(-Global.width, Global.width)
 	var final_dir = Vector2.from_angle(base_angle + angle_offset)
 
-	particle.initialize(final_dir * Global.particle_speed)
+	bullet.initialize(final_dir * Global.particle_speed)
 
 	Manager.audio.play_shoot_sfx()
 	

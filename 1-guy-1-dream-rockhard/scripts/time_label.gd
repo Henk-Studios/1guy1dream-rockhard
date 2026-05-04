@@ -9,4 +9,4 @@ func _ready() -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(__) -> void:
 	if Manager.scene.current_scene:
-		text = Manager.utility.format_time(Manager.scene.current_scene.elapsed)
+		text = Manager.utility.format_time(World.main.time_elapsed)

@@ -73,12 +73,12 @@ func _get_sfx_player(key: String, force: bool = false) -> AudioStreamPlayer:
 	"""
 	# Check global limit
 	if not force and len(active_sfx_players) >= MAX_ACTIVE_PLAYERS:
-		print("Warning: Max active SFX players reached (%d). Ignoring request for: %s" % [MAX_ACTIVE_PLAYERS, key])
+		# print("Warning: Max active SFX players reached (%d). Ignoring request for: %s" % [MAX_ACTIVE_PLAYERS, key])
 		return null
 	
 	# Check per-sound limit (always enforced)
 	if sfx_per_key_count.get(key, 0) >= MAX_PLAYERS_PER_SOUND:
-		print("Warning: Max players for sound '%s' reached (%d). Ignoring request." % [key, MAX_PLAYERS_PER_SOUND])
+		# print("Warning: Max players for sound '%s' reached (%d). Ignoring request." % [key, MAX_PLAYERS_PER_SOUND])
 		return null
 	
 	# Get player from pool or create new one
@@ -118,12 +118,12 @@ func _get_sfx_3d_player(key: String, force: bool = false) -> AudioStreamPlayer3D
 	"""
 	# Check global limit
 	if not force and len(active_sfx_3d_players) >= MAX_ACTIVE_PLAYERS:
-		print("Warning: Max active 3D SFX players reached (%d). Ignoring request for: %s" % [MAX_ACTIVE_PLAYERS, key])
+		# print("Warning: Max active 3D SFX players reached (%d). Ignoring request for: %s" % [MAX_ACTIVE_PLAYERS, key])
 		return null
 	
 	# Check per-sound limit (always enforced)
 	if sfx_3d_per_key_count.get(key, 0) >= MAX_PLAYERS_PER_SOUND:
-		print("Warning: Max players for 3D sound '%s' reached (%d). Ignoring request." % [key, MAX_PLAYERS_PER_SOUND])
+		# print("Warning: Max players for 3D sound '%s' reached (%d). Ignoring request." % [key, MAX_PLAYERS_PER_SOUND])
 		return null
 	
 	# Get player from pool or create new one

@@ -1,6 +1,5 @@
 extends Node2D
-class_name World
-
+class_name Terrain
 const TILE_SIZE := 16
 
 # Tune these for performance. Fewer/smaller chunks = fewer loaded tiles.
@@ -43,14 +42,14 @@ const STONE_TYPES := [
 	Tile.Type.STONE_5,
 ]
 
-const SKY_HIGH := Color(0.45, 0.7, 0.9)
-const SKY_LOW := Color(0.08, 0.08, 0.10)
-const SKY_DEPTH_START := 0
-const SKY_DEPTH_END := 400
+const SURFACE_BACKGROUND_COLOR := Color(0.45, 0.7, 0.9)
+const DEPTHS_BACKGROUND_COLOR := Color(0.08, 0.08, 0.10)
 
 # Spawn the player near the bottom of the world inside a pre-carved pocket.
 const SPAWN_CELL := Vector2i(0, 470)
 const SPAWN_CLEAR_RADIUS := 5
+
+@export var tile_scene: PackedScene
 
 var world_seed: int
 var noise: FastNoiseLite
@@ -68,15 +67,6 @@ var active_tiles: Dictionary = {} # Vector2i cell -> Tile (fast break lookup)
 var broken_by_group: Dictionary = {}
 
 var tile_pool: Array[Tile] = []
-var elapsed: float = 0.0
-var _timer_frozen: bool = false
-@export var tile_scene: PackedScene
-@onready var the_guy: Node2D = $TheGuy
-@onready var free_cam: Camera2D = $FreeCam
-@onready var break_particle_pool: Node2D = $BreakParticlePool
-@onready var credits: Node = $Credits
-@onready var title: Control = $Title
-@onready var explode_particle_pool: Node2D = $ExplodeParticlePool
 var _last_streamed_chunk: Vector2i = Vector2i(-2147483648, -2147483648)
 
 func setup(params: Dictionary) -> void:
@@ -84,13 +74,6 @@ func setup(params: Dictionary) -> void:
 		world_seed = params["seed"]
 	else:
 		world_seed = randi()
-
-	Manager.message.info(" Use [color=lime]A[/color], [color=lime]D[/color], or [color=lime]<-, ->[/color], (keyboard) or [color=lime]RT[/color], [color=lime]LT[/color] (gamepad) to [color=yellow]move", 20)
-	Manager.message.info(" Use [color=lime]Mouse[/color] or [color=lime]Right Stick [/color] (gamepad) to [color=magenta]aim and shoot", 20)
-	Manager.message.info(" Press [color=lime]E[/color] (keyboard) or [color=lime]Y + Left Stick[/color] (gamepad) to open the [color=cyan]upgrade menu", 20)
-	Manager.message.info(" Press [color=lime]ESC[/color] (keyboard) or [color=lime]Start[/color] (gamepad) to [color=orange]pause", 20)
-	Manager.message.info(" [color=magenta][wave amp=10.0]Now be the 1guy and achieve your 1dream!!![/wave][/color]", 20)
-	Manager.message.info(" Generated world with seed: %d" % world_seed)
 
 	noise = FastNoiseLite.new()
 	noise.seed = world_seed
@@ -130,31 +113,22 @@ func setup(params: Dictionary) -> void:
 	explosive_noise.frequency = 0.15
 
 	_setup_lava()
-	_setup_audio()
-	_setup_title()
-	apply_resolution_zoom()
-	get_viewport().size_changed.connect(apply_resolution_zoom)
 
 	_clear_spawn_area(SPAWN_CELL, SPAWN_CLEAR_RADIUS)
 	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
-	if the_guy:
-		the_guy.global_position = spawn_world
+	World.the_guy.global_position = spawn_world
 	update_region(spawn_world)
 	Manager.scene.finish_loading()
 
 func _process(_delta: float) -> void:
-	if not _timer_frozen:
-		elapsed += _delta
 	var tracking_pos: Vector2
-	if free_cam.is_current():
-		tracking_pos = free_cam.global_position
+	if World.camera.free_cam_enabled:
+		tracking_pos = World.camera.global_position
 		# Freecam debug: click or hold left mouse to delete blocks under the cursor.
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			break_cell_at_world_pos(get_global_mouse_position(), EXPLOSION_OVERKILL)
-	elif the_guy:
-		tracking_pos = the_guy.global_position
 	else:
-		return
+		tracking_pos = World.camera.global_position
 	_update_sky(tracking_pos.y)
 	var chunk := _world_to_chunk(tracking_pos)
 	if chunk != _last_streamed_chunk:
@@ -172,66 +146,13 @@ func _clear_spawn_area(center: Vector2i, radius: int) -> void:
 				if not broken_by_group.has(group):
 					broken_by_group[group] = group_broken
 
-const LAVA_SHADER_CODE := """
-shader_type canvas_item;
-
-uniform vec4 dark_color : source_color = vec4(0.7, 0.2, 0.0, 1.0);
-uniform vec4 bright_color : source_color = vec4(1.0, 0.55, 0.1, 1.0);
-
-varying vec2 world_pos;
-
-float hash(vec2 p) {
-	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
-}
-
-float vnoise(vec2 p) {
-	vec2 i = floor(p);
-	vec2 f = fract(p);
-	float a = hash(i);
-	float b = hash(i + vec2(1.0, 0.0));
-	float c = hash(i + vec2(0.0, 1.0));
-	float d = hash(i + vec2(1.0, 1.0));
-	vec2 u = f * f * (3.0 - 2.0 * f);
-	return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
-}
-
-void vertex() {
-	world_pos = VERTEX;
-}
-
-void fragment() {
-	float t = TIME * 0.4;
-	vec2 p = world_pos * 0.008;
-	float n = vnoise(p + vec2(t * 0.3, t * 0.2));
-	n = mix(n, vnoise(p * 2.0 - vec2(t * 0.6, t * 0.1)), 0.4);
-	COLOR = mix(dark_color, bright_color, n);
-}
-"""
-
 func _setup_lava() -> void:
-	var lava := Polygon2D.new()
-	var top: float = WORLD_Y_MAX * TILE_SIZE
-	var half_width: float = 100000.0
-	var depth: float = 4000.0
-	lava.polygon = PackedVector2Array([
-		Vector2(-half_width, top),
-		Vector2(half_width, top),
-		Vector2(half_width, top + depth),
-		Vector2(-half_width, top + depth),
-	])
-	var shader := Shader.new()
-	shader.code = LAVA_SHADER_CODE
-	var mat := ShaderMaterial.new()
-	mat.shader = shader
-	lava.material = mat
-	lava.z_index = -10
-	add_child(lava)
+	World.lava.position.y = (WORLD_Y_MAX + 1) * TILE_SIZE
 
 func update_region(world_pos: Vector2) -> void:
-	_update_sky(world_pos.y)
 	var rx := LOAD_RADIUS_X
 	var ry := LOAD_RADIUS_Y
-	if free_cam != null and free_cam.is_current():
+	if World.camera.free_cam_enabled:
 		rx = roundi(LOAD_RADIUS_X * FREE_CAM_RADIUS_MULT)
 		ry = roundi(LOAD_RADIUS_Y * FREE_CAM_RADIUS_MULT)
 	var center := _world_to_chunk(world_pos)
@@ -264,6 +185,16 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 				continue
 			if cell.y < surface_y:
 				continue # above surface: sky
+			# Unbreakable layer at the bottom of the world is always solid
+			if cell.y == WORLD_Y_MAX:
+				var unbreakable_tile := _acquire_tile()
+				unbreakable_tile.configure(Tile.Type.UNBREAKABLE, _cell_angle(cell), _cell_texture_index(cell), cell)
+				unbreakable_tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
+				add_child(unbreakable_tile)
+				tiles[cell] = unbreakable_tile
+				active_tiles[cell] = unbreakable_tile
+				continue
+
 			var bulk := noise.get_noise_2d(cell.x, cell.y)
 			var cave := _cave_at(cell)
 			var cave_penalty: float = maxf(cave - CAVE_SPARSITY, 0.0) * CAVE_STRENGTH
@@ -322,6 +253,8 @@ func _do_break(cell: Vector2i, damage: int, chain_depth: int) -> void:
 	if not active_tiles.has(cell):
 		return
 	var tile: Tile = active_tiles[cell]
+	if tile.tile_type == Tile.Type.UNBREAKABLE:
+		return
 	if hp_lost < Tile.HP[tile.tile_type]:
 		tile.animate_hit(hp_lost)
 		return
@@ -360,47 +293,9 @@ func _explode(center: Vector2i, chain_depth: int) -> void:
 		_do_break(c, EXPLOSION_OVERKILL, chain_depth + 1)
 		# await get_tree().process_frame # zero lag but ugly
 
-func _setup_audio() -> void:
-	if Global.has_signal("credits"):
-		Global.credits.connect(_on_credits)
-
-func _on_credits() -> void:
-	_timer_frozen = true
-	# Update personal record if this run is better
-	credits.time_label.text = "[color=blue]Time: %s[/color]" % Manager.utility.format_time(elapsed)
-	var current_record: float = Manager.utility.get_personal_record()
-	if elapsed < current_record:
-		Manager.utility.set_personal_record(elapsed)
-		credits.time_label.text += " [color=deep_pink][wave](New Record!)[/wave][/color]"
-	else:
-		credits.time_label.text += " (PR: %s)" % Manager.utility.format_time(current_record)
-	await Manager.audio.play_credit_music()
-	Manager.audio.play_main_music()
-
-func _setup_title() -> void:
-	var spawn_world: Vector2 = Vector2(SPAWN_CELL) * TILE_SIZE
-	# Centre horizontally on the spawn, a few tiles below it.
-	title.position = spawn_world + Vector2(0, 230)
-	title.z_index = 1000
-	add_child(title)
-
-# Zoom scales with window width so every monitor shows the same slice of the world.
-# REFERENCE_WIDTH is the resolution the game was tuned at; BASE_ZOOM is the zoom at that size.
-const REFERENCE_WIDTH := 1152.0
-const BASE_ZOOM := .9
-
-func apply_resolution_zoom() -> void:
-	var w: float = get_viewport_rect().size.x
-	var factor: float = maxf(w / REFERENCE_WIDTH, 0.1)
-	var z := Vector2(BASE_ZOOM * factor, BASE_ZOOM * factor) / Global.vision
-	if the_guy and the_guy.has_node("Camera2D"):
-		the_guy.get_node("Camera2D").zoom = z
-	if free_cam:
-		free_cam.zoom = z
-
 func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
 	Manager.audio.play_explosion_sfx()
-	var p = explode_particle_pool.put_particle_at(Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0))
+	var p = World.explode_particle_pool.put_particle_at(Vector2(center.x * TILE_SIZE + TILE_SIZE / 2.0, center.y * TILE_SIZE + TILE_SIZE / 2.0))
 	if not p:
 		return
 	p.amount = clampi(int(radius * 20), 20, 200)
@@ -434,7 +329,7 @@ func _chunk_to_break_group(chunk: Vector2i) -> Vector2i:
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and Global.dev_mode:
 		if event.keycode == KEY_F1:
-			_toggle_free_cam()
+			World.camera.toggle_free_cam()
 		elif event.keycode == KEY_F2:
 			Global.money = 1_000_000_000
 		elif event.keycode == KEY_F4:
@@ -446,18 +341,6 @@ func _input(event: InputEvent) -> void:
 			Global.particle_speed = 2000
 			Global.bullet_explosive_chance_level = 100
 			Global.bullet_explosive_size_level = 100
-
-func _toggle_free_cam() -> void:
-	var player_cam: Camera2D = the_guy.get_node("Camera2D")
-	if free_cam.is_current():
-		player_cam.make_current()
-		free_cam.enabled = false
-	else:
-		free_cam.global_position = player_cam.global_position
-		free_cam.enabled = true
-		free_cam.make_current()
-	# Force a region refresh so the expanded/contracted radius takes effect immediately.
-	_last_streamed_chunk = Vector2i(-2147483648, -2147483648)
 
 func _surface_y(x: int) -> int:
 	return roundi(SURFACE_BASE + surface_noise.get_noise_1d(x) * SURFACE_AMPLITUDE)
@@ -471,7 +354,7 @@ func _tile_type_for(cell: Vector2i, depth: int, is_heavy: bool) -> Tile.Type:
 	var height_ratio: float = clampf(1.0 - float(cell.y) / float(WORLD_Y_MAX), 0.0, 1.0)
 	# Explosives appear only in the stone zone; a touch more common as we go up.
 	var explosive_threshold: float = 0.49 - height_ratio * 0.10
-	if explosive_noise.get_noise_2d(cell.x, cell.y) > explosive_threshold:
+	if explosive_noise.get_noise_2d(cell.x, cell.y) > explosive_threshold and false: # TODO
 		return Tile.Type.EXPLOSIVE
 	# Compute underlying stone tier; some ores are gated on it.
 	var below_dirt: int = depth - DIRT_DEPTH - 1
@@ -514,7 +397,34 @@ func _cell_texture_index(cell: Vector2i) -> int:
 	return absi(h) % 6
 
 func _update_sky(world_y: float) -> void:
-	var y_tiles: float = world_y / TILE_SIZE
-	var t: float = clampf((y_tiles - SKY_DEPTH_START) / float(SKY_DEPTH_END - SKY_DEPTH_START), 0.0, 1.0)
-	RenderingServer.set_default_clear_color(SKY_HIGH.lerp(SKY_LOW, t))
-	get_node("WorldUI/Vignette").material.set_shader_parameter("vignette_strength", t)
+	var y_tiles: float = world_y / float(TILE_SIZE)
+	
+	var stops: Array[Dictionary] = [
+		{"y": float(SURFACE_BASE - 5), "color": SURFACE_BACKGROUND_COLOR},
+		{"y": float(SURFACE_BASE + DIRT_DEPTH * 0.5), "color": Tile.COLORS[Tile.Type.DIRT].darkened(0.8)},
+		{"y": float(SURFACE_BASE + DIRT_DEPTH + STONE_TIER_HEIGHT * 0.5), "color": Tile.COLORS[Tile.Type.STONE_1].darkened(0.8)},
+		{"y": float(SURFACE_BASE + DIRT_DEPTH + STONE_TIER_HEIGHT * 1.5), "color": Tile.COLORS[Tile.Type.STONE_2].darkened(0.8)},
+		{"y": float(SURFACE_BASE + DIRT_DEPTH + STONE_TIER_HEIGHT * 2.5), "color": Tile.COLORS[Tile.Type.STONE_3].darkened(0.8)},
+		{"y": float(SURFACE_BASE + DIRT_DEPTH + STONE_TIER_HEIGHT * 3.5), "color": Tile.COLORS[Tile.Type.STONE_4].darkened(0.8)},
+		{"y": float(SURFACE_BASE + DIRT_DEPTH + STONE_TIER_HEIGHT * 4.5), "color": Tile.COLORS[Tile.Type.STONE_5].darkened(0.8)},
+		{"y": float(WORLD_Y_MAX), "color": DEPTHS_BACKGROUND_COLOR}
+	]
+
+	var sky_color := DEPTHS_BACKGROUND_COLOR
+	if y_tiles <= stops[0].y:
+		sky_color = stops[0].color
+	elif y_tiles >= stops[stops.size() - 1].y:
+		sky_color = stops[stops.size() - 1].color
+	else:
+		for i in range(stops.size() - 1):
+			if y_tiles >= stops[i].y and y_tiles <= stops[i + 1].y:
+				var t = (y_tiles - stops[i].y) / (stops[i + 1].y - stops[i].y)
+				sky_color = stops[i].color.lerp(stops[i + 1].color, t)
+				break
+	
+	RenderingServer.set_default_clear_color(sky_color)
+	
+	var vignette_node = get_node_or_null("WorldUI/Vignette")
+	if vignette_node:
+		var t_vignette: float = clampf((y_tiles - SURFACE_BASE) / float(WORLD_Y_MAX - SURFACE_BASE), 0.0, 1.0)
+		vignette_node.material.set_shader_parameter("vignette_strength", t_vignette * 1.5)

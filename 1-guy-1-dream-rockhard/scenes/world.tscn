@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://def0dga52atjf"]
 
-[ext_resource type="Script" uid="uid://80vx6b2n7l4i" path="res://scripts/main.gd" id="1_m5mgf"]
+[ext_resource type="Script" uid="uid://80vx6b2n7l4i" path="res://scripts/terrain.gd" id="1_m5mgf"]
+[ext_resource type="Script" uid="uid://bp30a1y6efjct" path="res://scripts/world.gd" id="1_q5onr"]
 [ext_resource type="PackedScene" uid="uid://b40ejr6it842w" path="res://scenes/tile.tscn" id="2_71j4m"]
 [ext_resource type="PackedScene" uid="uid://xtv65a2ku4yj" path="res://scenes/the_guy.tscn" id="2_emkrx"]
 [ext_resource type="Script" uid="uid://ccjcluay40l2u" path="res://scripts/camera_2d.gd" id="3_0tg4p"]
@@ -8,54 +9,48 @@
 [ext_resource type="Script" uid="uid://ulfuk4frib3s" path="res://scripts/particle_pool.gd" id="6_i7141"]
 [ext_resource type="PackedScene" uid="uid://cq430a7r20cj0" path="res://scenes/break_particles.tscn" id="6_qfnet"]
 [ext_resource type="PackedScene" uid="uid://ccgicpw0bjxvq" path="res://scenes/credits.tscn" id="8_4mrxx"]
-[ext_resource type="PackedScene" uid="uid://d1u282k4ig2nu" path="res://scenes/title.tscn" id="8_7r4gi"]
 [ext_resource type="PackedScene" uid="uid://cx7r3nwbsp45b" path="res://scenes/explode_particles.tscn" id="10_w7kh3"]
+[ext_resource type="Shader" uid="uid://c3edrgjrt0k7c" path="res://shaders/lava.gdshader" id="11_e3hyu"]
+[ext_resource type="Script" uid="uid://b43axhdwwhivs" path="res://scripts/lava.gd" id="12_q5onr"]
+[ext_resource type="Script" uid="uid://dgr17sv3r8op2" path="res://scripts/bullet_pool.gd" id="13_o8fc1"]
+[ext_resource type="PackedScene" uid="uid://c2ap1kbaxqjaj" path="res://scenes/bullet.tscn" id="14_xo05s"]
 
-[node name="World" type="Node2D" unique_id=717164903]
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_e3hyu"]
+frequency = 0.0047
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_q5onr"]
+noise = SubResource("FastNoiseLite_e3hyu")
+seamless = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jhx03"]
+shader = ExtResource("11_e3hyu")
+shader_parameter/timeScaleFactor = 0.04
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_q5onr")
+
+[node name="World" type="Node2D" unique_id=717164903 node_paths=PackedStringArray("terrain", "the_guy", "camera", "credits", "lava", "bullet_pool", "break_particle_pool", "explode_particle_pool")]
 process_mode = 1
+script = ExtResource("1_q5onr")
+terrain = NodePath("Terrain")
+the_guy = NodePath("TheGuy")
+camera = NodePath("Camera")
+credits = NodePath("Credits")
+lava = NodePath("Lava")
+bullet_pool = NodePath("BulletPool")
+break_particle_pool = NodePath("BreakParticlePool")
+explode_particle_pool = NodePath("ExplodeParticlePool")
+
+[node name="Terrain" type="Node2D" parent="." unique_id=569992496]
 script = ExtResource("1_m5mgf")
 tile_scene = ExtResource("2_71j4m")
 
 [node name="TheGuy" parent="." unique_id=1049185052 instance=ExtResource("2_emkrx")]
+z_index = -1
 
-[node name="FreeCam" type="Camera2D" parent="." unique_id=709071274]
-enabled = false
+[node name="Camera" type="Camera2D" parent="." unique_id=709071274]
 zoom = Vector2(2.5, 2.5)
 script = ExtResource("3_0tg4p")
 
 [node name="WorldUI" parent="." unique_id=2031217533 instance=ExtResource("4_hcb8y")]
-
-[node name="BreakParticlePool" type="Node2D" parent="." unique_id=2065963388]
-script = ExtResource("6_i7141")
-particle_scene = ExtResource("6_qfnet")
-
-[node name="Title" type="Control" parent="." unique_id=77022050]
-layout_mode = 3
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_right = 40.0
-offset_bottom = 40.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="Title" parent="Title" unique_id=1535050460 instance=ExtResource("8_7r4gi")]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -284.0
-offset_top = -102.5
-offset_right = 284.0
-offset_bottom = 102.5
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
 
 [node name="Credits" parent="." unique_id=1299189433 node_paths=PackedStringArray("guy") instance=ExtResource("8_4mrxx")]
 z_index = 3
@@ -68,6 +63,20 @@ offset_top = -245.905
 offset_bottom = -245.905
 guy = NodePath("../TheGuy")
 
+[node name="BreakParticlePool" type="Node2D" parent="." unique_id=2065963388]
+script = ExtResource("6_i7141")
+particle_scene = ExtResource("6_qfnet")
+
 [node name="ExplodeParticlePool" type="Node2D" parent="." unique_id=2011470263]
 script = ExtResource("6_i7141")
 particle_scene = ExtResource("10_w7kh3")
+
+[node name="Lava" type="Polygon2D" parent="." unique_id=2008828421]
+z_index = -10
+material = SubResource("ShaderMaterial_jhx03")
+polygon = PackedVector2Array(960, 0, 960, 1080, -960, 1080, -960, 0)
+script = ExtResource("12_q5onr")
+
+[node name="BulletPool" type="Node2D" parent="." unique_id=2006154698]
+script = ExtResource("13_o8fc1")
+bullet_scene = ExtResource("14_xo05s")
