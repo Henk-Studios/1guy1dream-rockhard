@@ -1,149 +1,22 @@
 extends Node2D
-class_name Terrain
-const TILE_SIZE: int = 16
-const CHUNK_SIZE: int = 8
-const BREAK_GROUP_CHUNKS: int = 8
-const LOAD_RADIUS_X: int = 5
-const LOAD_RADIUS_Y: int = 3
-const FREE_CAM_RADIUS_MULT: float = 2.0
-const EXPLOSION_OVERKILL: int = 999999
-var world_thickness: int = 0
-
-class Layer:
-	var type: int
-	var thickness: int
-	var background: Color
-	var patches: Array[Patch]
-	func _init(p_type: int = -1, p_thickness: int = 0, p_background: Color = Color(0, 0, 0), p_patches: Array[Patch] = []):
-		self.type = p_type
-		self.thickness = p_thickness
-		self.background = p_background
-		self.patches = p_patches
-
-class Patch:
-	var type: int
-	var noise_gen: NoiseConfig
-	var threshold: float
-	var invert: bool = false
-	var patches: Array[Patch]
-	func _init(p_type: int = -1, p_noise_gen: NoiseConfig = null, p_threshold: float = 0.0, p_invert: bool = false, p_patches: Array[Patch] = []):
-		self.type = p_type
-		self.noise_gen = p_noise_gen
-		self.threshold = p_threshold
-		self.invert = p_invert
-		self.patches = p_patches
-
-class NoiseConfig:
-	var noise_type: FastNoiseLite.NoiseType
-	var frequency: float
-	var seed_offset: int
-	var fractal_type: int = -1
-	var fractal_octaves: int = -1
-	var noise = FastNoiseLite.new()
-	func _init(p_noise_type: FastNoiseLite.NoiseType = FastNoiseLite.TYPE_PERLIN, p_frequency: float = 0.05, p_seed_offset: int = 0, p_fractal_type: int = -1, p_fractal_octaves: int = -1):
-		self.noise_type = p_noise_type
-		self.frequency = p_frequency
-		self.seed_offset = p_seed_offset
-		self.fractal_type = p_fractal_type
-		self.fractal_octaves = p_fractal_octaves
-	# Can only be configured after world_seed is set.
-	func configure(p_seed: int) -> void:
-		self.noise.noise_type = self.noise_type
-		self.noise.frequency = self.frequency
-		self.noise.seed = p_seed ^ self.seed_offset
-		if self.fractal_type != -1:
-			self.noise.fractal_type = self.fractal_type
-		if self.fractal_octaves != -1:
-			self.noise.fractal_octaves = self.fractal_octaves
-
-var noises: Dictionary[String, NoiseConfig] = {
-	"ridged_mask": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.05, 0x9E3779B9, FastNoiseLite.FRACTAL_RIDGED, 1),
-	"cave_mask": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.015, 0),
-	"stone_transition": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.05, 0x87654321),
-	"explosive": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.15, 0xD4E5F607),
-	"gold": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.08, 0xA1B2C3D4),
-	"diamond": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.12, 0xB2C3D4E5),
- 	"emerald": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.14, 0xC3D4E5F6),
-	"explosive_spaghetti": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.005, 0xDEADBEEF, FastNoiseLite.FRACTAL_RIDGED, 2),
-}
-
-func _make_stone_layer_patches(transition_type: int, layer_index: int) -> Array[Patch]:
-	# layer_index: 1 (closest to surface) .. 5 (deepest)
-	# Caves become rarer the higher (smaller index) you go.
-	var cave_thresh_by_layer := {1: -0.65, 2: -0.55, 3: -0.45, 4: -0.35, 5: -0.25}
-	# Gold gets less common upward (higher threshold near surface)
-	var gold_thresh_by_layer := {1: 0.50, 2: 0.40, 3: 0.35, 4: 0.30, 5: 0.25}
-	# Diamond gets more common upward (lower threshold near surface)
-	var diamond_thresh_by_layer := {1: 0.30, 2: 0.35, 3: 0.40, 4: 0.45, 5: 0.50}
-	# Explosive slightly more common upward (lower threshold near surface)
-	var explosive_thresh_by_layer := {1: 0.42, 2: 0.45, 3: 0.49, 4: 0.52, 5: 0.55}
-
-	var cave_thresh: float = cave_thresh_by_layer.get(layer_index, -0.45)
-	var gold_thresh: float = gold_thresh_by_layer.get(layer_index, 0.35)
-	var diamond_thresh: float = diamond_thresh_by_layer.get(layer_index, 0.45)
-	var explosive_thresh: float = explosive_thresh_by_layer.get(layer_index, 0.49)
-
-	var result: Array[Patch] = [
-		Patch.new(-1, noises["ridged_mask"], 0.8),
-		Patch.new(-1, noises["cave_mask"], cave_thresh, true),
-		Patch.new(transition_type, noises["stone_transition"], 0.3),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["explosive"], explosive_thresh),
-		# Very rare, long 'spaghetti' explosive veins
-		Patch.new(Tile.Type.EXPLOSIVE, noises["explosive_spaghetti"], 0.85),
-		Patch.new(Tile.Type.GOLD, noises["gold"], gold_thresh),
-		Patch.new(Tile.Type.DIAMOND, noises["diamond"], diamond_thresh),
-	]
-
-	# Emeralds: very rare in stone_4, more common in stone_5
-	if layer_index >= 4:
-		var emerald_thresh: float = 0.45
-		if layer_index == 4:
-			emerald_thresh = 0.52
-		result.append(Patch.new(Tile.Type.EMERALD, noises["emerald"], emerald_thresh))
-
-	return result
-
-var patches: Dictionary = {
-	"stone_1": _make_stone_layer_patches(Tile.Type.STONE_2, 1),
-	"stone_2": _make_stone_layer_patches(Tile.Type.STONE_3, 2),
-	"stone_3": _make_stone_layer_patches(Tile.Type.STONE_4, 3),
-	"stone_4": _make_stone_layer_patches(Tile.Type.STONE_5, 4),
-	"stone_5": _make_stone_layer_patches(Tile.Type.STONE_1, 5),
-}
-
-# Add rare patches that occasionally replace a layer with the layer above it
-# (applies to stone_1..stone_4 only). These patches use a high threshold to be rare
-func _add_rare_above_layer_patches() -> void:
-	for i in range(1, 5):
-		var key := "stone_" + str(i)
-		var above_key := "stone_" + str(i + 1)
-		# type for the above layer
-		var above_type := -1
-		if i == 1:
-			above_type = Tile.Type.STONE_2
-		elif i == 2:
-			above_type = Tile.Type.STONE_3
-		elif i == 3:
-			above_type = Tile.Type.STONE_4
-		elif i == 4:
-			above_type = Tile.Type.STONE_5
-
-		if patches.has(above_key) and above_type != -1:
-			# Rare pockets of the above layer. When matched, evaluate the above layer's patches.
-			patches[key].append(Patch.new(above_type, noises["ridged_mask"], 0.92, false, patches[above_key]))
-
-var layers: Dictionary[String, Layer] = {
-	"dirt": Layer.new(Tile.Type.DIRT, 50, Color(0.09, 0.07, 0.04)),
-	"stone_1": Layer.new(Tile.Type.STONE_1, 90, Color(0.08, 0.08, 0.10), patches["stone_1"]),
-	"stone_2": Layer.new(Tile.Type.STONE_2, 90, Color(0.07, 0.07, 0.09), patches["stone_2"]),
-	"stone_3": Layer.new(Tile.Type.STONE_3, 90, Color(0.06, 0.06, 0.08), patches["stone_3"]),
-	"stone_4": Layer.new(Tile.Type.STONE_4, 90, Color(0.05, 0.05, 0.07), patches["stone_4"]),
-	"stone_5": Layer.new(Tile.Type.STONE_5, 90, Color(0.04, 0.04, 0.06), patches["stone_5"]),
-}
+const TILE_SIZE := 16
 
 var terrain_config: Dictionary = {
+	"chunk_size": 8,
+	"load_radius_x": 5,
+	"load_radius_y": 3,
+	"free_cam_radius_mult": 2.0,
+	"world_y_min": 0,
+	"world_y_max": 500,
+	"air_threshold": - 0.45,
+	"heavy_threshold": 0.3,
+	"cave_sparsity": 0.9,
+	"cave_strength": 7.0,
+	"cave_gate_soft": - 0.25,
+	"cave_gate_hard": 0.2,
 	"surface_base": 15,
 	"surface_amplitude": 6,
+	"break_group_chunks": 8,
 	"spawn_cell": Vector2i(0, 470),
 	"spawn_clear_radius": 5,
 	"surface_background_color": Color(0.45, 0.7, 0.9),
@@ -151,18 +24,233 @@ var terrain_config: Dictionary = {
 	"explosion_base_radius": 3.0,
 	"explosion_chain_bonus": 0.55,
 	"explosion_chain_delay": 0.08,
-	"noises": noises,
-	"patches": patches,
+	"explosion_overkill": 999999,
+
 	"layers": [
-		layers["dirt"],
-		layers["stone_1"],
-		layers["stone_2"],
-		layers["stone_3"],
-		layers["stone_4"],
-		layers["stone_5"],
+		{
+			"type": Tile.Type.DIRT,
+			"thickness": 50,
+			"background": Color(0.09, 0.07, 0.04),
+			"patches": [
+				{
+					"noise_freq": 0.15,
+					"seed_offset": 0xD4E5F607,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.49,
+					"type": Tile.Type.EXPLOSIVE,
+				},
+				{
+					"noise_freq": 0.08,
+					"seed_offset": 0xA1B2C3D4,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.35,
+					"type": Tile.Type.GOLD,
+				}
+			]
+		},
+		{
+			"type": Tile.Type.STONE_1,
+			"thickness": 90,
+			"background": Color(0.08, 0.08, 0.10),
+			"patches": [
+				{
+					"noise_freq": 0.05,
+					"seed_offset": 0x87654321,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.3,
+					"type": Tile.Type.STONE_2,
+					"patches": []
+				},
+				{
+					"noise_freq": 0.15,
+					"seed_offset": 0xD4E5F607,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.49,
+					"type": Tile.Type.EXPLOSIVE,
+				},
+				{
+					"noise_freq": 0.08,
+					"seed_offset": 0xA1B2C3D4,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.35,
+					"type": Tile.Type.GOLD,
+				},
+				{
+					"noise_freq": 0.12,
+					"seed_offset": 0xB2C3D4E5,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.45,
+					"type": Tile.Type.DIAMOND,
+				}
+			]
+		},
+		{
+			"type": Tile.Type.STONE_2,
+			"thickness": 90,
+			"background": Color(0.07, 0.07, 0.09),
+			"patches": [
+				{
+					"noise_freq": 0.05,
+					"seed_offset": 0x87654321,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.3,
+					"type": Tile.Type.STONE_3,
+					"patches": []
+				},
+				{
+					"noise_freq": 0.15,
+					"seed_offset": 0xD4E5F607,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.49,
+					"type": Tile.Type.EXPLOSIVE,
+				},
+				{
+					"noise_freq": 0.08,
+					"seed_offset": 0xA1B2C3D4,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.35,
+					"type": Tile.Type.GOLD,
+				},
+				{
+					"noise_freq": 0.12,
+					"seed_offset": 0xB2C3D4E5,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.45,
+					"type": Tile.Type.DIAMOND,
+				}
+			]
+		},
+		{
+			"type": Tile.Type.STONE_3,
+			"thickness": 90,
+			"background": Color(0.06, 0.06, 0.08),
+			"patches": [
+				{
+					"noise_freq": 0.05,
+					"seed_offset": 0x87654321,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.3,
+					"type": Tile.Type.STONE_4,
+					"patches": []
+				},
+				{
+					"noise_freq": 0.15,
+					"seed_offset": 0xD4E5F607,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.49,
+					"type": Tile.Type.EXPLOSIVE,
+				},
+				{
+					"noise_freq": 0.08,
+					"seed_offset": 0xA1B2C3D4,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.35,
+					"type": Tile.Type.GOLD,
+				},
+				{
+					"noise_freq": 0.12,
+					"seed_offset": 0xB2C3D4E5,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.45,
+					"type": Tile.Type.DIAMOND,
+				}
+			]
+		},
+		{
+			"type": Tile.Type.STONE_4,
+			"thickness": 90,
+			"background": Color(0.05, 0.05, 0.07),
+			"patches": [
+				{
+					"noise_freq": 0.05,
+					"seed_offset": 0x87654321,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.3,
+					"type": Tile.Type.STONE_5,
+					"patches": []
+				},
+				{
+					"noise_freq": 0.15,
+					"seed_offset": 0xD4E5F607,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.49,
+					"type": Tile.Type.EXPLOSIVE,
+				},
+				{
+					"noise_freq": 0.08,
+					"seed_offset": 0xA1B2C3D4,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.35,
+					"type": Tile.Type.GOLD,
+				},
+				{
+					"noise_freq": 0.12,
+					"seed_offset": 0xB2C3D4E5,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.45,
+					"type": Tile.Type.DIAMOND,
+				}
+			]
+		},
+		{
+			"type": Tile.Type.STONE_5,
+			"thickness": 90,
+			"background": Color(0.04, 0.04, 0.06),
+			"patches": [
+				{
+					"noise_freq": 0.05,
+					"seed_offset": 0x87654321,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.3,
+					"type": Tile.Type.STONE_1,
+					"patches": []
+				},
+				{
+					"noise_freq": 0.15,
+					"seed_offset": 0xD4E5F607,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.49,
+					"type": Tile.Type.EXPLOSIVE,
+				},
+				{
+					"noise_freq": 0.08,
+					"seed_offset": 0xA1B2C3D4,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.35,
+					"type": Tile.Type.GOLD,
+				},
+				{
+					"noise_freq": 0.12,
+					"seed_offset": 0xB2C3D4E5,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.45,
+					"type": Tile.Type.DIAMOND,
+				},
+				{
+					"noise_freq": 0.14,
+					"seed_offset": 0xC3D4E5F6,
+					"noise_type": FastNoiseLite.TYPE_PERLIN,
+					"threshold": 0.48,
+					"type": Tile.Type.EMERALD,
+				}
+			]
+		}
 	]
 }
 
+# Tune these for performance. Fewer/smaller chunks = fewer loaded tiles.
+
+
+# Caves only form where bulk noise is already leaning toward air.
+# At bulk <= terrain_config.cave_gate_soft: full carving. At bulk >= terrain_config.cave_gate_hard: no carving.
+
+# Surface terrain shape. terrain_config.surface_base is the average surface y (in tiles).
+# terrain_config.surface_amplitude is how far above/below surface can vary.
+
+# Layer depths below the surface.
+
+# Broken-cell storage grouping: each group spans terrain_config.break_group_chunks x terrain_config.break_group_chunks chunks.
+# Coarser groups = fewer outer dict entries as the world fills up with mined cells.
 const STONE_TYPES := [
 	Tile.Type.STONE_1,
 	Tile.Type.STONE_2,
@@ -172,9 +260,13 @@ const STONE_TYPES := [
 ]
 
 
+# Spawn the player near the bottom of the world inside a pre-carved pocket.
+
 @export var tile_scene: PackedScene
 
 var world_seed: int
+var noise: FastNoiseLite
+var cave_noise: FastNoiseLite
 var surface_noise: FastNoiseLite
 var loaded_chunks: Dictionary = {} # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
 var active_tiles: Dictionary = {} # Vector2i cell -> Tile (fast break lookup)
@@ -192,46 +284,53 @@ func setup(params: Dictionary) -> void:
 	else:
 		world_seed = randi()
 
+	noise = FastNoiseLite.new()
+	noise.seed = world_seed
+	noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	noise.frequency = 0.015
+
+	cave_noise = FastNoiseLite.new()
+	cave_noise.seed = world_seed ^ 0x9E3779B9
+	cave_noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	cave_noise.fractal_type = FastNoiseLite.FRACTAL_RIDGED
+	cave_noise.fractal_octaves = 1
+	cave_noise.frequency = 0.05
+
 	surface_noise = FastNoiseLite.new()
 	surface_noise.seed = world_seed ^ 0x12345678
 	surface_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	surface_noise.frequency = 0.03
 
-	# Add rare 'above-layer' pockets before configuring patches
-	_add_rare_above_layer_patches()
-
 	_setup_patches_recursive(terrain_config.layers)
 
+	_setup_lava()
 
 	_clear_spawn_area(terrain_config.spawn_cell, terrain_config.spawn_clear_radius)
 	var spawn_world: Vector2 = Vector2(terrain_config.spawn_cell) * TILE_SIZE
-	for layer: Layer in terrain_config.layers:
-		world_thickness += layer.thickness
 	World.the_guy.global_position = spawn_world
-	_setup_lava()
 	update_region(spawn_world)
 	Manager.scene.finish_loading()
 
 func _setup_patches_recursive(items: Array) -> void:
 	for item in items:
-		var item_patches: Array[Patch] = []
-		if item is Layer:
-			item_patches = (item as Layer).patches
-		elif item is Patch:
-			item_patches = (item as Patch).patches
+		if item.has("patches"):
+			for patch in item["patches"]:
+				var p_noise := FastNoiseLite.new()
+				p_noise.seed = world_seed ^ patch.get("seed_offset", 0)
+				p_noise.noise_type = patch.get("noise_type", FastNoiseLite.TYPE_PERLIN)
+				p_noise.frequency = patch.get("noise_freq", 0.05)
+				patch["noise_gen"] = p_noise
+				
+				if patch.has("patches"):
+					_setup_patches_recursive([patch])
 
-		for patch in item_patches:
-			if patch.noise_gen != null:
-				patch.noise_gen.configure(world_seed)
-			if not patch.patches.is_empty():
-				_setup_patches_recursive([patch])
 func _process(_delta: float) -> void:
 	var tracking_pos: Vector2
 	if World.camera.free_cam_enabled:
 		tracking_pos = World.camera.global_position
 		# Freecam debug: click or hold left mouse to delete blocks under the cursor.
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
-			break_cell_at_world_pos(get_global_mouse_position(), EXPLOSION_OVERKILL)
+			break_cell_at_world_pos(get_global_mouse_position(), terrain_config.explosion_overkill)
 	else:
 		tracking_pos = World.camera.global_position
 	_update_sky(tracking_pos.y)
@@ -247,20 +346,19 @@ func _clear_spawn_area(center: Vector2i, radius: int) -> void:
 				var cell := center + Vector2i(dx, dy)
 				var group := _chunk_to_break_group(_cell_to_chunk(cell))
 				var group_broken: Dictionary = broken_by_group.get(group, {})
-				group_broken[cell] = EXPLOSION_OVERKILL
+				group_broken[cell] = 99999 # well above any tile's HP → always broken
 				if not broken_by_group.has(group):
 					broken_by_group[group] = group_broken
 
 func _setup_lava() -> void:
-	World.lava.position.y = (world_thickness) * TILE_SIZE
-	print("World thickness:", world_thickness, "Lava Y:", World.lava.position.y)
+	World.lava.position.y = (terrain_config.world_y_max + 1) * TILE_SIZE
 
 func update_region(world_pos: Vector2) -> void:
-	var rx = LOAD_RADIUS_X
-	var ry = LOAD_RADIUS_Y
+	var rx = terrain_config.load_radius_x
+	var ry = terrain_config.load_radius_y
 	if World.camera.free_cam_enabled:
-		rx = roundi(LOAD_RADIUS_X * FREE_CAM_RADIUS_MULT)
-		ry = roundi(LOAD_RADIUS_Y * FREE_CAM_RADIUS_MULT)
+		rx = roundi(terrain_config.load_radius_x * terrain_config.free_cam_radius_mult)
+		ry = roundi(terrain_config.load_radius_y * terrain_config.free_cam_radius_mult)
 	var center := _world_to_chunk(world_pos)
 	var wanted: Dictionary = {}
 	for dx in range(-rx, rx + 1):
@@ -274,25 +372,25 @@ func update_region(world_pos: Vector2) -> void:
 			_unload_chunk(chunk)
 
 func _world_to_chunk(world_pos: Vector2) -> Vector2i:
-	var chunk_pixels: float = CHUNK_SIZE * TILE_SIZE
+	var chunk_pixels: float = terrain_config.chunk_size * TILE_SIZE
 	return Vector2i(floor(world_pos.x / chunk_pixels), floor(world_pos.y / chunk_pixels))
 
 func _generate_chunk(chunk_coord: Vector2i) -> void:
-	var base = chunk_coord * CHUNK_SIZE
+	var base = chunk_coord * terrain_config.chunk_size
 	var tiles: Dictionary = {}
 	# One upfront lookup; null means no broken cells in this chunk's group (fast path).
 	var chunk_broken: Variant = broken_by_group.get(_chunk_to_break_group(chunk_coord))
-	for lx in CHUNK_SIZE:
+	for lx in terrain_config.chunk_size:
 		var col_x: int = base.x + lx
 		var surface_y: int = _surface_y(col_x)
-		for ly in CHUNK_SIZE:
+		for ly in terrain_config.chunk_size:
 			var cell := Vector2i(col_x, base.y + ly)
-			if cell.y < 0 or cell.y >= world_thickness:
+			if cell.y < terrain_config.world_y_min or cell.y > terrain_config.world_y_max:
 				continue
 			if cell.y < surface_y:
 				continue # above surface: sky
 			# Unbreakable layer at the bottom of the world is always solid
-			if cell.y == world_thickness - 1:
+			if cell.y == terrain_config.world_y_max:
 				var unbreakable_tile := _acquire_tile()
 				unbreakable_tile.configure(Tile.Type.UNBREAKABLE, _cell_angle(cell), _cell_texture_index(cell), cell)
 				unbreakable_tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
@@ -301,10 +399,16 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 				active_tiles[cell] = unbreakable_tile
 				continue
 
-			var depth: int = cell.y - surface_y
-			var tile_type: int = _tile_type_for(cell, depth)
-			if tile_type == -1:
+			var bulk := noise.get_noise_2d(cell.x, cell.y)
+			var cave := _cave_at(cell)
+			var cave_penalty: float = maxf(cave - terrain_config.cave_sparsity, 0.0) * terrain_config.cave_strength
+			var cave_gate: float = clampf((terrain_config.cave_gate_hard - bulk) / (terrain_config.cave_gate_hard - terrain_config.cave_gate_soft), 0.0, 1.0)
+			var combined: float = bulk - cave_penalty * cave_gate
+			if combined < terrain_config.air_threshold:
 				continue
+
+			var depth: int = cell.y - surface_y
+			var tile_type: Tile.Type = _tile_type_for(cell, depth)
 
 			# Skip cell if accumulated damage already destroys this tile type.
 			if chunk_broken != null:
@@ -333,7 +437,7 @@ func break_cell(cell: Vector2i, damage: int = 1) -> void:
 
 # Triggered by an explosive bullet upgrade. bonus_depth scales the blast radius via chain formula.
 func bullet_explode(cell: Vector2i, bonus_depth: int = 0) -> void:
-	_do_break(cell, EXPLOSION_OVERKILL, bonus_depth)
+	_do_break(cell, terrain_config.explosion_overkill, bonus_depth)
 	_explode(cell, bonus_depth)
 
 func _do_break(cell: Vector2i, damage: int, chain_depth: int) -> void:
@@ -379,13 +483,13 @@ func _explode(center: Vector2i, chain_depth: int) -> void:
 			if active_tiles.has(target) and active_tiles[target].tile_type == Tile.Type.EXPLOSIVE:
 				chained.append(target)
 			else:
-				_do_break(target, EXPLOSION_OVERKILL, chain_depth + 1)
+				_do_break(target, terrain_config.explosion_overkill, chain_depth + 1)
 
 	if chained.is_empty():
 		return
 	await get_tree().process_frame # reduced lag
 	for c in chained:
-		_do_break(c, EXPLOSION_OVERKILL, chain_depth + 1)
+		_do_break(c, terrain_config.explosion_overkill, chain_depth + 1)
 		# await get_tree().process_frame # zero lag but ugly
 
 func _spawn_explosion_fx(center: Vector2i, radius: float) -> void:
@@ -416,10 +520,10 @@ func break_cell_at_world_pos(world_pos: Vector2, damage: int = 1) -> void:
 	break_cell(Vector2i(floori(world_pos.x / TILE_SIZE), floori(world_pos.y / TILE_SIZE)), damage)
 
 func _cell_to_chunk(cell: Vector2i) -> Vector2i:
-	return Vector2i(floori(float(cell.x) / CHUNK_SIZE), floori(float(cell.y) / CHUNK_SIZE))
+	return Vector2i(floori(float(cell.x) / terrain_config.chunk_size), floori(float(cell.y) / terrain_config.chunk_size))
 
 func _chunk_to_break_group(chunk: Vector2i) -> Vector2i:
-	return Vector2i(floori(float(chunk.x) / BREAK_GROUP_CHUNKS), floori(float(chunk.y) / BREAK_GROUP_CHUNKS))
+	return Vector2i(floori(float(chunk.x) / terrain_config.break_group_chunks), floori(float(chunk.y) / terrain_config.break_group_chunks))
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and Global.dev_mode:
@@ -440,47 +544,54 @@ func _input(event: InputEvent) -> void:
 func _surface_y(x: int) -> int:
 	return roundi(terrain_config.surface_base + surface_noise.get_noise_1d(x) * terrain_config.surface_amplitude)
 
-func _tile_type_for(cell: Vector2i, depth: int) -> int:
+func _tile_type_for(cell: Vector2i, depth: int) -> Tile.Type:
 	if depth == 0:
 		return Tile.Type.GRASS
 		
-	var target_layer: Layer = null
+	var target_layer: Dictionary
 	var current_depth_thresh := 0
 	
-	for layer: Layer in terrain_config.layers:
+	for layer in terrain_config.layers:
 		current_depth_thresh += layer.thickness
 		if depth <= current_depth_thresh:
 			target_layer = layer
 			break
 			
-	if target_layer == null:
-		target_layer = terrain_config.layers[-1] as Layer
+	if target_layer.is_empty():
+		target_layer = terrain_config.layers[-1]
 
-	var current_config: Patch = null
-	var resolved_type: int = target_layer.type
+	var current_config: Dictionary = target_layer
+	var resolved_type: Tile.Type = current_config.type
 
 	# Evaluate patches recursively
-	var patches_to_check: Array[Patch] = target_layer.patches
+	var patches_to_check: Array = current_config.get("patches", [])
 	while not patches_to_check.is_empty():
-		var matched_patch: Patch = null
-		for patch: Patch in patches_to_check:
-			var patch_noise_gen: FastNoiseLite = patch.noise_gen.noise if patch.noise_gen != null else null
-			var thresh: float = patch.threshold
-			var invert: bool = patch.invert
-			if patch_noise_gen:
-				var val = patch_noise_gen.get_noise_2d(cell.x, cell.y)
-				if (invert and val < thresh) or (not invert and val >= thresh):
-					matched_patch = patch
-					break # Enter the first matching patch
+		var matched_patch = null
+		for patch in patches_to_check:
+			var patch_noise_gen: FastNoiseLite = patch.get("noise_gen")
+			var thresh: float = patch.get("threshold", 0.3)
+			if patch_noise_gen and patch_noise_gen.get_noise_2d(cell.x, cell.y) >= thresh:
+				matched_patch = patch
+				break # Enter the first matching patch
 		
 		if matched_patch:
 			current_config = matched_patch
-			resolved_type = current_config.type
-			patches_to_check = current_config.patches
+			resolved_type = current_config.get("type", resolved_type)
+			patches_to_check = current_config.get("patches", [])
 		else:
 			break # No patch matched, stop digging deeper
 
 	return resolved_type
+
+func _cave_at(cell: Vector2i) -> float:
+	# Dilated ridge sample: cell counts as "on a ridge" if it or any 4-neighbor has a peak.
+	# Thickens tunnels without increasing their count or length.
+	var m := cave_noise.get_noise_2d(cell.x, cell.y)
+	m = maxf(m, cave_noise.get_noise_2d(cell.x - 1, cell.y))
+	m = maxf(m, cave_noise.get_noise_2d(cell.x + 1, cell.y))
+	m = maxf(m, cave_noise.get_noise_2d(cell.x, cell.y - 1))
+	m = maxf(m, cave_noise.get_noise_2d(cell.x, cell.y + 1))
+	return m
 
 func _cell_angle(cell: Vector2i) -> float:
 	# Deterministic per-cell rotation so revisiting a chunk looks identical.
@@ -500,7 +611,7 @@ func _update_sky(world_y: float) -> void:
 	]
 	
 	var current_y = terrain_config.surface_base
-	for layer: Layer in terrain_config.layers:
+	for layer in terrain_config.layers:
 		current_y += layer.thickness
 		var y_stop = current_y - layer.thickness * 0.5
 		var col = layer.background
@@ -508,7 +619,7 @@ func _update_sky(world_y: float) -> void:
 			col = Tile.COLORS[layer.type].darkened(0.8)
 		stops.append({"y": float(y_stop), "color": col})
 		
-	stops.append({"y": float(world_thickness), "color": terrain_config.depths_background_color})
+	stops.append({"y": float(terrain_config.world_y_max), "color": terrain_config.depths_background_color})
 
 	var sky_color = terrain_config.depths_background_color
 	if y_tiles <= stops[0].y:
@@ -526,5 +637,5 @@ func _update_sky(world_y: float) -> void:
 	
 	var vignette_node = get_node_or_null("WorldUI/Vignette")
 	if vignette_node:
-		var t_vignette: float = clampf((y_tiles - terrain_config.surface_base) / float(world_thickness - terrain_config.surface_base), 0.0, 1.0)
+		var t_vignette: float = clampf((y_tiles - terrain_config.surface_base) / float(terrain_config.world_y_max - terrain_config.surface_base), 0.0, 1.0)
 		vignette_node.material.set_shader_parameter("vignette_strength", t_vignette * 1.5)

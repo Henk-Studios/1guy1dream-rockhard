@@ -74,7 +74,7 @@ particle_scene = ExtResource("10_w7kh3")
 [node name="Lava" type="Polygon2D" parent="." unique_id=2008828421]
 z_index = -10
 material = SubResource("ShaderMaterial_jhx03")
-polygon = PackedVector2Array(960, 0, 960, 1080, -960, 1080, -960, 0)
+polygon = PackedVector2Array(960, -10, 960, 1080, -960, 1080, -960, -10)
 script = ExtResource("12_q5onr")
 
 [node name="BulletPool" type="Node2D" parent="." unique_id=2006154698]
