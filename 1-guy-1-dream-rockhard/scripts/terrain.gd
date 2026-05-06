@@ -34,43 +34,77 @@ class Patch:
 		self.patches = p_patches
 
 class NoiseConfig:
-	var noise_type: FastNoiseLite.NoiseType
-	var frequency: float
-	var seed_offset: int
-	var fractal_type: int = -1
-	var fractal_octaves: int = -1
+	var style: StringName # High-level noise character: blobby, ridged, billowy, value.
+	var size: float # Feature scale from small (0.0) to large (1.0).
+	var detail: float # Amount of fine detail layered into the pattern.
+	var roughness: float # Contrast/harshness of variation between highs and lows.
+	var spaghettiness: float # How stringy and tunnel-like the pattern becomes.
+	var rarity: float # Rarity bias used to nudge thresholds toward common or rare.
+	var intensity: float # Reserved strength multiplier for future weighting controls.
 	var noise = FastNoiseLite.new()
-	func _init(p_noise_type: FastNoiseLite.NoiseType = FastNoiseLite.TYPE_PERLIN, p_frequency: float = 0.05, p_seed_offset: int = 0, p_fractal_type: int = -1, p_fractal_octaves: int = -1):
-		self.noise_type = p_noise_type
-		self.frequency = p_frequency
-		self.seed_offset = p_seed_offset
-		self.fractal_type = p_fractal_type
-		self.fractal_octaves = p_fractal_octaves
+	static var seed_increment: int = 0
+	func _init(p_style: StringName = &"blobby", p_size: float = 0.5, p_rarity: float = 0.5, p_spaghettiness: float = 0.0, p_detail: float = 0.5, p_roughness: float = 0.4, p_intensity: float = 1.0):
+		self.style = p_style
+		self.size = p_size
+		self.detail = p_detail
+		self.roughness = p_roughness
+		self.spaghettiness = p_spaghettiness
+		self.rarity = p_rarity
+		self.intensity = p_intensity
+
+	func threshold(base: float, invert: bool = false, influence: float = 0.35) -> float:
+		var rarity_shift: float = (clampf(rarity, 0.0, 1.0) - 0.5) * influence
+		if invert:
+			rarity_shift = - rarity_shift
+		return clampf(base + rarity_shift, -1.0, 1.0)
+
 	# Can only be configured after world_seed is set.
 	func configure(p_seed: int) -> void:
-		self.noise.noise_type = self.noise_type
-		self.noise.frequency = self.frequency
-		self.noise.seed = p_seed ^ self.seed_offset
-		if self.fractal_type != -1:
-			self.noise.fractal_type = self.fractal_type
-		if self.fractal_octaves != -1:
-			self.noise.fractal_octaves = self.fractal_octaves
+		self.noise.noise_type = FastNoiseLite.TYPE_PERLIN
+		self.noise.fractal_type = FastNoiseLite.FRACTAL_FBM
+		if style == &"ridged":
+			self.noise.fractal_type = FastNoiseLite.FRACTAL_RIDGED
+		elif style == &"billowy":
+			self.noise.fractal_type = FastNoiseLite.FRACTAL_PING_PONG
+		elif style == &"value":
+			self.noise.noise_type = FastNoiseLite.TYPE_VALUE
+
+		var increment := seed_increment
+		seed_increment += 1
+		var seed_offset := int(hash(Vector2i(p_seed, increment)))
+
+		var size_clamped := clampf(size, 0.0, 1.0)
+		var detail_clamped := clampf(detail, 0.0, 1.0)
+		var roughness_clamped := clampf(roughness, 0.0, 1.0)
+		var spaghetti_clamped := clampf(spaghettiness, 0.0, 1.0)
+
+		var base_frequency: float = lerpf(0.18, 0.005, size_clamped)
+		var detail_multiplier: float = lerpf(0.7, 1.8, detail_clamped)
+		self.noise.frequency = base_frequency * detail_multiplier
+		self.noise.fractal_octaves = clampi(roundi(lerpf(1.0, 6.0, detail_clamped)), 1, 8)
+		self.noise.fractal_gain = lerpf(0.25, 0.85, roughness_clamped)
+		self.noise.fractal_lacunarity = lerpf(1.6, 2.8, detail_clamped)
+		self.noise.fractal_weighted_strength = lerpf(0.0, 1.0, spaghetti_clamped)
+		self.noise.fractal_ping_pong_strength = lerpf(1.0, 2.2, spaghetti_clamped)
+		self.noise.seed = p_seed ^ seed_offset
+		if spaghetti_clamped > 0.75:
+			self.noise.fractal_type = FastNoiseLite.FRACTAL_PING_PONG
 
 var noises: Dictionary[String, NoiseConfig] = {
-	"ridged_mask": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.05, 0x9E3779B9, FastNoiseLite.FRACTAL_RIDGED, 1),
-	"cave_mask": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.015, 0),
-	"stone_transition": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.05, 0x87654321),
-	"explosive": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.15, 0xD4E5F607),
-	"gold": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.08, 0xA1B2C3D4),
-	"diamond": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.12, 0xB2C3D4E5),
- 	"emerald": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.14, 0xC3D4E5F6),
-	"explosive_spaghetti": NoiseConfig.new(FastNoiseLite.TYPE_PERLIN, 0.005, 0xDEADBEEF, FastNoiseLite.FRACTAL_RIDGED, 2),
+	"ridged": NoiseConfig.new(&"ridged", 0.74, 0.50, 0.15, 0.25, 0.35),
+	"blobby": NoiseConfig.new(&"blobby", 0.92, 0.50, 0.65, 0.45, 0.45),
+	"smooth": NoiseConfig.new(&"blobby", 0.74, 0.50, 0.05, 0.35, 0.40),
+	"chunky": NoiseConfig.new(&"blobby", 0.24, 0.70, 0.20, 0.65, 0.50),
+	"speckled": NoiseConfig.new(&"blobby", 0.55, 0.78, 0.10, 0.40, 0.45),
+	"crystalline": NoiseConfig.new(&"blobby", 0.40, 0.84, 0.20, 0.45, 0.50),
+	"dense": NoiseConfig.new(&"blobby", 0.30, 0.90, 0.20, 0.45, 0.55),
+	"spaghetti": NoiseConfig.new(&"billowy", 0.90, 0.86, 0.95, 0.55, 0.55),
 }
 
 func _make_stone_layer_patches(transition_type: int, layer_index: int) -> Array[Patch]:
 	# layer_index: 1 (closest to surface) .. 5 (deepest)
 	# Caves become rarer the higher (smaller index) you go.
-	var cave_thresh_by_layer := {1: -0.65, 2: -0.55, 3: -0.45, 4: -0.35, 5: -0.25}
+	var cave_thresh_by_layer := {1: - 0.65, 2: - 0.55, 3: - 0.45, 4: - 0.35, 5: - 0.25}
 	# Gold gets less common upward (higher threshold near surface)
 	var gold_thresh_by_layer := {1: 0.50, 2: 0.40, 3: 0.35, 4: 0.30, 5: 0.25}
 	# Diamond gets more common upward (lower threshold near surface)
@@ -84,31 +118,31 @@ func _make_stone_layer_patches(transition_type: int, layer_index: int) -> Array[
 	var explosive_thresh: float = explosive_thresh_by_layer.get(layer_index, 0.49)
 
 	var result: Array[Patch] = [
-		Patch.new(-1, noises["ridged_mask"], 0.8),
-		Patch.new(-1, noises["cave_mask"], cave_thresh, true),
-		Patch.new(transition_type, noises["stone_transition"], 0.3),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["explosive"], explosive_thresh),
+		Patch.new(-1, noises["ridged"], noises["ridged"].threshold(0.8)),
+		Patch.new(-1, noises["blobby"], noises["blobby"].threshold(cave_thresh, true), true),
+		Patch.new(transition_type, noises["smooth"], noises["smooth"].threshold(0.3), ),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"], noises["chunky"].threshold(explosive_thresh)),
 		# Very rare, long 'spaghetti' explosive veins
-		Patch.new(Tile.Type.EXPLOSIVE, noises["explosive_spaghetti"], 0.85),
-		Patch.new(Tile.Type.GOLD, noises["gold"], gold_thresh),
-		Patch.new(Tile.Type.DIAMOND, noises["diamond"], diamond_thresh),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"], noises["spaghetti"].threshold(cave_thresh, true), true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"], noises["speckled"].threshold(gold_thresh)),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"], noises["crystalline"].threshold(diamond_thresh)),
 	]
 
-	# Emeralds: very rare in stone_4, more common in stone_5
-	if layer_index >= 4:
+	# Emeralds: very rare in stone_2, more common in stone_1
+	if layer_index <= 2:
 		var emerald_thresh: float = 0.45
-		if layer_index == 4:
+		if layer_index == 2:
 			emerald_thresh = 0.52
-		result.append(Patch.new(Tile.Type.EMERALD, noises["emerald"], emerald_thresh))
+		result.append(Patch.new(Tile.Type.EMERALD, noises["dense"], noises["dense"].threshold(emerald_thresh)))
 
 	return result
 
 var patches: Dictionary = {
 	"stone_1": _make_stone_layer_patches(Tile.Type.STONE_2, 1),
-	"stone_2": _make_stone_layer_patches(Tile.Type.STONE_3, 2),
-	"stone_3": _make_stone_layer_patches(Tile.Type.STONE_4, 3),
-	"stone_4": _make_stone_layer_patches(Tile.Type.STONE_5, 4),
-	"stone_5": _make_stone_layer_patches(Tile.Type.STONE_1, 5),
+	"stone_2": _make_stone_layer_patches(Tile.Type.STONE_1, 2),
+	"stone_3": _make_stone_layer_patches(Tile.Type.STONE_2, 3),
+	"stone_4": _make_stone_layer_patches(Tile.Type.STONE_3, 4),
+	"stone_5": _make_stone_layer_patches(Tile.Type.STONE_4, 5),
 }
 
 # Add rare patches that occasionally replace a layer with the layer above it
@@ -130,7 +164,7 @@ func _add_rare_above_layer_patches() -> void:
 
 		if patches.has(above_key) and above_type != -1:
 			# Rare pockets of the above layer. When matched, evaluate the above layer's patches.
-			patches[key].append(Patch.new(above_type, noises["ridged_mask"], 0.92, false, patches[above_key]))
+			patches[key].append(Patch.new(above_type, noises["ridged"], noises["ridged"].threshold(0.92), false, patches[above_key]))
 
 var layers: Dictionary[String, Layer] = {
 	"dirt": Layer.new(Tile.Type.DIRT, 50, Color(0.09, 0.07, 0.04)),

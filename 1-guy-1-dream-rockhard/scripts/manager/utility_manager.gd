@@ -2,8 +2,6 @@
 extends Node
 class_name UtilityManager
 
-signal player_name_changed(new_name: String)
-signal tutorial_completed_changed(completed: bool)
 signal personal_record_updated(time_seconds: float)
 
 # Settings file path
