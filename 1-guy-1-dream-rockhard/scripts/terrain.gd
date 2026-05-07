@@ -13,8 +13,8 @@ class Layer:
 	var type: int
 	var thickness: int
 	var background: Color
-	var patches: Array[Patch]
-	func _init(p_type: int = -1, p_thickness: int = 0, p_background: Color = Color(0, 0, 0), p_patches: Array[Patch] = []):
+	var patches: Array
+	func _init(p_type: int = -1, p_thickness: int = 0, p_background: Color = Color(0, 0, 0), p_patches: Array = []):
 		self.type = p_type
 		self.thickness = p_thickness
 		self.background = p_background
@@ -25,8 +25,8 @@ class Patch:
 	var noise_gen: NoiseConfig
 	var threshold: float
 	var invert: bool = false
-	var patches: Array[Patch]
-	func _init(p_type: int = -1, p_noise_gen: NoiseConfig = null, p_threshold: float = 0.0, p_invert: bool = false, p_patches: Array[Patch] = []):
+	var patches: Array
+	func _init(p_type: int = -1, p_noise_gen: NoiseConfig = null, p_threshold: float = 0.0, p_invert: bool = false, p_patches: Array = []):
 		self.type = p_type
 		self.noise_gen = p_noise_gen
 		self.threshold = p_threshold
@@ -42,6 +42,7 @@ class NoiseConfig:
 	var rarity: float # Rarity bias used to nudge thresholds toward common or rare.
 	var intensity: float # Reserved strength multiplier for future weighting controls.
 	var noise = FastNoiseLite.new()
+	var variation: int = -99
 	static var seed_increment: int = 0
 	func _init(p_style: StringName = &"blobby", p_size: float = 0.5, p_rarity: float = 0.5, p_spaghettiness: float = 0.0, p_detail: float = 0.5, p_roughness: float = 0.4, p_intensity: float = 1.0):
 		self.style = p_style
@@ -52,11 +53,6 @@ class NoiseConfig:
 		self.rarity = p_rarity
 		self.intensity = p_intensity
 
-	func threshold(base: float, invert: bool = false, influence: float = 0.35) -> float:
-		var rarity_shift: float = (clampf(rarity, 0.0, 1.0) - 0.5) * influence
-		if invert:
-			rarity_shift = - rarity_shift
-		return clampf(base + rarity_shift, -1.0, 1.0)
 
 	func duplicate() -> NoiseConfig:
 		var copy := NoiseConfig.new()
@@ -67,6 +63,11 @@ class NoiseConfig:
 		copy.spaghettiness = self.spaghettiness
 		copy.rarity = self.rarity
 		copy.intensity = self.intensity
+		return copy
+
+	func variate(vari: int) -> NoiseConfig:
+		var copy := self.duplicate()
+		copy.variation = vari
 		return copy
 
 	# Can only be configured after world_seed is set.
@@ -80,9 +81,11 @@ class NoiseConfig:
 		elif style == &"value":
 			self.noise.noise_type = FastNoiseLite.TYPE_VALUE
 
-		var increment := seed_increment
+		var vari := seed_increment
+		if self.variation != -99:
+			vari = self.variation
 		seed_increment += 1
-		var seed_offset := int(hash(Vector2i(p_seed, increment)))
+		var seed_offset := int(hash(Vector2i(p_seed, vari)))
 
 		var size_clamped := clampf(size, 0.0, 1.0)
 		var detail_clamped := clampf(detail, 0.0, 1.0)
@@ -107,85 +110,88 @@ var noises: Dictionary[String, NoiseConfig] = {
 	"smooth": NoiseConfig.new(&"blobby", 0.74, 0.50, 0.05, 0.35, 0.40),
 	"chunky": NoiseConfig.new(&"blobby", 0.24, 0.70, 0.20, 0.65, 0.50),
 	"speckled": NoiseConfig.new(&"blobby", 0.55, 0.78, 0.10, 0.40, 0.45),
-	"emerald_clusters": NoiseConfig.new(&"blobby", 0.95, 0.97, 0.05, 0.20, 0.35),
 	"crystalline": NoiseConfig.new(&"blobby", 0.40, 0.84, 0.20, 0.45, 0.50),
 	"dense": NoiseConfig.new(&"blobby", 0.30, 0.90, 0.20, 0.45, 0.55),
 	"spaghetti": NoiseConfig.new(&"billowy", 0.90, 0.86, 0.95, 0.55, 0.55),
 }
 
-func _make_stone_layer_patches_recursive(transition_type: int, layer_index: int) -> Array[Patch]:
-	# layer_index: 1 (closest to surface) .. 5 (deepest)
-	# Caves become rarer the higher (smaller index) you go.
-	var cave_thresh_by_layer := {1: - 0.65, 2: - 0.55, 3: - 0.45, 4: - 0.35, 5: - 0.25}
-	# Gold gets less common upward (higher threshold near surface)
-	var gold_thresh_by_layer := {1: 0.50, 2: 0.40, 3: 0.35, 4: 0.30, 5: 0.25}
-	# Diamond gets more common upward (lower threshold near surface)
-	var diamond_thresh_by_layer := {1: 0.30, 2: 0.35, 3: 0.40, 4: 0.45, 5: 0.50}
-	# Explosive slightly more common upward (lower threshold near surface)
-	var explosive_thresh_by_layer := {1: 0.42, 2: 0.45, 3: 0.49, 4: 0.52, 5: 0.55}
-
-	var cave_thresh: float = cave_thresh_by_layer.get(layer_index, -0.45)
-	var gold_thresh: float = gold_thresh_by_layer.get(layer_index, 0.35)
-	var diamond_thresh: float = diamond_thresh_by_layer.get(layer_index, 0.45)
-	var explosive_thresh: float = explosive_thresh_by_layer.get(layer_index, 0.49)
-
-	var transition_patches: Patch = null
-	if transition_type > 0: # Recurse for any valid stone type to include nested ores
-		transition_patches = Patch.new(transition_type, noises["smooth"].duplicate(), noises["smooth"].threshold(0.3), false, _make_stone_layer_patches_recursive(transition_type - 1, layer_index - 1))
-	else:
-		transition_patches = Patch.new(transition_type, noises["smooth"].duplicate(), noises["smooth"].threshold(0.3))
-
-	if transition_patches.type == Tile.Type.DIRT:
-		transition_patches.type = Tile.Type.STONE_1
-
-	var result: Array[Patch] = [
-		Patch.new(-1, noises["ridged"].duplicate(), noises["ridged"].threshold(0.8)),
-		Patch.new(-1, noises["blobby"].duplicate(), noises["blobby"].threshold(cave_thresh, true), true),
-		transition_patches,
-		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), noises["chunky"].threshold(explosive_thresh)),
-		# Very rare, long 'spaghetti' explosive veins
-		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].duplicate(), noises["spaghetti"].threshold(cave_thresh, true), true),
-		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), noises["speckled"].threshold(gold_thresh)),
-		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), noises["crystalline"].threshold(diamond_thresh)),
-	]
-
-	# Emeralds: very rare in stone_2, more common in stone_1
-	if layer_index <= 2:
-		# Use a very low-frequency noise + high threshold so emerald spawns as large but rare clusters.
-		var emerald_thresh: float = 0.4
-		if layer_index == 2:
-			emerald_thresh = 0.5
-		result.append(Patch.new(Tile.Type.EMERALD, noises["emerald_clusters"].duplicate(), noises["emerald_clusters"].threshold(emerald_thresh)))
-
-	return result
+# Recursive patch generator removed; patches are hard-coded below for clarity
 
 var patches: Dictionary = {
-	"stone_1": _make_stone_layer_patches_recursive(Tile.Type.STONE_2, 1),
-	"stone_2": _make_stone_layer_patches_recursive(Tile.Type.STONE_1, 2),
-	"stone_3": _make_stone_layer_patches_recursive(Tile.Type.STONE_2, 3),
-	"stone_4": _make_stone_layer_patches_recursive(Tile.Type.STONE_3, 4),
-	"stone_5": _make_stone_layer_patches_recursive(Tile.Type.STONE_4, 5),
+	"stone_1": [
+		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
+		Patch.new(-1, noises["blobby"].duplicate(), -0.65, true),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.42),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].duplicate(), -0.65, true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.50),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.30),
+		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].duplicate(), 0.62),
+	],
+
+	"stone_2": [
+		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
+		Patch.new(-1, noises["blobby"].duplicate(), -0.55, true),
+		Patch.new(Tile.Type.STONE_1, noises["smooth"].variate(1234), 0.3, false, [
+			Patch.new(Tile.Type.EMERALD, noises["smooth"].variate(1234), 0.54)]),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.45),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.40),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.35),
+		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].duplicate(), 0.9),
+	],
+
+	"stone_3": [
+		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
+		Patch.new(-1, noises["blobby"].duplicate(), -0.45, true),
+		Patch.new(Tile.Type.STONE_2, noises["smooth"].duplicate(), 0.3),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.49),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].duplicate(), -0.45, true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.35),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.40),
+	],
+
+	"stone_4": [
+		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
+		Patch.new(-1, noises["blobby"].duplicate(), -0.35, true),
+		Patch.new(Tile.Type.STONE_3, noises["smooth"].variate(321), 0.3, false, [
+				Patch.new(Tile.Type.EXPLOSIVE, noises["smooth"].variate(321), 0.5),
+				Patch.new(Tile.Type.DIAMOND, noises["smooth"].variate(321), 0.45)
+			]),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.52),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].duplicate(), -0.55, true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.30),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.45),
+	],
+
+	"stone_5": [
+		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
+		Patch.new(-1, noises["blobby"].duplicate(), -0.25, true),
+		Patch.new(Tile.Type.STONE_4, noises["smooth"].variate(4321), 0.3, false, [
+				Patch.new(Tile.Type.DIAMOND, noises["smooth"].variate(4321), 0.45)
+			]),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.55),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.25),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.50),
+	],
 }
 
 var layers: Dictionary[String, Layer] = {
-	"dirt": Layer.new(Tile.Type.DIRT, 50, Color(0.09, 0.07, 0.04)),
-	"stone_1": Layer.new(Tile.Type.STONE_1, 100, Color(0.08, 0.08, 0.10), patches["stone_1"]),
-	"stone_2": Layer.new(Tile.Type.STONE_2, 100, Color(0.07, 0.07, 0.09), patches["stone_2"]),
-	"stone_3": Layer.new(Tile.Type.STONE_3, 100, Color(0.06, 0.06, 0.08), patches["stone_3"]),
-	"stone_4": Layer.new(Tile.Type.STONE_4, 100, Color(0.05, 0.05, 0.07), patches["stone_4"]),
-	"stone_5": Layer.new(Tile.Type.STONE_5, 100, Color(0.04, 0.04, 0.06), patches["stone_5"]),
+	"dirt": Layer.new(Tile.Type.DIRT, 50, Color.hex(0x52371d)),
+	"stone_1": Layer.new(Tile.Type.STONE_1, 100, Color.hex(0x000000ff), patches["stone_1"]),
+	"stone_2": Layer.new(Tile.Type.STONE_2, 100, Color.hex(0x000000ff), patches["stone_2"]),
+	"stone_3": Layer.new(Tile.Type.STONE_3, 100, Color.hex(0x000000ff), patches["stone_3"]),
+	"stone_4": Layer.new(Tile.Type.STONE_4, 100, Color.hex(0x000000ff), patches["stone_4"]),
+	"stone_5": Layer.new(Tile.Type.STONE_5, 100, Color.hex(0x000000ff), patches["stone_5"]),
 }
 
 var terrain_config: Dictionary = {
 	"surface_base": 15,
 	"surface_amplitude": 6,
-	"spawn_cell": Vector2i(0, 470),
+	"spawn_cell": Vector2i(0, 540),
 	"spawn_clear_radius": 5,
 	"surface_background_color": Color(0.45, 0.7, 0.9),
 	"depths_background_color": Color(0.08, 0.08, 0.10),
-	"explosion_base_radius": 3.0,
-	"explosion_chain_bonus": 0.55,
-	"explosion_chain_delay": 0.08,
+	"explosion_base_radius": 1.0,
+	"explosion_chain_bonus": 0.2,
 	"noises": noises,
 	"patches": patches,
 	"layers": [
@@ -246,7 +252,7 @@ func setup(params: Dictionary) -> void:
 
 func _setup_patches_recursive(items: Array) -> void:
 	for item in items:
-		var item_patches: Array[Patch] = []
+		var item_patches: Array = []
 		if item is Layer:
 			item_patches = (item as Layer).patches
 		elif item is Patch:
@@ -492,7 +498,7 @@ func _tile_type_for(cell: Vector2i, depth: int) -> int:
 	var resolved_type: int = target_layer.type
 
 	# Evaluate patches recursively
-	var patches_to_check: Array[Patch] = target_layer.patches
+	var patches_to_check: Array = target_layer.patches
 	while not patches_to_check.is_empty():
 		var matched_patch: Patch = null
 		for patch: Patch in patches_to_check:
@@ -536,8 +542,6 @@ func _update_sky(world_y: float) -> void:
 		current_y += layer.thickness
 		var y_stop = current_y - layer.thickness * 0.5
 		var col = layer.background
-		if col.a == 0.0:
-			col = Tile.COLORS[layer.type].darkened(0.8)
 		stops.append({"y": float(y_stop), "color": col})
 		
 	stops.append({"y": float(world_thickness), "color": terrain_config.depths_background_color})
@@ -556,7 +560,7 @@ func _update_sky(world_y: float) -> void:
 	
 	RenderingServer.set_default_clear_color(sky_color)
 	
-	var vignette_node = get_node_or_null("WorldUI/Vignette")
+	var vignette_node = World.main.get_node_or_null("WorldUI/Vignette")
 	if vignette_node:
-		var t_vignette: float = clampf((y_tiles - terrain_config.surface_base) / float(world_thickness - terrain_config.surface_base), 0.0, 1.0)
+		var t_vignette: float = clampf((0.98 - (world_thickness - y_tiles) / world_thickness) ** 0.3, 0.0, 1.0)
 		vignette_node.material.set_shader_parameter("vignette_strength", t_vignette * 1.5)
