@@ -58,6 +58,17 @@ class NoiseConfig:
 			rarity_shift = - rarity_shift
 		return clampf(base + rarity_shift, -1.0, 1.0)
 
+	func duplicate() -> NoiseConfig:
+		var copy := NoiseConfig.new()
+		copy.style = self.style
+		copy.size = self.size
+		copy.detail = self.detail
+		copy.roughness = self.roughness
+		copy.spaghettiness = self.spaghettiness
+		copy.rarity = self.rarity
+		copy.intensity = self.intensity
+		return copy
+
 	# Can only be configured after world_seed is set.
 	func configure(p_seed: int) -> void:
 		self.noise.noise_type = FastNoiseLite.TYPE_PERLIN
@@ -96,12 +107,13 @@ var noises: Dictionary[String, NoiseConfig] = {
 	"smooth": NoiseConfig.new(&"blobby", 0.74, 0.50, 0.05, 0.35, 0.40),
 	"chunky": NoiseConfig.new(&"blobby", 0.24, 0.70, 0.20, 0.65, 0.50),
 	"speckled": NoiseConfig.new(&"blobby", 0.55, 0.78, 0.10, 0.40, 0.45),
+	"emerald_clusters": NoiseConfig.new(&"blobby", 0.95, 0.97, 0.05, 0.20, 0.35),
 	"crystalline": NoiseConfig.new(&"blobby", 0.40, 0.84, 0.20, 0.45, 0.50),
 	"dense": NoiseConfig.new(&"blobby", 0.30, 0.90, 0.20, 0.45, 0.55),
 	"spaghetti": NoiseConfig.new(&"billowy", 0.90, 0.86, 0.95, 0.55, 0.55),
 }
 
-func _make_stone_layer_patches(transition_type: int, layer_index: int) -> Array[Patch]:
+func _make_stone_layer_patches_recursive(transition_type: int, layer_index: int) -> Array[Patch]:
 	# layer_index: 1 (closest to surface) .. 5 (deepest)
 	# Caves become rarer the higher (smaller index) you go.
 	var cave_thresh_by_layer := {1: - 0.65, 2: - 0.55, 3: - 0.45, 4: - 0.35, 5: - 0.25}
@@ -117,62 +129,51 @@ func _make_stone_layer_patches(transition_type: int, layer_index: int) -> Array[
 	var diamond_thresh: float = diamond_thresh_by_layer.get(layer_index, 0.45)
 	var explosive_thresh: float = explosive_thresh_by_layer.get(layer_index, 0.49)
 
+	var transition_patches: Patch = null
+	if transition_type > 0: # Recurse for any valid stone type to include nested ores
+		transition_patches = Patch.new(transition_type, noises["smooth"].duplicate(), noises["smooth"].threshold(0.3), false, _make_stone_layer_patches_recursive(transition_type - 1, layer_index - 1))
+	else:
+		transition_patches = Patch.new(transition_type, noises["smooth"].duplicate(), noises["smooth"].threshold(0.3))
+
+	if transition_patches.type == Tile.Type.DIRT:
+		transition_patches.type = Tile.Type.STONE_1
+
 	var result: Array[Patch] = [
-		Patch.new(-1, noises["ridged"], noises["ridged"].threshold(0.8)),
-		Patch.new(-1, noises["blobby"], noises["blobby"].threshold(cave_thresh, true), true),
-		Patch.new(transition_type, noises["smooth"], noises["smooth"].threshold(0.3), ),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"], noises["chunky"].threshold(explosive_thresh)),
+		Patch.new(-1, noises["ridged"].duplicate(), noises["ridged"].threshold(0.8)),
+		Patch.new(-1, noises["blobby"].duplicate(), noises["blobby"].threshold(cave_thresh, true), true),
+		transition_patches,
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), noises["chunky"].threshold(explosive_thresh)),
 		# Very rare, long 'spaghetti' explosive veins
-		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"], noises["spaghetti"].threshold(cave_thresh, true), true),
-		Patch.new(Tile.Type.GOLD, noises["speckled"], noises["speckled"].threshold(gold_thresh)),
-		Patch.new(Tile.Type.DIAMOND, noises["crystalline"], noises["crystalline"].threshold(diamond_thresh)),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].duplicate(), noises["spaghetti"].threshold(cave_thresh, true), true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), noises["speckled"].threshold(gold_thresh)),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), noises["crystalline"].threshold(diamond_thresh)),
 	]
 
 	# Emeralds: very rare in stone_2, more common in stone_1
 	if layer_index <= 2:
-		var emerald_thresh: float = 0.45
+		# Use a very low-frequency noise + high threshold so emerald spawns as large but rare clusters.
+		var emerald_thresh: float = 0.4
 		if layer_index == 2:
-			emerald_thresh = 0.52
-		result.append(Patch.new(Tile.Type.EMERALD, noises["dense"], noises["dense"].threshold(emerald_thresh)))
+			emerald_thresh = 0.5
+		result.append(Patch.new(Tile.Type.EMERALD, noises["emerald_clusters"].duplicate(), noises["emerald_clusters"].threshold(emerald_thresh)))
 
 	return result
 
 var patches: Dictionary = {
-	"stone_1": _make_stone_layer_patches(Tile.Type.STONE_2, 1),
-	"stone_2": _make_stone_layer_patches(Tile.Type.STONE_1, 2),
-	"stone_3": _make_stone_layer_patches(Tile.Type.STONE_2, 3),
-	"stone_4": _make_stone_layer_patches(Tile.Type.STONE_3, 4),
-	"stone_5": _make_stone_layer_patches(Tile.Type.STONE_4, 5),
+	"stone_1": _make_stone_layer_patches_recursive(Tile.Type.STONE_2, 1),
+	"stone_2": _make_stone_layer_patches_recursive(Tile.Type.STONE_1, 2),
+	"stone_3": _make_stone_layer_patches_recursive(Tile.Type.STONE_2, 3),
+	"stone_4": _make_stone_layer_patches_recursive(Tile.Type.STONE_3, 4),
+	"stone_5": _make_stone_layer_patches_recursive(Tile.Type.STONE_4, 5),
 }
-
-# Add rare patches that occasionally replace a layer with the layer above it
-# (applies to stone_1..stone_4 only). These patches use a high threshold to be rare
-func _add_rare_above_layer_patches() -> void:
-	for i in range(1, 5):
-		var key := "stone_" + str(i)
-		var above_key := "stone_" + str(i + 1)
-		# type for the above layer
-		var above_type := -1
-		if i == 1:
-			above_type = Tile.Type.STONE_2
-		elif i == 2:
-			above_type = Tile.Type.STONE_3
-		elif i == 3:
-			above_type = Tile.Type.STONE_4
-		elif i == 4:
-			above_type = Tile.Type.STONE_5
-
-		if patches.has(above_key) and above_type != -1:
-			# Rare pockets of the above layer. When matched, evaluate the above layer's patches.
-			patches[key].append(Patch.new(above_type, noises["ridged"], noises["ridged"].threshold(0.92), false, patches[above_key]))
 
 var layers: Dictionary[String, Layer] = {
 	"dirt": Layer.new(Tile.Type.DIRT, 50, Color(0.09, 0.07, 0.04)),
-	"stone_1": Layer.new(Tile.Type.STONE_1, 90, Color(0.08, 0.08, 0.10), patches["stone_1"]),
-	"stone_2": Layer.new(Tile.Type.STONE_2, 90, Color(0.07, 0.07, 0.09), patches["stone_2"]),
-	"stone_3": Layer.new(Tile.Type.STONE_3, 90, Color(0.06, 0.06, 0.08), patches["stone_3"]),
-	"stone_4": Layer.new(Tile.Type.STONE_4, 90, Color(0.05, 0.05, 0.07), patches["stone_4"]),
-	"stone_5": Layer.new(Tile.Type.STONE_5, 90, Color(0.04, 0.04, 0.06), patches["stone_5"]),
+	"stone_1": Layer.new(Tile.Type.STONE_1, 100, Color(0.08, 0.08, 0.10), patches["stone_1"]),
+	"stone_2": Layer.new(Tile.Type.STONE_2, 100, Color(0.07, 0.07, 0.09), patches["stone_2"]),
+	"stone_3": Layer.new(Tile.Type.STONE_3, 100, Color(0.06, 0.06, 0.08), patches["stone_3"]),
+	"stone_4": Layer.new(Tile.Type.STONE_4, 100, Color(0.05, 0.05, 0.07), patches["stone_4"]),
+	"stone_5": Layer.new(Tile.Type.STONE_5, 100, Color(0.04, 0.04, 0.06), patches["stone_5"]),
 }
 
 var terrain_config: Dictionary = {
@@ -230,9 +231,6 @@ func setup(params: Dictionary) -> void:
 	surface_noise.seed = world_seed ^ 0x12345678
 	surface_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	surface_noise.frequency = 0.03
-
-	# Add rare 'above-layer' pockets before configuring patches
-	_add_rare_above_layer_patches()
 
 	_setup_patches_recursive(terrain_config.layers)
 
