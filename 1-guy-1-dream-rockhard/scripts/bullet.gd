@@ -24,17 +24,17 @@ func _physics_process(delta):
 			prev_collision = collider
 			var main = World.terrain
 			var exploded := false
-			if Global.bullet_explosive_chance_level > 0:
-				var chance: float = Global.bullet_explosive_chance_level * 0.01
+			if World.main.bullet_explosive_chance_level > 0:
+				var chance: float = World.main.bullet_explosive_chance_level * 0.01
 				if randf() < chance and main.has_method("bullet_explode"):
-					main.bullet_explode(collider.cell, Global.bullet_explosive_size_level)
+					main.bullet_explode(collider.cell, World.main.bullet_explosive_size_level)
 					exploded = true
 			if not exploded and main.has_method("break_cell"):
-				main.break_cell(collider.cell, Global.damage)
+				main.break_cell(collider.cell, World.main.damage)
 		
-		if randf() < Global.piercing:
+		if randf() < World.main.piercing:
 			pass
-		elif randf() < Global.ricochet:
+		elif randf() < World.main.ricochet:
 			velocity = velocity.rotated(PI + randf_range(-PI / 4, PI / 4))
 		else:
 			_return_to_pool()

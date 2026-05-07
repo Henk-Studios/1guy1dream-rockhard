@@ -42,8 +42,7 @@ class NoiseConfig:
 	var rarity: float # Rarity bias used to nudge thresholds toward common or rare.
 	var intensity: float # Reserved strength multiplier for future weighting controls.
 	var noise = FastNoiseLite.new()
-	var variation: int = -99
-	static var seed_increment: int = 0
+	var variation: int = 0
 	func _init(p_style: StringName = &"blobby", p_size: float = 0.5, p_rarity: float = 0.5, p_spaghettiness: float = 0.0, p_detail: float = 0.5, p_roughness: float = 0.4, p_intensity: float = 1.0):
 		self.style = p_style
 		self.size = p_size
@@ -65,7 +64,8 @@ class NoiseConfig:
 		copy.intensity = self.intensity
 		return copy
 
-	func variate(vari: int) -> NoiseConfig:
+	# offset seed
+	func o_s(vari: int) -> NoiseConfig:
 		var copy := self.duplicate()
 		copy.variation = vari
 		return copy
@@ -81,11 +81,7 @@ class NoiseConfig:
 		elif style == &"value":
 			self.noise.noise_type = FastNoiseLite.TYPE_VALUE
 
-		var vari := seed_increment
-		if self.variation != -99:
-			vari = self.variation
-		seed_increment += 1
-		var seed_offset := int(hash(Vector2i(p_seed, vari)))
+		var seed_offset := int(hash(Vector2i(p_seed, self.variation)))
 
 		var size_clamped := clampf(size, 0.0, 1.0)
 		var detail_clamped := clampf(detail, 0.0, 1.0)
@@ -119,58 +115,58 @@ var noises: Dictionary[String, NoiseConfig] = {
 
 var patches: Dictionary = {
 	"stone_1": [
-		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
-		Patch.new(-1, noises["blobby"].duplicate(), -0.65, true),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.42),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].duplicate(), -0.65, true),
-		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.50),
-		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.30),
-		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].duplicate(), 0.62),
+		Patch.new(-1, noises["ridged"].o_s(1), 0.8),
+		Patch.new(-1, noises["blobby"].o_s(2), -0.65, true),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].o_s(3), 0.42),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].o_s(4), -0.65, true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(5), 0.50),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(6), 0.30),
+		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].o_s(7), 0.62),
 	],
 
 	"stone_2": [
-		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
-		Patch.new(-1, noises["blobby"].duplicate(), -0.55, true),
-		Patch.new(Tile.Type.STONE_1, noises["smooth"].variate(1234), 0.3, false, [
-			Patch.new(Tile.Type.EMERALD, noises["smooth"].variate(1234), 0.54)]),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.45),
-		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.40),
-		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.35),
-		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].duplicate(), 0.9),
+		Patch.new(-1, noises["ridged"].o_s(8), 0.8),
+		Patch.new(-1, noises["blobby"].o_s(9), -0.55, true),
+		Patch.new(Tile.Type.STONE_1, noises["smooth"].o_s(10), 0.3, false, [
+			Patch.new(Tile.Type.EMERALD, noises["smooth"].o_s(10), 0.54)]),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].o_s(11), 0.45),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(12), 0.40),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(13), 0.35),
+		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].o_s(14), 0.9),
 	],
 
 	"stone_3": [
-		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
-		Patch.new(-1, noises["blobby"].duplicate(), -0.45, true),
-		Patch.new(Tile.Type.STONE_2, noises["smooth"].duplicate(), 0.3),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.49),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].duplicate(), -0.45, true),
-		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.35),
-		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.40),
+		Patch.new(-1, noises["ridged"].o_s(15), 0.8),
+		Patch.new(-1, noises["blobby"].o_s(16), -0.45, true),
+		Patch.new(Tile.Type.STONE_2, noises["smooth"].o_s(17), 0.3),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].o_s(18), 0.49),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].o_s(19), -0.45, true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(20), 0.35),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(21), 0.40),
 	],
 
 	"stone_4": [
-		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
-		Patch.new(-1, noises["blobby"].duplicate(), -0.35, true),
-		Patch.new(Tile.Type.STONE_3, noises["smooth"].variate(321), 0.3, false, [
-				Patch.new(Tile.Type.EXPLOSIVE, noises["smooth"].variate(321), 0.5),
-				Patch.new(Tile.Type.DIAMOND, noises["smooth"].variate(321), 0.45)
+		Patch.new(-1, noises["ridged"].o_s(22), 0.8),
+		Patch.new(-1, noises["blobby"].o_s(23), -0.35, true),
+		Patch.new(Tile.Type.STONE_3, noises["smooth"].o_s(24), 0.3, false, [
+				Patch.new(Tile.Type.EXPLOSIVE, noises["smooth"].o_s(24), 0.5),
+				Patch.new(Tile.Type.DIAMOND, noises["smooth"].o_s(24), 0.45)
 			]),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.52),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].duplicate(), -0.55, true),
-		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.30),
-		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.45),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].o_s(25), 0.52),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].o_s(26), -0.55, true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(27), 0.30),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(28), 0.45),
 	],
 
 	"stone_5": [
-		Patch.new(-1, noises["ridged"].duplicate(), 0.8),
-		Patch.new(-1, noises["blobby"].duplicate(), -0.25, true),
-		Patch.new(Tile.Type.STONE_4, noises["smooth"].variate(4321), 0.3, false, [
-				Patch.new(Tile.Type.DIAMOND, noises["smooth"].variate(4321), 0.45)
+		Patch.new(-1, noises["ridged"].o_s(29), 0.8),
+		Patch.new(-1, noises["blobby"].o_s(30), -0.25, true),
+		Patch.new(Tile.Type.STONE_4, noises["smooth"].o_s(31), 0.3, false, [
+				Patch.new(Tile.Type.DIAMOND, noises["smooth"].o_s(31), 0.45)
 			]),
-		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].duplicate(), 0.55),
-		Patch.new(Tile.Type.GOLD, noises["speckled"].duplicate(), 0.25),
-		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].duplicate(), 0.50),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].o_s(32), 0.55),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(33), 0.25),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(34), 0.50),
 	],
 }
 
@@ -190,8 +186,8 @@ var terrain_config: Dictionary = {
 	"spawn_clear_radius": 5,
 	"surface_background_color": Color(0.45, 0.7, 0.9),
 	"depths_background_color": Color(0.08, 0.08, 0.10),
-	"explosion_base_radius": 1.0,
-	"explosion_chain_bonus": 0.2,
+	"explosion_base_radius": 2.0,
+	"explosion_chain_bonus": 0.3,
 	"noises": noises,
 	"patches": patches,
 	"layers": [
@@ -392,7 +388,7 @@ func _do_break(cell: Vector2i, damage: int, chain_depth: int) -> void:
 		tile.animate_hit(hp_lost)
 		return
 	var was_explosive: bool = tile.tile_type == Tile.Type.EXPLOSIVE
-	Global.money += Tile.COIN_VALUES[tile.tile_type]
+	World.main.money += Tile.COIN_VALUES[tile.tile_type]
 	active_tiles.erase(cell)
 	if loaded_chunks.has(chunk):
 		loaded_chunks[chunk].erase(cell)
@@ -460,20 +456,20 @@ func _chunk_to_break_group(chunk: Vector2i) -> Vector2i:
 	return Vector2i(floori(float(chunk.x) / BREAK_GROUP_CHUNKS), floori(float(chunk.y) / BREAK_GROUP_CHUNKS))
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and Global.dev_mode:
+	if event is InputEventKey and event.pressed and World.main.dev_mode:
 		if event.keycode == KEY_F1:
 			World.camera.toggle_free_cam()
 		elif event.keycode == KEY_F2:
-			Global.money = 1_000_000_000
+			World.main.money = 1_000_000_000
 		elif event.keycode == KEY_F4:
 			# Max out everything
-			Global.damage = 999
-			Global.jetpackspeed = 1400
-			Global.width = 3.14
-			Global.particles_per_second = 1000
-			Global.particle_speed = 2000
-			Global.bullet_explosive_chance_level = 100
-			Global.bullet_explosive_size_level = 100
+			World.main.damage = 999
+			World.main.jetpackspeed = 1400
+			World.main.width = 3.14
+			World.main.particles_per_second = 1000
+			World.main.particle_speed = 2000
+			World.main.bullet_explosive_chance_level = 100
+			World.main.bullet_explosive_size_level = 100
 
 func _surface_y(x: int) -> int:
 	return roundi(terrain_config.surface_base + surface_noise.get_noise_1d(x) * terrain_config.surface_amplitude)

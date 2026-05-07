@@ -187,6 +187,7 @@ layer = 999
 script = ExtResource("3_sugp2")
 
 [node name="MessageManager" type="CanvasLayer" parent="." unique_id=1918231666 node_paths=PackedStringArray("message_container")]
+layer = 999
 script = ExtResource("4_jyhfs")
 message_container = NodePath("MarginContainer/VBoxContainer")
 

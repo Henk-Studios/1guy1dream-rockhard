@@ -1,8 +1,9 @@
 extends RichTextLabel
 
 func _ready() -> void:
-	set_label(Global.money)
-	Global.money_changed.connect(set_label)
+	await get_tree().process_frame # wait a frame to ensure World is initialized
+	set_label(World.main.money)
+	World.main.money_changed.connect(set_label)
 
 func set_label(money):
 	pulse()

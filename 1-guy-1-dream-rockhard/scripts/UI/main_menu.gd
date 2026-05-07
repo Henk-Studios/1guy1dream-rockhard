@@ -49,7 +49,7 @@ func _on_dev_button_pressed() -> void:
 	dev_click_count += 1
 	if dev_click_count >= 3:
 		Manager.message.info("???")
-		Global.dev_mode = not Global.dev_mode
+		World.dev_mode = not World.dev_mode
 
 func intify(text: String) -> int:
 	var result: int = 0

@@ -64,5 +64,5 @@ const BASE_ZOOM := .9
 func apply_resolution_zoom() -> void:
 	var w: float = get_viewport_rect().size.x
 	var factor: float = maxf(w / REFERENCE_WIDTH, 0.1)
-	var z := Vector2(BASE_ZOOM * factor, BASE_ZOOM * factor) / Global.vision
+	var z: Vector2 = Vector2(BASE_ZOOM * factor, BASE_ZOOM * factor) / World.main.vision
 	zoom = z

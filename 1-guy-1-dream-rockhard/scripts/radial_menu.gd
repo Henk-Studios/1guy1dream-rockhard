@@ -24,8 +24,10 @@ var inner_radius: float = 50.0
 var spacing: float = 8.0
 var shop_open := false
 var button_instances: Array[WheelButton] = []
+
 func _ready() -> void:
 	hide()
+func setup() -> void:
 	# Create buttons based on the configuration
 	for i in range(buttons.size()):
 		var button_config = buttons[i]
@@ -38,54 +40,55 @@ func _ready() -> void:
 func _on_button_pressed(action: Callable, index: int) -> void:
 	Manager.audio.play_click_sfx()
 	var old_price = button_instances[index].price
-	if Global.money < old_price or button_instances[index].level >= buttons[index].max_lvl:
+	if World.main.money < old_price or button_instances[index].level >= buttons[index].max_lvl:
 		return
-	Global.money -= old_price
+	World.main.money -= old_price
 	button_instances[index].update_level()
 	var new_price: int = action.call(old_price)
 	button_instances[index].update_price(new_price)
+	Manager.message.info("Upgraded [color=magenta]%s[/color] to [color=yellow]level %d[/color] for [color=green]$%d[/color]" % [button_instances[index].upgrade_name, button_instances[index].level, old_price], 3)
 
 # Seperate functions to allow for more complex upgrade logic if ever needed
 
 func _on_bullet_speed_pressed(p) -> int:
-	Global.particle_speed += 50
+	World.main.particle_speed += 50
 	return increase_price(p, 0, 1.5)
 
 func _on_bullet_damage_pressed(p) -> int:
-	Global.damage += 1
+	World.main.damage += 100
 	return increase_price(p, 30, 1.05)
 
 func _on_bullet_rate_pressed(p) -> int:
-	Global.particles_per_second += 1
+	World.main.particles_per_second += 1
 	return increase_price(p, 20, 1.1)
 
 func _on_bullet_spread_pressed(p) -> int:
-	Global.width += 0.1
+	World.main.width += 0.1
 	return increase_price(p, 100, 2)
 
 func _on_bullet_piercing_pressed(p) -> int:
-	Global.piercing += 0.1
+	World.main.piercing += 0.1
 	return increase_price(p, 300, 1.5)
 
 func _on_bullet_ricochet_pressed(p) -> int:
-	Global.ricochet += 0.1
+	World.main.ricochet += 0.1
 	return increase_price(p, 300, 1.5)
 
 func _on_explosive_chance_pressed(p) -> int:
-	Global.bullet_explosive_chance_level += 1
+	World.main.bullet_explosive_chance_level += 1
 	return increase_price(p, 1000, 1.2)
 
 func _on_explosion_size_pressed(p) -> int:
-	Global.bullet_explosive_size_level += 1
+	World.main.bullet_explosive_size_level += 1
 	return increase_price(p, 750, 1.2)
 
 func _on_vision_range_pressed(p) -> int:
-	Global.vision += 0.1
+	World.main.vision += 0.1
 	World.camera.apply_resolution_zoom()
 	return increase_price(p, 50, 1.2)
 
 func _on_jetpack_speed_pressed(p) -> int:
-	Global.jetpackspeed += 100
+	World.main.jetpackspeed += 100
 	return increase_price(p, 5, 1.4)
 
 func increase_price(old_price: int, add: int, mult: float) -> int:
@@ -101,12 +104,12 @@ func toggle_shop() -> void:
 
 func open_shop() -> void:
 	shop_open = true
-	Global.shop_open = true
+	World.main.shop_open = true
 	show()
 
 func close_shop() -> void:
 	shop_open = false
-	Global.shop_open = false
+	World.main.shop_open = false
 	hide()
 
 func _input(event) -> void:

@@ -14,7 +14,7 @@ var color: Color = Color(1, 1, 1, 1)
 var outline_width = 1.8
 var level: int = 0
 signal button_pressed
-
+var upgrade_name: String = "Unknown Upgrade"
 var is_hovered: bool = false
 var is_selected: bool = false
 var center_offset: Vector2 = Vector2(-80, -80) # Adjust as needed to center the title_label properly
@@ -31,7 +31,7 @@ func _ready() -> void:
 	area.mouse_entered.connect(_on_mouse_entered)
 	area.mouse_exited.connect(_on_mouse_exited)
 	area.input_event.connect(_on_input_event)
-	Global.money_changed.connect(_on_money_changed)
+	World.main.money_changed.connect(_on_money_changed)
 	update_level()
 
 func _on_mouse_entered() -> void:
@@ -184,12 +184,13 @@ func setup_button(config: WheelButtonConfig, num_buttons: int, button_index: int
 		32,
 		spacing
 	)
+	upgrade_name = config.title
 	outline.polygon = outline_points
 	color = config.color
 	max_level = config.max_lvl
 	polygon.material.set_shader_parameter("mix_color", color)
 	update_price(config.start_price)
-	set_affordability(Global.money >= price)
+	set_affordability(World.main.money >= price)
 
 	# Set info
 	title_label.text = config.title
@@ -215,4 +216,4 @@ func set_affordability(can_afford: bool) -> void:
 		price_label.modulate = Color(1, 0.0, 0.0, 1)
 
 func _on_money_changed(__) -> void:
-	set_affordability(Global.money >= price)
+	set_affordability(World.main.money >= price)

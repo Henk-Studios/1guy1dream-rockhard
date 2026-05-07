@@ -1,6 +1,6 @@
 extends Node
 
-var main: Node2D
+var main: LocalWorld
 var terrain: Terrain
 var the_guy: TheGuy
 var camera: Camera2D
@@ -10,7 +10,8 @@ var break_particle_pool: ParticlePool
 var explode_particle_pool: ParticlePool
 var bullet_pool: BulletPool
 
-func setup(p_main: Node2D, p_terrain: Terrain, p_the_guy: TheGuy, p_camera: Camera2D, p_credits: Credits, p_lava: Lava, p_break_particle_pool: ParticlePool, p_explode_particle_pool: ParticlePool, p_bullet_pool: BulletPool) -> void:
+
+func setup(p_main: LocalWorld, p_terrain: Terrain, p_the_guy: TheGuy, p_camera: Camera2D, p_credits: Credits, p_lava: Lava, p_break_particle_pool: ParticlePool, p_explode_particle_pool: ParticlePool, p_bullet_pool: BulletPool) -> void:
 	main = p_main
 	terrain = p_terrain
 	the_guy = p_the_guy

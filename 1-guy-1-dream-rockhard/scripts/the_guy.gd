@@ -13,7 +13,7 @@ func _ready():
 	self.angular_damp = 2.0
 
 func _physics_process(__):
-	if Input.is_action_just_pressed("teleport") and Global.dev_mode:
+	if Input.is_action_just_pressed("teleport") and World.main.dev_mode:
 		global_position.y = -30
 		linear_velocity = Vector2.ZERO
 		angular_velocity = 0.0
@@ -30,12 +30,12 @@ func _physics_process(__):
 
 	# LEFT JET
 	if left_pressed:
-		apply_force(left_dir * Global.jetpackspeed)
+		apply_force(left_dir * World.main.jetpackspeed)
 		apply_torque(-torque_force)
 
 	# RIGHT JET
 	if right_pressed:
-		apply_force(right_dir * Global.jetpackspeed)
+		apply_force(right_dir * World.main.jetpackspeed)
 		apply_torque(torque_force)
 		
 	var jetting: bool = right_pressed or left_pressed
@@ -72,5 +72,5 @@ func _integrate_forces(state: PhysicsDirectBodyState2D) -> void:
 				
 				if dot_product > 0.5: # Adjust threshold (higher = more perpendicular)
 					# Deal damage to tiles based on collision speed
-					var damage = maxi(1, int(collision_speed / 80)) * Global.jetpackspeed / 700
+					var damage = maxi(1, int(collision_speed / 80)) * World.main.jetpackspeed / 700
 					World.terrain.break_cell_at_world_pos(state.get_contact_collider_object(i).position, damage)

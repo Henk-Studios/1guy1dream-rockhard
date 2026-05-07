@@ -33,7 +33,7 @@ func _process(delta):
 		global_rotation = 0
 		return
 
-	_spawn_accumulator += Global.particles_per_second * delta
+	_spawn_accumulator += World.main.particles_per_second * delta
 
 	while _spawn_accumulator >= 1.0:
 		_spawn_accumulator -= 1.0
@@ -42,7 +42,7 @@ func _process(delta):
 
 func get_aim_direction() -> Vector2:
 	# if using mouse and mouse down
-	if use_mouse and Input.is_action_pressed("aim_mouse") and not Global.shop_open:
+	if use_mouse and Input.is_action_pressed("aim_mouse") and not World.main.shop_open:
 		return (get_global_mouse_position() - global_position).normalized()
 	else:
 		var input_vec = Vector2(
@@ -66,10 +66,10 @@ func shoot(base_direction: Vector2):
 
 	# Random angle within cone
 	var base_angle = base_direction.angle()
-	var angle_offset = randf_range(-Global.width, Global.width)
+	var angle_offset = randf_range(-World.main.width, World.main.width)
 	var final_dir = Vector2.from_angle(base_angle + angle_offset)
 
-	bullet.initialize(final_dir * Global.particle_speed)
+	bullet.initialize(final_dir * World.main.particle_speed)
 
 	Manager.audio.play_shoot_sfx()
 	
