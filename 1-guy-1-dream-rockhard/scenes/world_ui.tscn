@@ -88,6 +88,7 @@ script = ExtResource("3_6wqhg")
 
 [node name="PauseMenu" type="Control" parent="." unique_id=1492014258 node_paths=PackedStringArray("back_button", "quit_button", "click_blocker")]
 process_mode = 3
+z_index = 999
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 3
 anchors_preset = 8
@@ -185,22 +186,23 @@ layout_mode = 2
 [node name="Control" type="Control" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1219030064]
 layout_mode = 2
 
-[node name="QuitButton" type="Button" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=212503419]
+[node name="BackButton" type="Button" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1509982545]
 layout_mode = 2
 theme = ExtResource("5_5nafa")
-text = "Quit"
+text = "Continue"
 
 [node name="Seperator6" type="ColorRect" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=443462374]
 custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
 color = Color(0, 0, 0, 1)
 
-[node name="BackButton" type="Button" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1509982545]
+[node name="QuitButton" type="Button" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=212503419]
 layout_mode = 2
 theme = ExtResource("5_5nafa")
-text = "Continue"
+text = "Save and Quit"
 
 [node name="Countdown" type="RichTextLabel" parent="." unique_id=858292110]
+process_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5

@@ -16,6 +16,9 @@ func _ready():
 func enable() -> void:
 	_enabled = true
 
+func is_enabled() -> bool:
+	return _enabled
+
 func _physics_process(__):
 	if Input.is_action_just_pressed("teleport") and World.main.dev_mode:
 		global_position.y = -30

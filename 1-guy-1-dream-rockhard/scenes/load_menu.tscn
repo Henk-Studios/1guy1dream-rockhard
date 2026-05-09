@@ -1,0 +1,116 @@
+[gd_scene format=3 uid="uid://bqjrec7sioa70"]
+
+[ext_resource type="Script" uid="uid://ep0tcniem0tm" path="res://scripts/load_menu.gd" id="1_o70tx"]
+[ext_resource type="Theme" uid="uid://cy1xg3e1f5n68" path="res://styles/settings.tres" id="2_8tv1f"]
+[ext_resource type="Shader" uid="uid://bn5rfvynd4ao2" path="res://shaders/blur.gdshader" id="3_xnhyc"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lwwgp"]
+shader = ExtResource("3_xnhyc")
+shader_parameter/lod = 2.6400001254
+shader_parameter/mix_color = Color(0.6847319, 0.6847319, 0.6847319, 1)
+shader_parameter/add_color = Color(0.22959325, 0.22959325, 0.22959322, 0)
+
+[node name="LoadMenu" type="Control" unique_id=181004235]
+z_index = 6
+custom_minimum_size = Vector2(300, 400)
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -200.0
+offset_right = 150.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_o70tx")
+
+[node name="ClickBlocker" type="ColorRect" parent="." unique_id=1075055412]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1089.0
+offset_top = -469.0
+offset_right = 1026.0
+offset_bottom = 549.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.635294)
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="." unique_id=1390157326]
+copy_mode = 2
+
+[node name="Panel" type="Panel" parent="BackBufferCopy" unique_id=1643791291]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 101.0
+offset_bottom = 202.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_8tv1f")
+
+[node name="MarginContainer2" type="MarginContainer" parent="BackBufferCopy/Panel" unique_id=728429574]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Background" type="Panel" parent="BackBufferCopy/Panel/MarginContainer2" unique_id=902906153]
+material = SubResource("ShaderMaterial_lwwgp")
+layout_mode = 2
+theme = ExtResource("2_8tv1f")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=2064135262]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=452599423]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer" unique_id=736683604]
+layout_mode = 2
+text = "Load Game Save"
+horizontal_alignment = 1
+
+[node name="Seperator" type="ColorRect" parent="MarginContainer/VBoxContainer" unique_id=1217151572]
+custom_minimum_size = Vector2(258, 5)
+layout_mode = 2
+size_flags_horizontal = 0
+color = Color(0, 0, 0, 1)
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer" unique_id=1005691283]
+z_index = 1
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("2_8tv1f")
+vertical_scroll_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer" unique_id=1961950835]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="BackButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1347936328]
+layout_mode = 2
+theme = ExtResource("2_8tv1f")
+text = "Back"

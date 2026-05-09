@@ -10,6 +10,8 @@
 [ext_resource type="Shader" uid="uid://bn5rfvynd4ao2" path="res://shaders/blur.gdshader" id="4_rtw2f"]
 [ext_resource type="Shader" uid="uid://cxu0duo2mtc8b" path="res://shaders/vignette.gdshader" id="5_8ln24"]
 [ext_resource type="PackedScene" uid="uid://ba6j28f3johsr" path="res://scenes/settings_menu.tscn" id="5_sf4ia"]
+[ext_resource type="PackedScene" uid="uid://bqjrec7sioa70" path="res://scenes/load_menu.tscn" id="10_lgwnu"]
+[ext_resource type="PackedScene" uid="uid://cttg3hxx5vohj" path="res://scenes/load_game_tile.tscn" id="12_rcqid"]
 
 [sub_resource type="Gradient" id="Gradient_lghrq"]
 offsets = PackedFloat32Array(0, 0.9581281)
@@ -139,7 +141,7 @@ scale_amount_min = 0.1
 scale_amount_max = 0.3
 color_ramp = SubResource("Gradient_lghrq")
 
-[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_button", "settings_button", "quit_button", "seed_input", "dev_button", "settings_menu")]
+[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_new_button", "continue_button", "load_game_save_button", "settings_button", "quit_button", "seed_input", "name_input", "dev_button", "settings_menu", "load_menu")]
 custom_minimum_size = Vector2(10, 10)
 layout_mode = 3
 anchors_preset = 15
@@ -150,12 +152,16 @@ grow_vertical = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
 script = ExtResource("1_yqeox")
-play_button = NodePath("Control/MenuContainer/VBoxContainer2/PlayButton")
+play_new_button = NodePath("Control/MenuContainer/VBoxContainer2/PlayButton")
+continue_button = NodePath("Control/MenuContainer/VBoxContainer2/ContinueButton")
+load_game_save_button = NodePath("Control/MenuContainer/VBoxContainer2/LoadButton")
 settings_button = NodePath("Control/MenuContainer/VBoxContainer2/SettingsButton")
 quit_button = NodePath("Control/MenuContainer/VBoxContainer2/QuitButton")
-seed_input = NodePath("Control/MenuContainer/VBoxContainer2/LineEdit")
+seed_input = NodePath("Control/MenuContainer/VBoxContainer2/WorldSeedField")
+name_input = NodePath("Control/MenuContainer/VBoxContainer2/WorldNameField")
 dev_button = NodePath("DevButton")
 settings_menu = NodePath("SettingsMenu")
+load_menu = NodePath("LoadMenu")
 
 [node name="Vignette" type="ColorRect" parent="CanvasLayer/Menu" unique_id=1123369898]
 material = SubResource("ShaderMaterial_rtw2f")
@@ -212,20 +218,42 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 0
 
+[node name="ContinueButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=120383415]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = SubResource("Theme_lgwnu")
+text = "Continue Last Save"
+flat = true
+
 [node name="PlayButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=451168382]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 theme = SubResource("Theme_lgwnu")
-text = "Play game"
+text = "Play New Game"
 flat = true
 
-[node name="LineEdit" type="LineEdit" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=1915889]
+[node name="WorldNameField" type="LineEdit" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=348421531]
 layout_mode = 2
 theme = SubResource("Theme_flqon")
-placeholder_text = "Seed"
+placeholder_text = "World Name"
 alignment = 1
+
+[node name="WorldSeedField" type="LineEdit" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=1915889]
+layout_mode = 2
+theme = SubResource("Theme_flqon")
+placeholder_text = "World Seed"
+alignment = 1
+
+[node name="LoadButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=1236520570]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = SubResource("Theme_lgwnu")
+text = "Load Game Save"
+flat = true
 
 [node name="SettingsButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=420548488]
 unique_name_in_owner = true
@@ -263,6 +291,10 @@ size_flags_horizontal = 0
 size_flags_vertical = 8
 text = "HenkStudios"
 label_settings = SubResource("LabelSettings_616w3")
+
+[node name="LoadMenu" parent="CanvasLayer/Menu" unique_id=181004235 instance=ExtResource("10_lgwnu")]
+layout_mode = 1
+load_game_tile_scene = ExtResource("12_rcqid")
 
 [node name="SettingsMenu" parent="CanvasLayer/Menu" unique_id=1557815145 instance=ExtResource("5_sf4ia")]
 unique_name_in_owner = true

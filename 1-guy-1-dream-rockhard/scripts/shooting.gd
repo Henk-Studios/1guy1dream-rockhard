@@ -54,6 +54,8 @@ func get_aim_direction() -> Vector2:
 
 
 func shoot(base_direction: Vector2):
+	if not World.the_guy.is_enabled():
+		return
 	var bullet = World.bullet_pool.get_bullet()
 	# Choose the first shoot particle that is not currently emitting, or default to the first one if all are busy
 	var shoot_particle

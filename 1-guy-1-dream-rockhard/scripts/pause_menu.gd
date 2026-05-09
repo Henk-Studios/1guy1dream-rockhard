@@ -39,6 +39,11 @@ func _on_back_button_pressed():
 
 func _on_quit_button_pressed():
 	Manager.audio.play_click_sfx()
+	# Save current world if possible before leaving
+	var current_scene = Manager.scene.get_current_scene()
+	if current_scene and current_scene.has_method("save_state"):
+		current_scene.save_state()
+
 	get_tree().paused = false
 	Manager.message.clear()
 	Manager.scene.change_scene("res://scenes/main_menu.tscn")

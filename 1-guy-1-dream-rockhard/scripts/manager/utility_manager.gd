@@ -150,3 +150,78 @@ func clear_player_data() -> void:
 	config.clear()
 	config.save(PLAYER_DATA_PATH)
 	Manager.message.info(" All player data cleared")
+
+
+const SAVE_DIR := "user://worlds"
+const LEGACY_SAVE_PATH := "user://world_save.cfg"
+
+func ensure_save_dir() -> void:
+	if not DirAccess.dir_exists_absolute(SAVE_DIR):
+		DirAccess.make_dir_recursive_absolute(SAVE_DIR)
+
+func generate_world_id() -> String:
+	return "%d_%d_%d" % [Time.get_unix_time_from_system(), Time.get_ticks_usec(), randi()]
+
+func world_id_to_save_path(world_id: String) -> String:
+	return "%s/%s.cfg" % [SAVE_DIR, world_id]
+
+func resolve_world_id(save_path: String, data: Dictionary = {}) -> String:
+	if data.has("world_id") and data["world_id"] != null and str(data["world_id"]) != "":
+		return str(data["world_id"])
+	if save_path != "":
+		return save_path.get_file().get_basename()
+	return ""
+
+func get_save_paths() -> Array:
+	ensure_save_dir()
+	var paths: Array = []
+	var dir := DirAccess.open(SAVE_DIR)
+	if dir:
+		dir.list_dir_begin()
+		while true:
+			var file_name := dir.get_next()
+			if file_name == "":
+				break
+			if dir.current_is_dir():
+				continue
+			if not file_name.ends_with(".cfg"):
+				continue
+			paths.append("%s/%s" % [SAVE_DIR, file_name])
+		dir.list_dir_end()
+
+	if FileAccess.file_exists(LEGACY_SAVE_PATH):
+		paths.append(LEGACY_SAVE_PATH)
+
+	return paths
+
+func get_save_entries() -> Array:
+	var entries: Array = []
+	for path in get_save_paths():
+		var config := ConfigFile.new()
+		if config.load(path) != OK:
+			continue
+		var data = config.get_value("world", "data", null)
+		if typeof(data) != TYPE_DICTIONARY:
+			continue
+		var world_data: Dictionary = data
+		entries.append({
+			"path": path,
+			"data": world_data,
+			"world_id": resolve_world_id(path, world_data),
+			"world_name": str(world_data.get("name", "Unnamed World")),
+			"time_elapsed": float(world_data.get("time_elapsed", 0.0)),
+			"last_played": str(world_data.get("last_played", "Unknown")),
+			"save_timestamp": int(world_data.get("save_timestamp", 0))
+		})
+
+	entries.sort_custom(_sort_entries_desc)
+	return entries
+
+func get_latest_save_entry() -> Dictionary:
+	var entries := get_save_entries()
+	if entries.is_empty():
+		return {}
+	return entries[0]
+
+func _sort_entries_desc(a: Dictionary, b: Dictionary) -> bool:
+	return int(a.get("save_timestamp", 0)) > int(b.get("save_timestamp", 0))
