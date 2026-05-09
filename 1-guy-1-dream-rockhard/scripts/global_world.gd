@@ -10,7 +10,6 @@ var break_particle_pool: ParticlePool
 var explode_particle_pool: ParticlePool
 var bullet_pool: BulletPool
 
-
 func setup(p_main: LocalWorld, p_terrain: Terrain, p_the_guy: TheGuy, p_camera: Camera2D, p_credits: Credits, p_lava: Lava, p_break_particle_pool: ParticlePool, p_explode_particle_pool: ParticlePool, p_bullet_pool: BulletPool) -> void:
 	main = p_main
 	terrain = p_terrain

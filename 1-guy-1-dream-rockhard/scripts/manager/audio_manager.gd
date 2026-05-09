@@ -576,3 +576,9 @@ func play_rock_sfx(pitch_scale: float = 1.0) -> void:
 	# play random rock sound from rock_1 to rock_6
 	var rock_index = randi() % 6 + 1
 	await play_sfx("rock%d" % rock_index, false, pitch_scale)
+
+func play_321_sfx() -> void:
+	await play_sfx("321")
+
+func play_go_sfx() -> void:
+	await play_sfx("go")

@@ -7,6 +7,7 @@
 [ext_resource type="Theme" uid="uid://cy1xg3e1f5n68" path="res://styles/settings.tres" id="5_5nafa"]
 [ext_resource type="Shader" uid="uid://bn5rfvynd4ao2" path="res://shaders/blur.gdshader" id="6_oyvde"]
 [ext_resource type="Shader" uid="uid://cxu0duo2mtc8b" path="res://shaders/vignette.gdshader" id="7_5nafa"]
+[ext_resource type="Script" uid="uid://c7gonkx0isf5i" path="res://scripts/countdown.gd" id="8_oyvde"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_oyvde"]
 shader = ExtResource("7_5nafa")
@@ -198,3 +199,28 @@ color = Color(0, 0, 0, 1)
 layout_mode = 2
 theme = ExtResource("5_5nafa")
 text = "Continue"
+
+[node name="Countdown" type="RichTextLabel" parent="." unique_id=858292110]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset_ratio = Vector2(0.5, 0.5)
+theme_override_constants/outline_size = 30
+bbcode_enabled = true
+text = "321go"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+autowrap_trim_flags = 0
+shortcut_keys_enabled = false
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("8_oyvde")

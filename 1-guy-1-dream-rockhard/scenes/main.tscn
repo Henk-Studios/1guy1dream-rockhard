@@ -29,6 +29,8 @@
 [ext_resource type="AudioStream" uid="uid://cgmurbfyoy1rg" path="res://audio/rock4.mp3" id="22_c6pm6"]
 [ext_resource type="AudioStream" uid="uid://cqoqqx48yhu07" path="res://audio/rock5.mp3" id="23_yq6so"]
 [ext_resource type="AudioStream" uid="uid://bii3ldj7gy6qk" path="res://audio/rock6.mp3" id="24_fv21b"]
+[ext_resource type="AudioStream" uid="uid://bxgehixtljuf5" path="res://audio/321.mp3" id="25_tel4y"]
+[ext_resource type="AudioStream" uid="uid://b1uklqq4xrmae" path="res://audio/goooo.mp3" id="26_qkpxi"]
 
 [sub_resource type="Resource" id="Resource_5he1u"]
 script = ExtResource("2_eb6dy")
@@ -143,12 +145,23 @@ stream = ExtResource("5_choun")
 volume = 0.5
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
+[sub_resource type="Resource" id="Resource_5q0nq"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("25_tel4y")
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
+[sub_resource type="Resource" id="Resource_dgi5k"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("26_qkpxi")
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
 [node name="Main" type="Node" unique_id=767152644]
 process_mode = 3
 
 [node name="AudioManager" type="Node" parent="." unique_id=815207516]
 script = ExtResource("1_o5qli")
 audio_properties = Dictionary[String, ExtResource("2_eb6dy")]({
+"321": SubResource("Resource_5q0nq"),
 "bling1": SubResource("Resource_5he1u"),
 "bling2": SubResource("Resource_5poiv"),
 "bling3": SubResource("Resource_2cjbq"),
@@ -161,6 +174,7 @@ audio_properties = Dictionary[String, ExtResource("2_eb6dy")]({
 "dirt4": SubResource("Resource_vc5cj"),
 "dirt5": SubResource("Resource_nvyfr"),
 "explosion": SubResource("Resource_dp3eg"),
+"go": SubResource("Resource_dgi5k"),
 "hover": SubResource("Resource_jkv2x"),
 "jetfart": SubResource("Resource_jbj1t"),
 "rock1": SubResource("Resource_ty1g6"),

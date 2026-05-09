@@ -2,14 +2,14 @@ extends Node2D
 class_name LocalWorld
 
 @export var terrain: Terrain
-@export var the_guy: Node2D
+@export var the_guy: TheGuy
 @export var camera: Camera2D
 @export var credits: Credits
 @export var lava: Lava
 @export var bullet_pool: BulletPool
 @export var break_particle_pool: ParticlePool
 @export var explode_particle_pool: ParticlePool
-var time_frozen: bool = false
+var time_frozen: bool = true
 var time_elapsed: float = 0.0
 
 
@@ -42,6 +42,7 @@ func _physics_process(delta: float) -> void:
 func setup(params) -> void:
 	if debugging:
 		dev_mode = true
+	time_frozen = true
 
 	World.setup(self , terrain, the_guy, camera, credits, lava, break_particle_pool, explode_particle_pool, bullet_pool)
 	terrain.setup(params)
@@ -54,3 +55,9 @@ func setup(params) -> void:
 	Manager.message.info(" Press [color=lime]S[/color] (keyboard) or [color=lime]Y + Left Stick[/color] (gamepad) to open the [color=cyan]upgrade menu", 20)
 	Manager.message.info(" Press [color=lime]ESC[/color] (keyboard) or [color=lime]Start[/color] (gamepad) to [color=orange]pause", 20)
 	Manager.message.info(" [color=magenta][wave amp=10.0]Now be the 1guy and achieve your 1dream!!![/wave][/color]", 20)
+	Manager.audio.fade_out_music()
+
+	await get_node("WorldUI/Countdown").countdown()
+	the_guy.enable()
+	time_frozen = false
+	Manager.audio.play_main_music()

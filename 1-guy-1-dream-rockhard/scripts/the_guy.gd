@@ -7,10 +7,14 @@ class_name TheGuy
 @export var physics_material: PhysicsMaterial
 var was_jetting: bool = false
 var credits_reached: bool = false
+var _enabled: bool = false
 @onready var jetpart: CPUParticles2D = $jetpart
 func _ready():
 	self.linear_damp = 1
 	self.angular_damp = 2.0
+
+func enable() -> void:
+	_enabled = true
 
 func _physics_process(__):
 	if Input.is_action_just_pressed("teleport") and World.main.dev_mode:
@@ -28,15 +32,16 @@ func _physics_process(__):
 	var left_pressed = Input.is_action_pressed("leftjet")
 	var right_pressed = Input.is_action_pressed("rightjet")
 
-	# LEFT JET
-	if left_pressed:
-		apply_force(left_dir * World.main.jetpackspeed)
-		apply_torque(-torque_force)
+	if _enabled:
+		# LEFT JET
+		if left_pressed:
+			apply_force(left_dir * World.main.jetpackspeed)
+			apply_torque(-torque_force)
 
-	# RIGHT JET
-	if right_pressed:
-		apply_force(right_dir * World.main.jetpackspeed)
-		apply_torque(torque_force)
+		# RIGHT JET
+		if right_pressed:
+			apply_force(right_dir * World.main.jetpackspeed)
+			apply_torque(torque_force)
 		
 	var jetting: bool = right_pressed or left_pressed
 	if jetting and not was_jetting:

@@ -17,7 +17,6 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-Global="*res://scripts/global.gd"
 Manager="*uid://e0rbodau73ne"
 World="*uid://csphkpr0p84ha"
 
