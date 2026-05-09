@@ -25,7 +25,7 @@ func _physics_process(__):
 		linear_velocity = Vector2.ZERO
 		angular_velocity = 0.0
 	
-	if position.y < 0 and not credits_reached:
+	if position.y < -World.terrain.world_thickness * World.terrain.TILE_SIZE and not credits_reached:
 		World.credits.start_credits()
 		credits_reached = true
 	

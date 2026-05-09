@@ -23,14 +23,6 @@ const CAVE_GATE_HARD := 0.2
 const DIRT_DEPTH := 50
 const STONE_TIER_HEIGHT := 90
 
-const STONE_TYPES := [
-	Tile.Type.STONE_1,
-	Tile.Type.STONE_2,
-	Tile.Type.STONE_3,
-	Tile.Type.STONE_4,
-	Tile.Type.STONE_5,
-]
-
 # Noise generators
 var world_seed: int
 var noise: FastNoiseLite
@@ -229,7 +221,7 @@ func _tile_type_for_grid_cell(grid_x: int, grid_y: int) -> Variant:
 	if is_heavy and stone_num > 1:
 		stone_num -= 1
 	
-	return STONE_TYPES[stone_num - 1]
+	return Tile.stone(stone_num - 1)
 
 func _cave_at(cell: Vector2i) -> float:
 	var m := cave_noise.get_noise_2d(cell.x, cell.y)
