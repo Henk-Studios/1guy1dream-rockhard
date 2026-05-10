@@ -141,7 +141,7 @@ scale_amount_min = 0.1
 scale_amount_max = 0.3
 color_ramp = SubResource("Gradient_lghrq")
 
-[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_new_button", "continue_button", "load_game_save_button", "settings_button", "quit_button", "seed_input", "name_input", "dev_button", "settings_menu", "load_menu")]
+[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_classic_button", "play_infinite_button", "play_infinite_rising_lava_button", "continue_button", "load_game_save_button", "settings_button", "quit_button", "seed_input", "name_input", "dev_button", "pr_label", "settings_menu", "load_menu")]
 custom_minimum_size = Vector2(10, 10)
 layout_mode = 3
 anchors_preset = 15
@@ -152,7 +152,9 @@ grow_vertical = 2
 size_flags_horizontal = 8
 size_flags_vertical = 0
 script = ExtResource("1_yqeox")
-play_new_button = NodePath("Control/MenuContainer/VBoxContainer2/PlayButton")
+play_classic_button = NodePath("Control/MenuContainer/VBoxContainer2/ClassicButton")
+play_infinite_button = NodePath("Control/MenuContainer/VBoxContainer2/InfiniteButton")
+play_infinite_rising_lava_button = NodePath("Control/MenuContainer/VBoxContainer2/LavaButton")
 continue_button = NodePath("Control/MenuContainer/VBoxContainer2/ContinueButton")
 load_game_save_button = NodePath("Control/MenuContainer/VBoxContainer2/LoadButton")
 settings_button = NodePath("Control/MenuContainer/VBoxContainer2/SettingsButton")
@@ -160,6 +162,7 @@ quit_button = NodePath("Control/MenuContainer/VBoxContainer2/QuitButton")
 seed_input = NodePath("Control/MenuContainer/VBoxContainer2/WorldSeedField")
 name_input = NodePath("Control/MenuContainer/VBoxContainer2/WorldNameField")
 dev_button = NodePath("DevButton")
+pr_label = NodePath("Control/PRLabel")
 settings_menu = NodePath("SettingsMenu")
 load_menu = NodePath("LoadMenu")
 
@@ -206,6 +209,16 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
+[node name="PRLabel" type="RichTextLabel" parent="CanvasLayer/Menu/Control" unique_id=225563425]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+text = "test
+test"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
 [node name="MenuContainer" type="VBoxContainer" parent="CanvasLayer/Menu/Control" unique_id=1148648463]
 custom_minimum_size = Vector2(387.49, 0)
 layout_mode = 2
@@ -226,13 +239,29 @@ theme = SubResource("Theme_lgwnu")
 text = "Continue Last Save"
 flat = true
 
-[node name="PlayButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=451168382]
+[node name="ClassicButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=451168382]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 4
 theme = SubResource("Theme_lgwnu")
-text = "Play New Game"
+text = "Play Classic"
+flat = true
+
+[node name="InfiniteButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=963346532]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = SubResource("Theme_lgwnu")
+text = "Play Infinite"
+flat = true
+
+[node name="LavaButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=1723478023]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = SubResource("Theme_lgwnu")
+text = "Play Rising Lava"
 flat = true
 
 [node name="WorldNameField" type="LineEdit" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=348421531]
@@ -293,6 +322,7 @@ text = "HenkStudios"
 label_settings = SubResource("LabelSettings_616w3")
 
 [node name="LoadMenu" parent="CanvasLayer/Menu" unique_id=181004235 instance=ExtResource("10_lgwnu")]
+visible = false
 layout_mode = 1
 load_game_tile_scene = ExtResource("12_rcqid")
 

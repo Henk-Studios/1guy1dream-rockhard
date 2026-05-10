@@ -1,9 +1,18 @@
 shader_type canvas_item;
 
 uniform float timeScaleFactor = .04;
+uniform float worldScale = 0.01;
+uniform float opacity = 1.0;
+uniform float borderFadeWidth = 28.0;
+uniform float borderWaveAmount = 18.0;
+uniform float borderWaveScale = 0.0025;
+uniform float borderWaveSpeed = 1.5;
 
 // Make sure to use a seamless noise texture
 uniform sampler2D noise_texture: repeat_enable, filter_linear;
+
+varying vec2 world_pos;
+varying vec2 local_pos;
 
 float localTime() {
 	return TIME * timeScaleFactor;
@@ -46,18 +55,29 @@ float flow(vec2 p) {
 	return rz;
 }
 
+void vertex() {
+	local_pos = VERTEX;
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 0.0, 1.0)).xy;
+}
+
 void fragment() {
-	vec2 resolution = 1. / SCREEN_PIXEL_SIZE;
-	vec2 fragCoord = FRAGCOORD.xy;
-	fragCoord = vec2(fragCoord.x, resolution.y - fragCoord.y);
-	vec2 p = fragCoord / resolution - 0.5;
-	
-	p.x *= resolution.x / resolution.y;
-	p *= 3.;
+	vec2 p = world_pos * worldScale;
 	
 	float rz = flow(p);
 	vec3 col = vec3(.2, .07, .01) / rz;
 	col = pow(col, vec3(1.4));
+
+	float edge_dist = min(
+		min(local_pos.x - (-960.0), 967.0 - local_pos.x),
+		min(local_pos.y - (-10.0), 6174.0 - local_pos.y)
+	);
+	float t = localTime() * borderWaveSpeed;
+	vec2 wave_pos = world_pos * borderWaveScale;
+	wave_pos += vec2(t * 1.3, t * -0.9);
+	float wave = noise(wave_pos) * 2.0 - 1.0;
+	wave += noise(wave_pos * 1.9 + vec2(t * 0.7, t * 1.1)) * 2.0 - 1.0;
+	wave += sin(world_pos.x * 0.003 + t * 2.2) * 0.5;
+	float border_alpha = smoothstep(0.0, borderFadeWidth, edge_dist + wave * borderWaveAmount);
 	
-	COLOR = vec4(col, 1.0);
+	COLOR = vec4(col, opacity * border_alpha);
 }

@@ -5,6 +5,7 @@ class_name LoadGameTile
 @onready var delete_button: Button = $VBoxContainer/HBoxContainer/DeleteButton
 @onready var playtime_label: Label = $VBoxContainer/HBoxContainer2/TimeLabel
 @onready var last_played_label: Label = $VBoxContainer/HBoxContainer2/DateLabel
+@onready var type_label: Label = $VBoxContainer/HBoxContainer2/TypeLabel
 
 var save_path: String = ""
 

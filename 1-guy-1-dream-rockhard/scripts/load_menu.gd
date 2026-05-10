@@ -46,7 +46,17 @@ func _populate() -> void:
 			time_label.text = "%02d:%02d" % [int(t) / 60, int(t) % 60]
 		if tile.has_node("VBoxContainer/HBoxContainer2/DateLabel"):
 			var date_label = tile.get_node("VBoxContainer/HBoxContainer2/DateLabel") as Label
-			date_label.text = "Last Played: " + str(data["last_played"]) if data.has("last_played") and data["last_played"] != null else "Unknown"
+			date_label.text = str(data["last_played"]) if data.has("last_played") and data["last_played"] != null else "Unknown"
+		if tile.has_node("VBoxContainer/HBoxContainer2/TypeLabel"):
+			var type_label = tile.get_node("VBoxContainer/HBoxContainer2/TypeLabel") as Label
+			var world_type: String = "Classic"
+			var rising_lava: bool = data.get("rising_lava_enabled", false) if data.has("rising_lava_enabled") else false
+			var gamemode: String = data.get("gamemode", "") if data.has("gamemode") else ""
+			if rising_lava:
+				world_type = "Rising Lava"
+			elif gamemode == "infinite":
+				world_type = "Infinite"
+			type_label.text = "%s" % world_type
 
 		tile.set_save_path(path)
 		load_container.add_child(tile)

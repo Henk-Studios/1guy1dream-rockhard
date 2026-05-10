@@ -13,6 +13,7 @@ extends Control
 @export var back_button: Button
 @export var click_blocker: ColorRect
 
+signal player_data_cleared
 
 # UI Scale constants
 const MIN_UI_SCALE := 0.6
@@ -160,3 +161,4 @@ func _apply_fullscreen(toggled_on: bool) -> void:
 func _on_clear_player_data_pressed() -> void:
 	Manager.audio.play_click_sfx()
 	Manager.utility.clear_player_data()
+	player_data_cleared.emit()

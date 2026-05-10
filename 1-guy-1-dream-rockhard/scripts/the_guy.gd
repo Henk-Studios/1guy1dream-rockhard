@@ -5,6 +5,7 @@ class_name TheGuy
 @export var torque_force := 900.0
 @export var max_angular_velocity := 5.0
 @export var physics_material: PhysicsMaterial
+@onready var fire_particles: CPUParticles2D = $FireParticles
 var was_jetting: bool = false
 var credits_reached: bool = false
 var _enabled: bool = false
@@ -20,7 +21,7 @@ func is_enabled() -> bool:
 	return _enabled
 
 func _physics_process(__):
-	if Input.is_action_just_pressed("teleport") and World.main.dev_mode:
+	if Input.is_action_just_pressed("teleport") and Manager.dev_mode:
 		global_position.y = -30
 		linear_velocity = Vector2.ZERO
 		angular_velocity = 0.0

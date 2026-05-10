@@ -217,3 +217,17 @@ func set_affordability(can_afford: bool) -> void:
 
 func _on_money_changed(__) -> void:
 	set_affordability(World.main.money >= price)
+
+
+func apply_state(p_level: int, p_price: int) -> void:
+	# Apply saved level and next-upgrade price without triggering side-effects
+	level = p_level
+	if level >= max_level:
+		info_label.text = "MAX Level (%d)" % level
+		price_label.text = "MAX"
+		price = 0
+	else:
+		info_label.text = "Level %d" % level
+		price = int(p_price)
+		price_label.text = "$%d" % price
+	set_affordability(World.main.money >= price)

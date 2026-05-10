@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://cq430a7r20cj0"]
 
-[ext_resource type="Texture2D" uid="uid://gh4jxl40oah" path="res://textures/sharp stone.png" id="1_g2cl2"]
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_si3m8"]
+resource_local_to_scene = true
+load_path = "res://.godot/imported/sharp stone.png-f81a7aef0b8890a1e23af256dfea34d2.ctex"
 
 [sub_resource type="Gradient" id="Gradient_si3m8"]
 interpolation_mode = 2
@@ -9,7 +11,7 @@ offsets = PackedFloat32Array(0.44581282, 1)
 [node name="BreakParticles" type="CPUParticles2D" unique_id=904329760]
 emitting = false
 amount = 30
-texture = ExtResource("1_g2cl2")
+texture = SubResource("CompressedTexture2D_si3m8")
 lifetime = 0.5
 one_shot = true
 explosiveness = 1.0

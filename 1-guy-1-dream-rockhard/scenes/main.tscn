@@ -31,6 +31,12 @@
 [ext_resource type="AudioStream" uid="uid://bii3ldj7gy6qk" path="res://audio/rock6.mp3" id="24_fv21b"]
 [ext_resource type="AudioStream" uid="uid://bxgehixtljuf5" path="res://audio/321.mp3" id="25_tel4y"]
 [ext_resource type="AudioStream" uid="uid://b1uklqq4xrmae" path="res://audio/goooo.mp3" id="26_qkpxi"]
+[ext_resource type="AudioStream" uid="uid://rrx632au8d0" path="res://audio/flame.mp3" id="27_qkpxi"]
+
+[sub_resource type="Resource" id="Resource_5q0nq"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("25_tel4y")
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
 [sub_resource type="Resource" id="Resource_5he1u"]
 script = ExtResource("2_eb6dy")
@@ -93,6 +99,11 @@ stream = ExtResource("8_jkv2x")
 volume = 0.7
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
+[sub_resource type="Resource" id="Resource_dgi5k"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("26_qkpxi")
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
 [sub_resource type="Resource" id="Resource_jkv2x"]
 script = ExtResource("2_eb6dy")
 stream = ExtResource("15_yq6so")
@@ -145,14 +156,9 @@ stream = ExtResource("5_choun")
 volume = 0.5
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
-[sub_resource type="Resource" id="Resource_5q0nq"]
+[sub_resource type="Resource" id="Resource_j8jky"]
 script = ExtResource("2_eb6dy")
-stream = ExtResource("25_tel4y")
-metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
-
-[sub_resource type="Resource" id="Resource_dgi5k"]
-script = ExtResource("2_eb6dy")
-stream = ExtResource("26_qkpxi")
+stream = ExtResource("27_qkpxi")
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
 [node name="Main" type="Node" unique_id=767152644]
@@ -174,6 +180,7 @@ audio_properties = Dictionary[String, ExtResource("2_eb6dy")]({
 "dirt4": SubResource("Resource_vc5cj"),
 "dirt5": SubResource("Resource_nvyfr"),
 "explosion": SubResource("Resource_dp3eg"),
+"flame": SubResource("Resource_j8jky"),
 "go": SubResource("Resource_dgi5k"),
 "hover": SubResource("Resource_jkv2x"),
 "jetfart": SubResource("Resource_jbj1t"),

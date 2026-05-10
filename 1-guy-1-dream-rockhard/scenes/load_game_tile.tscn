@@ -314,10 +314,20 @@ text = " X "
 [node name="HBoxContainer2" type="HBoxContainer" parent="VBoxContainer" unique_id=1471068545]
 layout_mode = 2
 
+[node name="TypeLabel" type="Label" parent="VBoxContainer/HBoxContainer2" unique_id=330478242]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Rising lava"
+
+[node name="Seperator2" type="Label" parent="VBoxContainer/HBoxContainer2" unique_id=1266094610]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "|"
+
 [node name="TimeLabel" type="Label" parent="VBoxContainer/HBoxContainer2" unique_id=1203401533]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "Playtime: 4:23:89"
+text = "4:23:89"
 
 [node name="Seperator" type="Label" parent="VBoxContainer/HBoxContainer2" unique_id=1179385741]
 layout_mode = 2

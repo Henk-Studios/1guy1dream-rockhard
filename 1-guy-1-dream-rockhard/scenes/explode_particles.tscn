@@ -1,6 +1,8 @@
 [gd_scene format=3 uid="uid://cx7r3nwbsp45b"]
 
-[ext_resource type="Texture2D" uid="uid://gh4jxl40oah" path="res://textures/sharp stone.png" id="1_ttoyj"]
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_1m171"]
+resource_local_to_scene = true
+load_path = "res://.godot/imported/sharp stone.png-f81a7aef0b8890a1e23af256dfea34d2.ctex"
 
 [sub_resource type="Curve" id="Curve_ttoyj"]
 _data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
@@ -13,7 +15,7 @@ colors = PackedColorArray(1, 1, 1, 1, 1, 0.22935726, 0, 0.99000007, 1, 0.8732160
 [node name="ExplodeParticles" type="CPUParticles2D" unique_id=904329760]
 emitting = false
 amount = 30
-texture = ExtResource("1_ttoyj")
+texture = SubResource("CompressedTexture2D_1m171")
 one_shot = true
 explosiveness = 1.0
 lifetime_randomness = 0.5

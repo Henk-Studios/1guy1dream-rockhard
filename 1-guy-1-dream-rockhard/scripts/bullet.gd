@@ -1,12 +1,12 @@
 extends CharacterBody2D
 
-var prev_collision: Object = null
 var distance_traveled: float = 0.0
+var dir: Vector2 = Vector2.ZERO
 
 func initialize(direction: Vector2):
+	dir = direction
 	velocity = direction
 	distance_traveled = 0.0
-	prev_collision = null
 
 func _physics_process(delta):
 	distance_traveled += velocity.length() * delta
@@ -20,8 +20,7 @@ func _physics_process(delta):
 	if collision:
 		# Bullet hit something → break if tile, then despawn or ricochet
 		var collider = collision.get_collider()
-		if collider is Tile and collider != prev_collision:
-			prev_collision = collider
+		if collider is Tile:
 			var main = World.terrain
 			var exploded := false
 			if World.main.bullet_explosive_chance_level > 0:
@@ -41,5 +40,4 @@ func _physics_process(delta):
 
 
 func _return_to_pool():
-	prev_collision = null
 	World.bullet_pool.return_bullet(self )

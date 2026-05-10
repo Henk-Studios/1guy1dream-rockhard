@@ -97,14 +97,14 @@ func _ready() -> void:
 
 func get_color() -> Color:
 	if is_stone(tile_type):
-		var c = 1 - 0.14 * stone_index(tile_type)
+		var c = 1 - 0.14 * (stone_index(tile_type) % 7)
 		return Color(c, c, c)
 	else:
 		return COLORS[tile_type]
 
 static func get_hp(tt: int) -> int:
 	if is_stone(tt):
-		return stone_hp_recursive(tt)
+		return 200 * (3 ** (stone_index(tt) - 1))
 	else: return HP[tt]
 
 static func get_value(tt: int) -> int:
@@ -145,11 +145,6 @@ func _apply_visual() -> void:
 	else:
 		crack_color = crack_color.darkened(randf_range(0.0, 1.0))
 	_cracks_sprite_node.self_modulate = crack_color
-
-static func stone_hp_recursive(tt: int, index: int = 1, hp: int = 200) -> int:
-	if index >= stone_index(tt):
-		return hp
-	return stone_hp_recursive(tt, index + 1, hp * 3)
 
 func animate_hit(hp_lost: int) -> void:
 	# reduce size more and more based on damage taken, with a minimum size limit

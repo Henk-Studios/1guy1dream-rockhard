@@ -582,3 +582,6 @@ func play_321_sfx() -> void:
 
 func play_go_sfx() -> void:
 	await play_sfx("go")
+
+func play_flame_sfx() -> void:
+	await play_sfx("flame")

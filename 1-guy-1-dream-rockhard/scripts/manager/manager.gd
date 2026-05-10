@@ -1,6 +1,8 @@
 ## Main autoload singleton providing global access to all game managers
 extends Node
 
+var dev_mode: bool = false
+
 # Main autoload singleton for global access to managers
 
 # Manager references

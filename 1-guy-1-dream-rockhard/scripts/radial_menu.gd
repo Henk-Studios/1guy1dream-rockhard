@@ -37,6 +37,20 @@ func setup() -> void:
 		button.button_pressed.connect(_on_button_pressed.bind(button_config.action, i))
 		button_instances.append(button)
 
+
+func apply_upgrade_state(levels: Array, prices: Array) -> void:
+	# Apply saved upgrade levels and next-upgrade prices to instantiated buttons
+	if button_instances.is_empty():
+		return
+	var count = min(levels.size(), button_instances.size())
+	for i in range(count):
+		var lvl = int(levels[i]) if i < levels.size() else 0
+		var pr = int(prices[i]) if i < prices.size() else button_instances[i].price
+		for _j in range(lvl - 1):
+			# Reapply the upgrade side effects so gameplay variables match the saved button level.
+			buttons[i].action.call(pr)
+		button_instances[i].apply_state(lvl, pr)
+
 func _on_button_pressed(action: Callable, index: int) -> void:
 	Manager.audio.play_click_sfx()
 	var old_price = button_instances[index].price

@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dpuh3lnl01woi" path="res://textures/guy.png" id="2_mtops"]
 [ext_resource type="PackedScene" uid="uid://b5r3xnxostxlm" path="res://scenes/the_gun.tscn" id="3_wuybt"]
 [ext_resource type="Texture2D" uid="uid://dqhj4e4vxpd2i" path="res://textures/ragged stone.png" id="4_lghrq"]
+[ext_resource type="PackedScene" uid="uid://cx7r3nwbsp45b" path="res://scenes/explode_particles.tscn" id="5_ehjnm"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_eluou"]
 friction = 0.2
@@ -19,6 +20,10 @@ height = 19.2
 [sub_resource type="Gradient" id="Gradient_lghrq"]
 offsets = PackedFloat32Array(0, 0.9581281)
 colors = PackedColorArray(1, 1, 1, 1, 0.6, 0.3372549, 0.1764706, 1)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_4agnf"]
+resource_local_to_scene = true
+load_path = "res://.godot/imported/sharp stone.png-f81a7aef0b8890a1e23af256dfea34d2.ctex"
 
 [node name="TheGuy" type="RigidBody2D" unique_id=1780183407]
 collision_layer = 2
@@ -64,3 +69,23 @@ angular_velocity_max = 154.29
 scale_amount_min = 0.04
 scale_amount_max = 0.08
 color_ramp = SubResource("Gradient_lghrq")
+
+[node name="FireParticles" parent="." unique_id=904329760 instance=ExtResource("5_ehjnm")]
+z_index = -1
+amount = 100
+texture = SubResource("CompressedTexture2D_4agnf")
+lifetime = 3.0
+one_shot = false
+explosiveness = 0.0
+emission_shape = 1
+emission_sphere_radius = 18.73
+direction = Vector2(0, -1)
+spread = 30.0
+gravity = Vector2(0, 0)
+initial_velocity_max = 100.0
+linear_accel_min = 0.0
+linear_accel_max = 0.0
+radial_accel_min = 0.0
+radial_accel_max = 0.0
+damping_min = 0.0
+damping_max = 0.0

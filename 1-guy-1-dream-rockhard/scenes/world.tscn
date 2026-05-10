@@ -15,17 +15,49 @@
 [ext_resource type="Script" uid="uid://dgr17sv3r8op2" path="res://scripts/bullet_pool.gd" id="13_o8fc1"]
 [ext_resource type="PackedScene" uid="uid://c2ap1kbaxqjaj" path="res://scenes/bullet.tscn" id="14_xo05s"]
 
+[sub_resource type="Gradient" id="Gradient_o8fc1"]
+colors = PackedColorArray(0.36412436, 0.2658203, 1, 1, 1, 1, 1, 1)
+
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_e3hyu"]
-frequency = 0.0047
+frequency = 0.0897
 
 [sub_resource type="NoiseTexture2D" id="NoiseTexture2D_q5onr"]
 noise = SubResource("FastNoiseLite_e3hyu")
+color_ramp = SubResource("Gradient_o8fc1")
 seamless = true
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jhx03"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_o8fc1"]
 shader = ExtResource("11_e3hyu")
-shader_parameter/timeScaleFactor = 0.04
+shader_parameter/timeScaleFactor = 0.01
+shader_parameter/worldScale = 0.01
+shader_parameter/opacity = 1.0
+shader_parameter/borderFadeWidth = 28.36
+shader_parameter/borderWaveAmount = 1.0
+shader_parameter/borderWaveScale = 0.175
+shader_parameter/borderWaveSpeed = 0.8
 shader_parameter/noise_texture = SubResource("NoiseTexture2D_q5onr")
+
+[sub_resource type="Gradient" id="Gradient_xo05s"]
+colors = PackedColorArray(0.36412436, 0.2658203, 1, 1, 1, 1, 1, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_dss4m"]
+frequency = 0.0897
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_7t5mc"]
+noise = SubResource("FastNoiseLite_dss4m")
+color_ramp = SubResource("Gradient_xo05s")
+seamless = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_lakw3"]
+shader = ExtResource("11_e3hyu")
+shader_parameter/timeScaleFactor = 0.01
+shader_parameter/worldScale = 0.01
+shader_parameter/opacity = 0.5
+shader_parameter/borderFadeWidth = 28.36
+shader_parameter/borderWaveAmount = 1.0
+shader_parameter/borderWaveScale = 0.175
+shader_parameter/borderWaveSpeed = 0.8
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_7t5mc")
 
 [node name="World" type="Node2D" unique_id=717164903 node_paths=PackedStringArray("terrain", "the_guy", "camera", "credits", "lava", "bullet_pool", "break_particle_pool", "explode_particle_pool")]
 process_mode = 1
@@ -73,8 +105,14 @@ particle_scene = ExtResource("10_w7kh3")
 
 [node name="Lava" type="Polygon2D" parent="." unique_id=2008828421]
 z_index = -10
-material = SubResource("ShaderMaterial_jhx03")
-polygon = PackedVector2Array(960, -10, 960, 1080, -960, 1080, -960, -10)
+material = SubResource("ShaderMaterial_o8fc1")
+polygon = PackedVector2Array(960, -10, 967, 6174, -976, 6174, -960, -10)
+script = ExtResource("12_q5onr")
+
+[node name="Lava" type="Polygon2D" parent="Lava" unique_id=496636833]
+z_index = 12
+material = SubResource("ShaderMaterial_lakw3")
+polygon = PackedVector2Array(960, -10, 967, 6174, -976, 6174, -960, -10)
 script = ExtResource("12_q5onr")
 
 [node name="BulletPool" type="Node2D" parent="." unique_id=2006154698]

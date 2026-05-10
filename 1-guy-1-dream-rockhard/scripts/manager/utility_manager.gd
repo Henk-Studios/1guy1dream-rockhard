@@ -2,7 +2,7 @@
 extends Node
 class_name UtilityManager
 
-signal personal_record_updated(time_seconds: float)
+signal personal_record_updated(time_seconds: float, game_type: String)
 
 # Settings file path
 const SETTINGS_PATH := "user://game_settings.cfg"
@@ -12,7 +12,16 @@ const UI_SECTION := "ui"
 const FPS_COUNTER_KEY := "fps_visible"
 
 const PLAYER_SECTION := "player"
-const PERSONAL_RECORD_KEY := "personal_record"
+const PERSONAL_RECORD_KEY := "personal_records"
+
+# Game type constants
+const GAME_TYPE_NORMAL := "normal"
+const GAME_TYPE_INFINITE := "infinite"
+const GAME_TYPE_INFINITE_RISING_LAVA := "infinite_rising_lava"
+
+# Seed type constants
+const SEED_TYPE_SET := "set"
+const SEED_TYPE_RANDOM := "random"
 
 var fps_visible: bool = false
 var fps_message_timer: Timer
@@ -66,6 +75,8 @@ func is_mouse_over_ui(ui_nodes: Array) -> bool:
 	return false
 
 func format_time(seconds: float) -> String:
+	if seconds == INF:
+		return "N/A"
 	var total: int = int(seconds)
 	var minutes: int = total / 60
 	var secs: int = total % 60
@@ -103,16 +114,108 @@ func has_setting(section: String, key: String) -> bool:
 		return config.has_section_key(section, key)
 	return false
 
+
+func intify(text) -> int:
+	if typeof(text) == TYPE_INT:
+		return text
+	var result: int = 0
+	for charr in text:
+		result += ord(charr)
+	return result
+
 # Player Data Management
 
-func get_personal_record() -> float:
-	"""Get the player's personal best time in seconds. Returns INF if no record exists."""
-	return load_player_data(PLAYER_SECTION, PERSONAL_RECORD_KEY, INF)
+func _get_all_personal_records() -> Dictionary:
+	"""Get all personal records as a dictionary: {game_type:seed_type: time}"""
+	var records = load_player_data(PLAYER_SECTION, PERSONAL_RECORD_KEY, {})
+	if not records is Dictionary:
+		records = {}
+	# Ensure all game type + seed type combinations exist
+	for game_type in [GAME_TYPE_NORMAL, GAME_TYPE_INFINITE, GAME_TYPE_INFINITE_RISING_LAVA]:
+		for seed_type in [SEED_TYPE_SET, SEED_TYPE_RANDOM]:
+			var key = "%s:%s" % [game_type, seed_type]
+			if not records.has(key):
+				records[key] = INF if game_type != GAME_TYPE_INFINITE_RISING_LAVA else 0.0
+	return records
 
-func set_personal_record(time_seconds: float) -> void:
-	"""Update the personal record if the new time is better (lower)"""
-	save_player_data(PLAYER_SECTION, PERSONAL_RECORD_KEY, time_seconds)
-	personal_record_updated.emit(time_seconds)
+func _save_all_personal_records(records: Dictionary) -> void:
+	"""Save all personal records"""
+	save_player_data(PLAYER_SECTION, PERSONAL_RECORD_KEY, records)
+
+func get_current_game_type() -> String:
+	"""Determine the current game type based on world state.
+	Rising lava is a modifier on the gamemode, so we check that first."""
+	if not is_instance_valid(World.lava):
+		return GAME_TYPE_NORMAL
+	
+	if World.lava.rising_lava:
+		return GAME_TYPE_INFINITE_RISING_LAVA
+	
+	# Check if infinite mode was enabled by looking at terrain layers count
+	# In infinite mode, many layers are generated. Normal mode has a fixed set.
+	if is_instance_valid(World.terrain) and World.terrain.terrain_config.has("layers"):
+		var layer_count = World.terrain.terrain_config.layers.size()
+		# Normal mode typically has 6 layers (dirt + 5 stone layers)
+		# Infinite mode generates many more layers (up to 34)
+		if layer_count > 10:
+			return GAME_TYPE_INFINITE
+	
+	return GAME_TYPE_NORMAL
+
+func get_current_seed_type() -> String:
+	"""Determine the current seed type based on world state.
+	Returns SEED_TYPE_SET if a seed was explicitly provided, SEED_TYPE_RANDOM otherwise."""
+	if not is_instance_valid(World.main):
+		return SEED_TYPE_RANDOM
+	return World.main.seed_type_used
+
+func get_personal_record(game_type: String = "", seed_type: String = "") -> float:
+	"""Get the player's personal best time for a specific game type and seed type.
+	If game_type is empty, uses current game type.
+	If seed_type is empty, uses current seed type.
+	Returns INF for normal/infinite (lower is better), 0.0 for infinite_rising_lava (higher is better)."""
+	if game_type == "":
+		game_type = get_current_game_type()
+	if seed_type == "":
+		seed_type = get_current_seed_type()
+	
+	var key = "%s:%s" % [game_type, seed_type]
+	var records = _get_all_personal_records()
+	if not records.has(key):
+		return INF if game_type != GAME_TYPE_INFINITE_RISING_LAVA else 0.0
+	return records[key]
+
+func set_personal_record(time_seconds: float, game_type: String = "", seed_type: String = "") -> void:
+	"""Update the personal record for a specific game type and seed type if the new time is better.
+	If game_type is empty, uses current game type.
+	If seed_type is empty, uses current seed type.
+	For normal/infinite: lower time is better. For infinite_rising_lava: higher time is better."""
+	if game_type == "":
+		game_type = get_current_game_type()
+	if seed_type == "":
+		seed_type = get_current_seed_type()
+	
+	var key = "%s:%s" % [game_type, seed_type]
+	var records = _get_all_personal_records()
+	var current_record = records.get(key, INF if game_type != GAME_TYPE_INFINITE_RISING_LAVA else 0.0)
+	
+	# Determine if this is a new record
+	var is_new_record = false
+	if game_type == GAME_TYPE_INFINITE_RISING_LAVA:
+		# For rising lava: higher time is better
+		is_new_record = time_seconds > current_record
+	else:
+		# For normal/infinite: lower time is better
+		is_new_record = time_seconds < current_record
+	
+	if is_new_record:
+		records[key] = time_seconds
+		_save_all_personal_records(records)
+		personal_record_updated.emit(time_seconds, game_type)
+
+func get_all_personal_records() -> Dictionary:
+	"""Get all personal records for all game types"""
+	return _get_all_personal_records()
 
 func save_player_data(section: String, key: String, value: Variant) -> void:
 	"""Save player data to the player data file"""

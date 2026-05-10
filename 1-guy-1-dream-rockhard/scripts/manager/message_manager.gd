@@ -48,7 +48,7 @@ func print_message(text: String, type: MessageType = MessageType.INFO, duration:
 func _start_removal_timer(message_node: Control, duration: float) -> void:
 	var timer = get_tree().create_timer(duration)
 	self.message_timers[message_node] = timer
-	timer.timeout.connect(_remove_message.bind(message_node))
+	timer.timeout.connect(func(): _remove_message(message_node))
 
 func _reset_message_timer(message_node: Control, duration: float) -> void:
 	_start_removal_timer(message_node, duration)

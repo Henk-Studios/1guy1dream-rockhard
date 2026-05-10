@@ -6,7 +6,8 @@ const BREAK_GROUP_CHUNKS: int = 8
 const LOAD_RADIUS_X: int = 5
 const LOAD_RADIUS_Y: int = 3
 const FREE_CAM_RADIUS_MULT: float = 2.0
-const EXPLOSION_OVERKILL: int = 999999
+# max integer
+const EXPLOSION_OVERKILL: int = -1
 var world_thickness: int = 0
 
 class Layer:
@@ -32,6 +33,17 @@ class Patch:
 		self.threshold = p_threshold
 		self.invert = p_invert
 		self.patches = p_patches
+
+class PatchShape:
+	var noise_gen: NoiseConfig
+	var threshold_mean: float
+	var threshold_deviation: float = 0.0
+	var invert: bool = false
+	func _init(p_noise_gen: NoiseConfig = null, p_threshold_mean: float = 0.0, p_threshold_deviation: float = 0.0, p_invert: bool = false):
+		self.noise_gen = p_noise_gen
+		self.threshold_mean = p_threshold_mean
+		self.threshold_deviation = p_threshold_deviation
+		self.invert = p_invert
 
 class NoiseConfig:
 	var style: StringName # High-level noise character: blobby, ridged, billowy, value.
@@ -107,11 +119,22 @@ var noises: Dictionary[String, NoiseConfig] = {
 	"chunky": NoiseConfig.new(&"blobby", 0.24, 0.70, 0.20, 0.65, 0.50),
 	"speckled": NoiseConfig.new(&"blobby", 0.55, 0.78, 0.10, 0.40, 0.45),
 	"crystalline": NoiseConfig.new(&"blobby", 0.40, 0.84, 0.20, 0.45, 0.50),
-	"dense": NoiseConfig.new(&"blobby", 0.30, 0.90, 0.20, 0.45, 0.55),
 	"spaghetti": NoiseConfig.new(&"billowy", 0.90, 0.86, 0.95, 0.55, 0.55),
 }
 
-# Recursive patch generator removed; patches are hard-coded below for clarity
+# could give them proper names sometime
+var s_patches: Dictionary = {
+	'1': PatchShape.new(noises["ridged"], 0.8),
+	'2': PatchShape.new(noises["blobby"], -0.65, 0.1, true),
+	'3': PatchShape.new(noises["blobby"], -0.45, 0.1, true),
+	'4': PatchShape.new(noises["blobby"], -0.25, 0.1, true),
+	'5': PatchShape.new(noises["chunky"], 0.42, 0.1),
+	'6': PatchShape.new(noises["spaghetti"], -0.55, 0.1, true),
+	'7': PatchShape.new(noises["spaghetti"], 0.9, 0.1),
+	'8': PatchShape.new(noises["speckled"], 0.40, 0.1),
+	'9': PatchShape.new(noises["crystalline"], 0.40, 0.2),
+	'10': PatchShape.new(noises["smooth"], 0.35, 0.15),
+}
 
 var patches: Dictionary = {
 	"stone_5": [
@@ -121,7 +144,7 @@ var patches: Dictionary = {
 		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].o_s(4), -0.65, true),
 		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(5), 0.50),
 		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(6), 0.30),
-		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].o_s(7), 0.62),
+		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].o_s(7), 0.72),
 	],
 
 	"stone_4": [
@@ -132,7 +155,7 @@ var patches: Dictionary = {
 		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].o_s(11), 0.45),
 		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(12), 0.40),
 		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(13), 0.35),
-		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].o_s(14), 0.9),
+		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].o_s(14), 0.95),
 	],
 
 	"stone_3": [
@@ -182,7 +205,7 @@ var layers: Dictionary[String, Layer] = {
 var terrain_config: Dictionary = {
 	"surface_base": 15,
 	"surface_amplitude": 6,
-	"spawn_cell": Vector2i(0, 540),
+	"spawn_cell": Vector2i(0, -10),
 	"spawn_clear_radius": 5,
 	"surface_background_color": Color(0.45, 0.7, 0.9),
 	"depths_background_color": Color(0.08, 0.08, 0.10),
@@ -203,6 +226,86 @@ var terrain_config: Dictionary = {
 
 @export var tile_scene: PackedScene
 
+
+func _create_stone_patches(index: int, rng: RandomNumberGenerator) -> Array:
+	var seed_off := rng.randi_range(0, 10000)
+	var patches_arr: Array = []
+	var ore_amount = rng.randi_range(1, 5)
+	var ore_count = 0
+	var ore_dict := {
+		Tile.Type.GOLD: 0,
+		Tile.Type.DIAMOND: 0,
+		Tile.Type.EMERALD: 0,
+		Tile.Type.EXPLOSIVE: 0,
+	}
+	while ore_count < ore_amount:
+		var r = rng.randf()
+		if r < 0.5:
+			ore_dict[Tile.Type.GOLD] += 1
+		elif r < 0.75:
+			ore_dict[Tile.Type.DIAMOND] += 1
+		elif r < 0.85:
+			ore_dict[Tile.Type.EMERALD] += 1
+		else:
+			ore_dict[Tile.Type.EXPLOSIVE] += 1
+		ore_count += 1
+
+	var shapes_amount = s_patches.size()
+	var shape_keys := s_patches.keys()
+	var off = 234
+	for ore_type in ore_dict.keys():
+		for i in range(ore_dict[ore_type]):
+			var ps: PatchShape = s_patches[shape_keys[rng.randi_range(0, shapes_amount - 1)]]
+			var p: Patch = Patch.new(ore_type, ps.noise_gen.o_s(seed_off + off), rng.randfn(ps.threshold_mean, ps.threshold_deviation), ps.invert, [])
+			
+			patches_arr.append(p)
+			off += 1
+	var sp = Patch.new(Tile.stone(index + 1), noises["smooth"].o_s(seed_off), 0.3, false, [])
+	patches_arr.append(sp)
+	var sub_ore_amount = rng.randi_range(1, 3)
+	var sub_ore_count = 0
+	var sub_ore_dict := {
+		Tile.Type.GOLD: 0,
+		Tile.Type.DIAMOND: 0,
+		Tile.Type.EMERALD: 0,
+		Tile.Type.EXPLOSIVE: 0,
+	}
+	while sub_ore_count < sub_ore_amount:
+		var r = rng.randf()
+		if r < 0.5:
+			sub_ore_dict[Tile.Type.GOLD] += 1
+		elif r < 0.75:
+			sub_ore_dict[Tile.Type.DIAMOND] += 1
+		elif r < 0.85:
+			sub_ore_dict[Tile.Type.EMERALD] += 1
+		else:
+			sub_ore_dict[Tile.Type.EXPLOSIVE] += 1
+		sub_ore_count += 1
+	for sub_ore_type in sub_ore_dict.keys():
+		for j in range(sub_ore_dict[sub_ore_type]):
+			var sub_ps: PatchShape = s_patches[shape_keys[rng.randi_range(0, shapes_amount - 1)]]
+			var sub_p: Patch = Patch.new(sub_ore_type, sub_ps.noise_gen.o_s(seed_off), rng.randfn(sub_ps.threshold_mean, sub_ps.threshold_deviation), sub_ps.invert, [])
+			sp.patches.append(sub_p)
+	return patches_arr
+
+func _generate_infinite_layers() -> void:
+	var max_layers: int = 34 # 200 * 3 ** 34 is just below int limit
+	var rng := RandomNumberGenerator.new()
+	rng.seed = world_seed
+
+	var generated_layers: Array = []
+	for i in range(max_layers):
+		var stone_index: int = i + 1
+		var patches_arr: Array = _create_stone_patches(stone_index, rng)
+		generated_layers.append(Layer.new(Tile.stone(stone_index), 100, Color.hex(0x000000ff), patches_arr))
+
+	# keep a dirt top layer like the default config
+	if layers.has("dirt"):
+		generated_layers.append(layers["dirt"])
+
+	terrain_config.layers = generated_layers
+
+
 var world_seed: int
 var surface_noise: FastNoiseLite
 var loaded_chunks: Dictionary = {} # Vector2i chunk -> Dictionary[cell, Tile] (O(1) break removal)
@@ -217,8 +320,8 @@ var _last_streamed_chunk: Vector2i = Vector2i(-2147483648, -2147483648)
 
 func setup(params: Dictionary) -> void:
 	world_thickness = 0
-	if params.has("seed") and params["seed"] is int:
-		world_seed = params["seed"]
+	if params.has("seed"):
+		world_seed = Manager.utility.intify(params["seed"])
 	else:
 		world_seed = randi()
 
@@ -227,10 +330,13 @@ func setup(params: Dictionary) -> void:
 	surface_noise.noise_type = FastNoiseLite.TYPE_PERLIN
 	surface_noise.frequency = 0.03
 
+	# Allow optional infinite gamemode which generates many stone layers
+	if params.has("gamemode") and params["gamemode"] == "infinite":
+		_generate_infinite_layers()
+
 	for layer: Layer in terrain_config.layers:
 		world_thickness += layer.thickness
-	var world_y_offset_tiles: int = world_thickness - 1
-	var spawn_cell: Vector2i = Vector2i(terrain_config.spawn_cell.x, terrain_config.spawn_cell.y - world_y_offset_tiles)
+	var spawn_cell: Vector2i = Vector2i(terrain_config.spawn_cell.x, terrain_config.spawn_cell.y)
 
 	_setup_patches_recursive(terrain_config.layers)
 
@@ -238,7 +344,7 @@ func setup(params: Dictionary) -> void:
 	_clear_spawn_area(spawn_cell, terrain_config.spawn_clear_radius)
 	var spawn_world: Vector2 = Vector2(spawn_cell) * TILE_SIZE
 	World.the_guy.global_position = spawn_world
-	_setup_lava()
+	_setup_lava(params.has("rising_lava") and bool(params["rising_lava"]))
 	_setup_credits()
 	update_region(spawn_world)
 	Manager.scene.finish_loading()
@@ -277,13 +383,16 @@ func _clear_spawn_area(center: Vector2i, radius: int) -> void:
 			if dx * dx + dy * dy <= radius * radius:
 				var cell := center + Vector2i(dx, dy)
 				var group := _chunk_to_break_group(_cell_to_chunk(cell))
-				var group_broken: Dictionary = broken_by_group.get(group, {})
-				group_broken[cell] = EXPLOSION_OVERKILL
 				if not broken_by_group.has(group):
-					broken_by_group[group] = group_broken
+					broken_by_group[group] = {}
+				var group_broken: Dictionary = broken_by_group[group]
+				group_broken[cell] = EXPLOSION_OVERKILL
 
-func _setup_lava() -> void:
+func _setup_lava(rising_lava_enabled: bool) -> void:
+	if rising_lava_enabled:
+		World.credits.disable()
 	World.lava.position.y = TILE_SIZE
+	World.lava.set_rising_lava(rising_lava_enabled)
 
 func _setup_credits() -> void:
 	World.credits.position.y = - world_thickness * TILE_SIZE - 200
@@ -337,7 +446,7 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 				# Skip cell if accumulated damage already destroys this grass tile.
 				if chunk_broken != null:
 					var hp_lost: int = chunk_broken.get(cell, 0)
-					if hp_lost >= Tile.get_hp(Tile.Type.GRASS):
+					if hp_lost >= Tile.get_hp(Tile.Type.GRASS) or hp_lost == EXPLOSION_OVERKILL:
 						continue
 				var grass_tile := _acquire_tile()
 				grass_tile.configure(Tile.Type.GRASS, _cell_angle(cell), _cell_texture_index(cell), cell)
@@ -355,7 +464,7 @@ func _generate_chunk(chunk_coord: Vector2i) -> void:
 			# Skip cell if accumulated damage already destroys this tile type.
 			if chunk_broken != null:
 				var hp_lost: int = chunk_broken.get(cell, 0)
-				if hp_lost >= Tile.get_hp(tile_type):
+				if hp_lost >= Tile.get_hp(tile_type) or hp_lost == EXPLOSION_OVERKILL:
 					continue
 
 			var tile := _acquire_tile()
@@ -385,18 +494,18 @@ func bullet_explode(cell: Vector2i, bonus_depth: int = 0) -> void:
 func _do_break(cell: Vector2i, damage: int, chain_depth: int) -> void:
 	var chunk := _cell_to_chunk(cell)
 	var group := _chunk_to_break_group(chunk)
-	var group_broken: Dictionary = broken_by_group.get(group, {})
-	var hp_lost: int = group_broken.get(cell, 0) + damage
-	group_broken[cell] = hp_lost
 	if not broken_by_group.has(group):
-		broken_by_group[group] = group_broken
+		broken_by_group[group] = {}
+	var group_broken: Dictionary = broken_by_group[group]
+	var hp_lost: int = group_broken.get(cell, 0) + damage if damage != EXPLOSION_OVERKILL else EXPLOSION_OVERKILL
+	group_broken[cell] = hp_lost
 
 	if not active_tiles.has(cell):
 		return
 	var tile: Tile = active_tiles[cell]
 	if tile.tile_type == Tile.Type.UNBREAKABLE:
 		return
-	if hp_lost < Tile.get_hp(tile.tile_type):
+	if hp_lost < Tile.get_hp(tile.tile_type) and hp_lost != EXPLOSION_OVERKILL:
 		tile.animate_hit(hp_lost)
 		return
 	var was_explosive: bool = tile.tile_type == Tile.Type.EXPLOSIVE
@@ -468,7 +577,7 @@ func _chunk_to_break_group(chunk: Vector2i) -> Vector2i:
 	return Vector2i(floori(float(chunk.x) / BREAK_GROUP_CHUNKS), floori(float(chunk.y) / BREAK_GROUP_CHUNKS))
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed and World.main.dev_mode:
+	if event is InputEventKey and event.pressed and Manager.dev_mode:
 		if event.keycode == KEY_F1:
 			World.camera.toggle_free_cam()
 		elif event.keycode == KEY_F2:
