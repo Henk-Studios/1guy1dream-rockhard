@@ -70,7 +70,7 @@ var cell: Vector2i = Vector2i.ZERO
 var context_tile_size: int = TILE_SIZE
 
 static func is_stone(tt: int) -> bool:
-	return tt > Type.size()
+	return tt >= Type.size()
 
 static func stone_index(tt: int) -> int:
 	return tt - Type.size()
@@ -84,10 +84,6 @@ func configure(type: Type, angle: float, tex_idx: int, cell_: Vector2i, tile_siz
 	texture_index = tex_idx
 	cell = cell_
 	context_tile_size = tile_size
-	if is_stone(tile_type):
-		name = "%s_%d,%d" % ["stone " + str(stone_index(tile_type)), cell.x, cell.y]
-	else:
-		name = "%s_%d,%d" % [STRING_NAMES[tile_type], cell.x, cell.y]
 	if _sprite_node:
 		_apply_visual()
 
@@ -157,7 +153,7 @@ func animate_hit(hp_lost: int) -> void:
 
 func animate_break() -> void:
 	play_sfx()
-	World.break_particle_pool.spawn_particles_at(global_position, 3, get_color())
+	World.break_particle_pool.spawn_particles_at(global_position, 1, get_color())
 	return
 
 func play_sfx() -> void:

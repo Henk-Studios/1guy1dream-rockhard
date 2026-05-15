@@ -52,7 +52,7 @@ seamless = true
 shader = ExtResource("11_e3hyu")
 shader_parameter/timeScaleFactor = 0.01
 shader_parameter/worldScale = 0.01
-shader_parameter/opacity = 0.5
+shader_parameter/opacity = 0.3
 shader_parameter/borderFadeWidth = 28.36
 shader_parameter/borderWaveAmount = 1.0
 shader_parameter/borderWaveScale = 0.175
@@ -113,7 +113,6 @@ script = ExtResource("12_q5onr")
 z_index = 12
 material = SubResource("ShaderMaterial_lakw3")
 polygon = PackedVector2Array(960, -10, 967, 6174, -976, 6174, -960, -10)
-script = ExtResource("12_q5onr")
 
 [node name="BulletPool" type="Node2D" parent="." unique_id=2006154698]
 script = ExtResource("13_o8fc1")

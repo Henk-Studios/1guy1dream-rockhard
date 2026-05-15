@@ -35,6 +35,31 @@ func _physics_process(__):
 	var right_dir = Vector2(-1, -1.5).normalized() # up-right
 	var left_pressed = Input.is_action_pressed("leftjet")
 	var right_pressed = Input.is_action_pressed("rightjet")
+	
+	# Handle follow_mouse mode
+	if Manager.follow_mouse:
+		var mouse_pos = get_global_mouse_position()
+		var relative_pos = mouse_pos - global_position
+		
+		# Only respond if mouse is above the guy
+		if relative_pos.y < 20:
+			var threshold = 50.0
+			if relative_pos.x < -threshold:
+				# Mouse to upper-left
+				left_pressed = false
+				right_pressed = true
+			elif relative_pos.x > threshold:
+				# Mouse to upper-right
+				right_pressed = false
+				left_pressed = true
+			else:
+				# Mouse directly above
+				left_pressed = true
+				right_pressed = true
+		else:
+			# Mouse below, don't fire
+			left_pressed = false
+			right_pressed = false
 
 	if _enabled:
 		# LEFT JET

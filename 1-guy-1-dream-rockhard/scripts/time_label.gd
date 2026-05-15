@@ -9,4 +9,9 @@ func _ready() -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(__) -> void:
 	if Manager.scene.current_scene:
-		text = Manager.utility.format_time(World.main.time_elapsed)
+		if World.main.gamemode == Manager.utility.GameType.RACE_TO_SPACE:
+			text = Manager.utility.format_time(max(0, 300.0 - World.main.time_elapsed))
+		elif World.main.gamemode == Manager.utility.GameType.RACE_TO_RICHES:
+			text = Manager.utility.format_time(max(0, 600.0 - World.main.time_elapsed))
+		else:
+			text = Manager.utility.format_time(World.main.time_elapsed)

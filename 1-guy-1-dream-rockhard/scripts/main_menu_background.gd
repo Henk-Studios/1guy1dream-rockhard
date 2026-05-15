@@ -44,6 +44,9 @@ var scroll_y: float = 0.0
 # Track which grid cells have been generated to avoid duplicates
 var generated_cells: Dictionary = {} # Vector2i(grid_x, grid_y) -> true
 
+# Sky background
+var sky_color_rect: ColorRect
+
 # Zoom scales with window width so every monitor shows the same slice of the world.
 # REFERENCE_WIDTH is the resolution the game was tuned at; BASE_ZOOM is the zoom at that size.
 const REFERENCE_WIDTH := 1152.0
@@ -54,6 +57,16 @@ const BASE_ZOOM := 0.9
 func _ready() -> void:
 	world_seed = randi()
 	_setup_noise()
+	
+	# Setup sky background
+	var canvas_layer = CanvasLayer.new()
+	canvas_layer.layer = -1 # Draw behind tiles
+	add_child(canvas_layer)
+	
+	sky_color_rect = ColorRect.new()
+	sky_color_rect.anchor_right = 1.0
+	sky_color_rect.anchor_bottom = 1.0
+	canvas_layer.add_child(sky_color_rect)
 	
 	# Start at the bottom of the map
 	scroll_y = 500.0 * TILE_SIZE # Start viewing from deep underground
@@ -118,6 +131,9 @@ func _process(delta: float) -> void:
 	scroll_x += SCROLL_SPEED * delta
 	scroll_y -= SCROLL_SPEED * delta
 
+	# Update sky color based on depth
+	_update_sky_color()
+
 	# Generate or recycle tiles based on current scroll
 	_update_visible_tiles()
 	
@@ -131,8 +147,10 @@ func _update_visible_tiles() -> void:
 	for grid_cell in active_tiles.keys():
 		var pixel_pos: Vector2 = _grid_to_pixel(grid_cell)
 		# Remove tiles that are far off any edge of the screen
-		if pixel_pos.x < -TILE_SIZE or pixel_pos.x > view_size.x + TILE_SIZE or \
-		   pixel_pos.y < -TILE_SIZE or pixel_pos.y > view_size.y + TILE_SIZE:
+		# Keep the cull band wider than the spawn band so edge tiles are not
+		# constantly released and recreated as they cross the viewport border.
+		if pixel_pos.x < -2 * TILE_SIZE or pixel_pos.x > view_size.x + 2 * TILE_SIZE or \
+			pixel_pos.y < -2 * TILE_SIZE or pixel_pos.y > view_size.y + 2 * TILE_SIZE:
 			tiles_to_remove.append(grid_cell)
 	
 	for cell in tiles_to_remove:
@@ -161,7 +179,7 @@ func _generate_or_show_tile(grid_x: int, grid_y: int) -> void:
 		return
 	
 	# Acquire or create tile
-	var tile := _acquire_tile()
+	var tile = _acquire_tile()
 	tile.configure(tile_type, _cell_angle(cell), _cell_texture_index(cell), cell, TILE_SIZE)
 	add_child(tile)
 	
@@ -201,7 +219,7 @@ func _tile_type_for_grid_cell(grid_x: int, grid_y: int) -> Variant:
 		return Tile.Type.EXPLOSIVE
 	
 	var below_dirt: int = depth - DIRT_DEPTH - 1
-	var stone_num: int = clampi(below_dirt / STONE_TIER_HEIGHT + 1, 1, 5)
+	var stone_num: int = clampi(5 - below_dirt / STONE_TIER_HEIGHT + 1, 1, 5)
 	
 	if is_heavy and stone_num < 5:
 		var emerald_threshold: float = 0.48 - height_ratio * 0.28
@@ -219,7 +237,7 @@ func _tile_type_for_grid_cell(grid_x: int, grid_y: int) -> Variant:
 		return Tile.Type.GOLD
 	
 	if is_heavy and stone_num > 1:
-		stone_num -= 1
+		stone_num += 1
 	
 	return Tile.stone(stone_num - 1)
 
@@ -262,9 +280,23 @@ func _release_tile(tile: Tile) -> void:
 	remove_child(tile)
 	tile_pool.append(tile)
 
+func _update_sky_color() -> void:
+	var surface_y = SURFACE_BASE * TILE_SIZE
+	var dirt_end_y = surface_y + DIRT_DEPTH * TILE_SIZE
+	
+	# Calculate transition: 0 = black (at surface), 1 = blue (at dirt_end and beyond)
+	var transition = clamp((scroll_y - surface_y) / float(DIRT_DEPTH * TILE_SIZE), 0.0, 1.0)
+	
+	# Blend from black to blue
+	var black = Color.BLACK
+	var blue = Color(0.45, 0.7, 0.9)
+	var sky_color = blue.lerp(black, transition)
+	
+	sky_color_rect.color = sky_color
+
 func _apply_resolution_zoom() -> void:
 	var w: float = get_viewport_rect().size.x
 	var factor: float = maxf(w / REFERENCE_WIDTH, 0.1)
 	var z := Vector2(BASE_ZOOM * factor, BASE_ZOOM * factor)
-	if has_node("TheGuy/Camera2D"):
-		get_node("TheGuy/Camera2D").zoom = z
+	if has_node("Camera2D"):
+		get_node("Camera2D").zoom = z

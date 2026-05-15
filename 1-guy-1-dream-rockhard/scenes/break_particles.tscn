@@ -5,6 +5,7 @@ resource_local_to_scene = true
 load_path = "res://.godot/imported/sharp stone.png-f81a7aef0b8890a1e23af256dfea34d2.ctex"
 
 [sub_resource type="Gradient" id="Gradient_si3m8"]
+resource_local_to_scene = true
 interpolation_mode = 2
 offsets = PackedFloat32Array(0.44581282, 1)
 

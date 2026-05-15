@@ -90,7 +90,7 @@ func _on_bullet_ricochet_pressed(p) -> int:
 
 func _on_explosive_chance_pressed(p) -> int:
 	World.main.bullet_explosive_chance_level += 1
-	return increase_price(p, 1000, 1.2)
+	return increase_price(p, 800, 1.1)
 
 func _on_explosion_size_pressed(p) -> int:
 	World.main.bullet_explosive_size_level += 1
@@ -119,11 +119,14 @@ func toggle_shop() -> void:
 func open_shop() -> void:
 	shop_open = true
 	World.main.shop_open = true
+	# slow down the game
+	Engine.time_scale = 0.1
 	show()
 
 func close_shop() -> void:
 	shop_open = false
 	World.main.shop_open = false
+	Engine.time_scale = 1.0
 	hide()
 
 func _input(event) -> void:

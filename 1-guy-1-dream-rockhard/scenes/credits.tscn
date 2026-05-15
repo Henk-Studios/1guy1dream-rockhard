@@ -41,9 +41,9 @@ theme_override_font_sizes/normal_font_size = 30
 text = "Congratulations, you beat the game.
 Thank you for playing.
 
-Jeroen Krijgsman - Slave Owner
-Pascal van Tilborg - Slave
-Quinten van Schelven - God Gamedev
+Jeroen - Slave Owner
+Pascal - Slave
+Quinten - God Gamedev
 Ivo - Playtesting"
 scroll_active = false
 horizontal_alignment = 1

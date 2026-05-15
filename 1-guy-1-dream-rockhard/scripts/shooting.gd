@@ -13,25 +13,25 @@ var prev_aim_direction: Vector2 = Vector2.ZERO
 func _process(delta):
 	var direction = get_aim_direction()
 	prev_aim_direction = direction
-	global_rotation = direction.angle()
-	if direction.x > 0:
-		sprite.flip_h = true
-		sprite.offset = sprite_offset_2
-		for particles in muzzle_particles:
-			particles.rotation = 0
-			particles.position.x = 260
+	
+	if direction != Vector2.ZERO:
+		global_rotation = direction.angle()
+		if direction.x > 0:
+			sprite.flip_h = true
+			sprite.offset = sprite_offset_2
+			for particles in muzzle_particles:
+				particles.rotation = 0
+				particles.position.x = 260
+		else:
+			global_rotation += PI
+			sprite.flip_h = false
+			sprite.offset = sprite_offset_1
+			for particles in muzzle_particles:
+				particles.rotation = PI
+				particles.position.x = -260
 	else:
-		global_rotation += PI
-		sprite.flip_h = false
-		sprite.offset = sprite_offset_1
-		for particles in muzzle_particles:
-			particles.rotation = PI
-			particles.position.x = -260
-	if direction == Vector2.ZERO:
-		sprite.flip_h = false
-		sprite.offset = sprite_offset_1
-		global_rotation = 0
-		return
+		if not Manager.auto_shoot:
+			return
 
 	_spawn_accumulator += World.main.particles_per_second * delta
 
@@ -42,7 +42,7 @@ func _process(delta):
 
 func get_aim_direction() -> Vector2:
 	# if using mouse and mouse down
-	if use_mouse and Input.is_action_pressed("aim_mouse") and not World.main.shop_open:
+	if use_mouse and (Input.is_action_pressed("aim_mouse") or Manager.auto_shoot):
 		return (get_global_mouse_position() - global_position).normalized()
 	else:
 		var input_vec = Vector2(

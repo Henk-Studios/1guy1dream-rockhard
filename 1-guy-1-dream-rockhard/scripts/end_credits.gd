@@ -18,7 +18,7 @@ func start_credits() -> void:
 	# Update personal record if this run is better
 	var current_time = World.main.time_elapsed
 	World.main.time_frozen = true
-	var game_type = Manager.utility.get_current_game_type()
+	var game_type = World.main.gamemode
 	var seed_type = World.main.seed_type_used
 	
 	time_label.text = "[color=blue]Time: %s[/color]" % Manager.utility.format_time(current_time)

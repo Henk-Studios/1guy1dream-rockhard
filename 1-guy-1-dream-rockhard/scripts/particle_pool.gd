@@ -1,6 +1,6 @@
 extends Node2D
 class_name ParticlePool
-@export var pool_size: int = 20
+@export var pool_size: int = 40
 @export var particle_scene: PackedScene
 
 func _ready():

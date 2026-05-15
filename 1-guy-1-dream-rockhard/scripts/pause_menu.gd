@@ -2,9 +2,10 @@ class_name PauseMenu
 extends Control
 
 @export var back_button: Button
+@export var settings_button: Button
 @export var quit_button: Button
 @export var click_blocker: ColorRect
-
+@export var settings_menu: SettingsMenu
 
 func _ready():
 	hide()
@@ -13,6 +14,8 @@ func _ready():
 	click_blocker.gui_input.connect(_on_click_blocker_input)
 	quit_button.pressed.connect(_on_quit_button_pressed)
 	quit_button.mouse_entered.connect(_on_button_mouse_entered)
+	settings_button.pressed.connect(_on_settings_button_pressed)
+	settings_button.mouse_entered.connect(_on_button_mouse_entered)
 
 # input
 func _input(event: InputEvent):
@@ -37,6 +40,10 @@ func _on_back_button_pressed():
 	Manager.audio.play_click_sfx()
 	hide_pause_menu()
 
+func _on_settings_button_pressed():
+	Manager.audio.play_click_sfx()
+	settings_menu.show_settings()
+
 func _on_quit_button_pressed():
 	Manager.audio.play_click_sfx()
 	# Save current world if possible before leaving
@@ -46,6 +53,8 @@ func _on_quit_button_pressed():
 
 	get_tree().paused = false
 	Manager.message.clear()
+	Manager.audio.stop_all_looping_sfx()
+	Engine.time_scale = 1.0
 	Manager.scene.change_scene("res://scenes/main_menu.tscn")
 
 func _on_click_blocker_input(event: InputEvent):

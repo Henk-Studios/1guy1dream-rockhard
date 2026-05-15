@@ -10,7 +10,7 @@ shader_parameter/lod = 2.6400001254
 shader_parameter/mix_color = Color(0.6847319, 0.6847319, 0.6847319, 1)
 shader_parameter/add_color = Color(0.22959325, 0.22959325, 0.22959322, 0)
 
-[node name="SettingsMenu" type="Control" unique_id=1492014258 node_paths=PackedStringArray("master_volume_slider", "music_volume_slider", "sfx_volume_slider", "ui_scale_slider", "fullscreen_toggle", "fps_toggle", "clear_player_data_button", "back_button", "click_blocker")]
+[node name="SettingsMenu" type="Control" unique_id=1492014258 node_paths=PackedStringArray("master_volume_slider", "music_volume_slider", "sfx_volume_slider", "ui_scale_slider", "fullscreen_toggle", "fps_toggle", "follow_mouse_toggle", "auto_shoot_toggle", "clear_player_data_button", "back_button", "click_blocker", "player_section")]
 custom_minimum_size = Vector2(300, 400)
 layout_mode = 3
 anchors_preset = 8
@@ -31,9 +31,12 @@ sfx_volume_slider = NodePath("MarginContainer/VBoxContainer/ScrollContainer/Marg
 ui_scale_slider = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/ScaleSlider")
 fullscreen_toggle = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/FullscreenToggle")
 fps_toggle = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/FPSToggle")
-clear_player_data_button = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/ClearPlayerDataButton")
+follow_mouse_toggle = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/FollowMouseToggle")
+auto_shoot_toggle = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/AutoShootToggle")
+clear_player_data_button = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/PlayerSection/ClearPlayerDataButton")
 back_button = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/BackButton")
 click_blocker = NodePath("ClickBlocker")
+player_section = NodePath("MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/PlayerSection")
 
 [node name="ClickBlocker" type="ColorRect" parent="." unique_id=499946639]
 layout_mode = 1
@@ -171,6 +174,35 @@ custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
 color = Color(0, 0, 0, 1)
 
+[node name="GameplayLabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1812789698]
+layout_mode = 2
+text = "Gameplay"
+
+[node name="Seperator7" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1400364877]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="FollowMouseToggle" type="CheckButton" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=246356673]
+layout_mode = 2
+text = "Control Jetpack using Mouse"
+
+[node name="AutoShootToggle" type="CheckButton" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=378584336]
+layout_mode = 2
+text = "Always Shoot"
+
+[node name="GameplayLabel2" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1341630528]
+custom_minimum_size = Vector2(1, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Both these options allow simpler but less accurate control"
+autowrap_mode = 3
+
+[node name="Seperator8" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=1349935742]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
 [node name="UILabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=95468439]
 layout_mode = 2
 text = "UI"
@@ -204,13 +236,25 @@ custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
 color = Color(0, 0, 0, 1)
 
-[node name="ClearPlayerDataButton" type="Button" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=260540285]
+[node name="PlayerSection" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=769233629]
+layout_mode = 2
+
+[node name="PlayerLabel" type="Label" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/PlayerSection" unique_id=1028742341]
+layout_mode = 2
+text = "Player"
+
+[node name="Seperator9" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/PlayerSection" unique_id=1504062537]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="ClearPlayerDataButton" type="Button" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/PlayerSection" unique_id=260540285]
 layout_mode = 2
 theme = ExtResource("2_wswnh")
 theme_override_colors/font_color = Color(1, 0, 0, 1)
 text = "Clear All Player Data (NO UNDO)"
 
-[node name="Seperator6" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer" unique_id=443462374]
+[node name="Seperator6" type="ColorRect" parent="MarginContainer/VBoxContainer/ScrollContainer/MarginContainer/HBoxContainer/PlayerSection" unique_id=443462374]
 custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
 color = Color(0, 0, 0, 1)

@@ -19,9 +19,9 @@ signal money_changed(money)
 # enable dev mode by clicking the top right corner 3 times in the main menu (??? message will appear when toggled)
 var world_name: String = ""
 var world_id: String = ""
-var gamemode: String = ""
+var gamemode: int = 0
 var rising_lava_enabled: bool = false
-var seed_type_used: String = "" # "set" or "random"
+var seed_type_used: int = 0
 var money: int:
 	set(value):
 		money = value
@@ -41,6 +41,26 @@ var bullet_explosive_size_level: int = 0 # blast radius bonus
 func _physics_process(delta: float) -> void:
 	if not time_frozen:
 		time_elapsed += delta
+		if gamemode == Manager.utility.GameType.RACE_TO_SPACE and time_elapsed >= Manager.utility.GAME_TYPE_DEFINITIONS[Manager.utility.GameType.RACE_TO_SPACE]["duration"]:
+			time_frozen = true
+			var score: float = the_guy.global_position.y * -1
+			var current_record: float = Manager.utility.get_personal_record(Manager.utility.GameType.RACE_TO_SPACE, seed_type_used)
+			var new_pr: bool = score > current_record
+			if new_pr:
+				Manager.message.info("Time's up! You reached a height of %d!  [color=deep_pink][wave](New Record!)[/wave][/color]" % score)
+				Manager.utility.set_personal_record(score, Manager.utility.GameType.RACE_TO_SPACE, seed_type_used)
+			else:
+				Manager.message.info("Time's up! You reached a height of %d!" % score)
+		elif gamemode == Manager.utility.GameType.RACE_TO_RICHES and time_elapsed >= Manager.utility.GAME_TYPE_DEFINITIONS[Manager.utility.GameType.RACE_TO_RICHES]["duration"]:
+			time_frozen = true
+			var score: int = money
+			var current_record: int = int(Manager.utility.get_personal_record(Manager.utility.GameType.RACE_TO_RICHES, seed_type_used))
+			var new_pr: bool = score > current_record
+			if new_pr:
+				Manager.message.info("Time's up! You collected $%d!  [color=deep_pink][wave](New Record!)[/wave][/color]" % money)
+				Manager.utility.set_personal_record(World.main.money, Manager.utility.GameType.RACE_TO_RICHES, seed_type_used)
+			else:
+				Manager.message.info("Time's up! You collected $%d!" % money)
 
 func setup(params) -> void:
 	time_frozen = true
@@ -50,18 +70,17 @@ func setup(params) -> void:
 		var d: Dictionary = params["load_data"]
 		if d.has("gamemode") and d["gamemode"] != null:
 			params["gamemode"] = d["gamemode"]
-		if d.has("rising_lava_enabled") and d["rising_lava_enabled"] != null:
-			params["rising_lava"] = bool(d["rising_lava_enabled"])
 
 	# Extract gamemode and rising_lava from params or defaults
-	gamemode = params.get("gamemode", "") if params else ""
+	gamemode = params.get("gamemode", 0) if params else 0
+	print("Setting up world with gamemode: %s" % gamemode)
 	rising_lava_enabled = params.get("rising_lava", false) if params else false
 	
 	# Determine seed type (set vs random)
 	if params and params.has("seed") and params["seed"] != null and str(params["seed"]) != "":
-		seed_type_used = Manager.utility.SEED_TYPE_SET
+		seed_type_used = Manager.utility.SeedType.SET
 	else:
-		seed_type_used = Manager.utility.SEED_TYPE_RANDOM
+		seed_type_used = Manager.utility.SeedType.RANDOM
 
 	World.setup(self , terrain, the_guy, camera, credits, lava, break_particle_pool, explode_particle_pool, bullet_pool)
 
@@ -103,11 +122,9 @@ func setup(params) -> void:
 		if d.has("time_elapsed"):
 			time_elapsed = float(d["time_elapsed"]) if d["time_elapsed"] != null else time_elapsed
 		if d.has("gamemode") and d["gamemode"] != null:
-			gamemode = str(d["gamemode"])
-		if d.has("rising_lava_enabled") and d["rising_lava_enabled"] != null:
-			rising_lava_enabled = bool(d["rising_lava_enabled"])
+			gamemode = int(d["gamemode"])
 		if d.has("seed_type") and d["seed_type"] != null:
-			seed_type_used = str(d["seed_type"])
+			seed_type_used = int(d["seed_type"])
 		if d.has("player_pos") and the_guy:
 			var pp = d["player_pos"]
 			if pp and pp.size() >= 2:
@@ -152,11 +169,22 @@ func setup(params) -> void:
 			var prices = ld.get("upgrade_prices", [])
 			shop.apply_upgrade_state(levels, prices)
 	Manager.scene.finish_loading()
-	Manager.message.info("Loaded world with seed: '%s'" % (params.get("seed", "Unknown")), 20)
+	if str(params.get("seed", "")) != "":
+		Manager.message.info("Loaded world with seed: '%s'" % (params.get("seed", "Unknown")), 20)
 	Manager.message.info(" Use [color=lime]A[/color], [color=lime]D[/color], or [color=lime]<-, ->[/color], (keyboard) or [color=lime]RT[/color], [color=lime]LT[/color] (gamepad) to [color=yellow]move", 20)
 	Manager.message.info(" Use [color=lime]Mouse[/color] or [color=lime]Right Stick [/color] (gamepad) to [color=magenta]aim and shoot", 20)
 	Manager.message.info(" Press [color=lime]S[/color] (keyboard) or [color=lime]Y + Left Stick[/color] (gamepad) to open the [color=cyan]upgrade menu", 20)
 	Manager.message.info(" Press [color=lime]ESC[/color] (keyboard) or [color=lime]Start[/color] (gamepad) to [color=orange]pause", 20)
+	# per-gamemode instructions
+	match gamemode:
+		Manager.utility.GameType.CLASSIC, Manager.utility.GameType.INFINITE:
+			Manager.message.info("[color=yellow]Your 1dream: Reach the surface as fast as possible!", 20)
+		Manager.utility.GameType.INFINITE_RISING_LAVA:
+			Manager.message.info("[color=yellow]Your 1dream: Avoid the lava as long as possible!")
+		Manager.utility.GameType.RACE_TO_SPACE:
+			Manager.message.info("[color=yellow]Your 1dream: Go as high as possible in 5 minutes!")
+		Manager.utility.GameType.RACE_TO_RICHES:
+			Manager.message.info("[color=yellow]Your 1dream: Get as rich as possible in 10 minutes!")
 	Manager.message.info(" [color=magenta][wave amp=10.0]Now be the 1guy and achieve your 1dream!!![/wave][/color]", 20)
 	Manager.audio.fade_out_music()
 
@@ -172,6 +200,8 @@ func save_state() -> void:
 	var save_path = Manager.utility.world_id_to_save_path(world_id)
 	var config := ConfigFile.new()
 	var world_data: Dictionary = {}
+	# Game version
+	world_data["version"] = Manager.utility.GAME_VERSION
 	# Seed
 	world_data["seed"] = terrain.world_seed if terrain else null
 	world_data["world_id"] = world_id
@@ -191,7 +221,6 @@ func save_state() -> void:
 	
 	# Gamemode
 	world_data["gamemode"] = gamemode
-	world_data["rising_lava_enabled"] = rising_lava_enabled
 	world_data["seed_type"] = seed_type_used
 	
 	# Lava height (only save if rising lava is enabled)

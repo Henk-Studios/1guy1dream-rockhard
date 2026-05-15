@@ -24,7 +24,7 @@ func _physics_process(delta):
 			var main = World.terrain
 			var exploded := false
 			if World.main.bullet_explosive_chance_level > 0:
-				var chance: float = World.main.bullet_explosive_chance_level * 0.01
+				var chance: float = World.main.bullet_explosive_chance_level * 0.01 / World.main.particles_per_second * 5
 				if randf() < chance and main.has_method("bullet_explode"):
 					main.bullet_explode(collider.cell, World.main.bullet_explosive_size_level)
 					exploded = true

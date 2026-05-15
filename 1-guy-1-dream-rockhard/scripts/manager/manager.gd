@@ -2,6 +2,8 @@
 extends Node
 
 var dev_mode: bool = false
+var follow_mouse: bool = false
+var auto_shoot: bool = false
 
 # Main autoload singleton for global access to managers
 

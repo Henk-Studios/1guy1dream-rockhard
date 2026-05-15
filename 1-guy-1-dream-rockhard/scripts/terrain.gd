@@ -137,6 +137,16 @@ var s_patches: Dictionary = {
 }
 
 var patches: Dictionary = {
+	"stone_6": [
+		Patch.new(-1, noises["ridged"].o_s(-8), 0.8),
+		Patch.new(-1, noises["blobby"].o_s(-7), -0.75, true),
+		Patch.new(Tile.stone(6), noises["smooth"].o_s(-6), 0.3),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].o_s(-5), 0.40),
+		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].o_s(-4), -0.75, true),
+		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(-3), 0.45),
+		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(-2), 0.40),
+		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].o_s(-1), -0.4, true),
+	],
 	"stone_5": [
 		Patch.new(-1, noises["ridged"].o_s(1), 0.8),
 		Patch.new(-1, noises["blobby"].o_s(2), -0.65, true),
@@ -145,6 +155,9 @@ var patches: Dictionary = {
 		Patch.new(Tile.Type.GOLD, noises["speckled"].o_s(5), 0.50),
 		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(6), 0.30),
 		Patch.new(Tile.Type.EMERALD, noises["spaghetti"].o_s(7), 0.72),
+		Patch.new(Tile.stone(6), noises["smooth"].o_s(7), 0.3, false, [
+			Patch.new(Tile.Type.EMERALD, noises["smooth"].o_s(7), 0.54)]),
+			Patch.new(Tile.Type.EXPLOSIVE, noises["smooth"].o_s(7), 0.5),
 	],
 
 	"stone_4": [
@@ -195,6 +208,7 @@ var patches: Dictionary = {
 
 var layers: Dictionary[String, Layer] = {
 	"dirt": Layer.new(Tile.Type.DIRT, 50, Color.hex(0x52371d)),
+	"stone_6": Layer.new(Tile.stone(6), 100, Color.hex(0x000000ff), patches["stone_6"]),
 	"stone_5": Layer.new(Tile.stone(5), 100, Color.hex(0x000000ff), patches["stone_5"]),
 	"stone_4": Layer.new(Tile.stone(4), 100, Color.hex(0x000000ff), patches["stone_4"]),
 	"stone_3": Layer.new(Tile.stone(3), 100, Color.hex(0x000000ff), patches["stone_3"]),
@@ -219,6 +233,7 @@ var terrain_config: Dictionary = {
 		layers["stone_3"],
 		layers["stone_4"],
 		layers["stone_5"],
+		layers["stone_6"],
 		layers["dirt"],
 	]
 }
@@ -331,7 +346,7 @@ func setup(params: Dictionary) -> void:
 	surface_noise.frequency = 0.03
 
 	# Allow optional infinite gamemode which generates many stone layers
-	if params.has("gamemode") and params["gamemode"] == "infinite":
+	if params.has("gamemode") and Manager.utility.GAME_TYPE_DEFINITIONS.get(params["gamemode"]).get("infinite_layers", false):
 		_generate_infinite_layers()
 
 	for layer: Layer in terrain_config.layers:
@@ -344,8 +359,8 @@ func setup(params: Dictionary) -> void:
 	_clear_spawn_area(spawn_cell, terrain_config.spawn_clear_radius)
 	var spawn_world: Vector2 = Vector2(spawn_cell) * TILE_SIZE
 	World.the_guy.global_position = spawn_world
-	_setup_lava(params.has("rising_lava") and bool(params["rising_lava"]))
-	_setup_credits()
+	_setup_lava(params.has("gamemode") and Manager.utility.GAME_TYPE_DEFINITIONS.get(params["gamemode"]).get("rising_lava", false))
+	_setup_credits(Manager.utility.GAME_TYPE_DEFINITIONS.get(params["gamemode"]).get("show_credits", false))
 	update_region(spawn_world)
 	Manager.scene.finish_loading()
 
@@ -389,12 +404,12 @@ func _clear_spawn_area(center: Vector2i, radius: int) -> void:
 				group_broken[cell] = EXPLOSION_OVERKILL
 
 func _setup_lava(rising_lava_enabled: bool) -> void:
-	if rising_lava_enabled:
-		World.credits.disable()
 	World.lava.position.y = TILE_SIZE
 	World.lava.set_rising_lava(rising_lava_enabled)
 
-func _setup_credits() -> void:
+func _setup_credits(show_credits: bool) -> void:
+	if not show_credits:
+		World.credits.disable()
 	World.credits.position.y = - world_thickness * TILE_SIZE - 200
 
 func update_region(world_pos: Vector2) -> void:

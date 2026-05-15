@@ -9,10 +9,13 @@ extends Control
 @export var ui_scale_slider: HSlider
 @export var fullscreen_toggle: CheckButton
 @export var fps_toggle: CheckButton
+@export var follow_mouse_toggle: CheckButton
+@export var auto_shoot_toggle: CheckButton
 @export var clear_player_data_button: Button
 @export var back_button: Button
 @export var click_blocker: ColorRect
-
+@export var is_main_settings: bool = true
+@export var player_section: Control
 signal player_data_cleared
 
 # UI Scale constants
@@ -22,6 +25,13 @@ const DEFAULT_UI_SCALE := 1.0
 const FULLSCREEN_SECTION := "display"
 const FULLSCREEN_KEY := "fullscreen"
 const FULLSCREEN_DEFAULT := true
+
+# Gameplay constants
+const GAMEPLAY_SECTION := "gameplay"
+const FOLLOW_MOUSE_KEY := "follow_mouse"
+const AUTO_SHOOT_KEY := "auto_shoot"
+const FOLLOW_MOUSE_DEFAULT := false
+const AUTO_SHOOT_DEFAULT := false
 
 func _ready():
 	# Load UI scale setting on startup
@@ -48,11 +58,19 @@ func _ready():
 	fullscreen_toggle.toggled.connect(_on_fullscreen_toggle_toggled)
 	if fps_toggle:
 		fps_toggle.toggled.connect(_on_fps_toggle_toggled)
+	if follow_mouse_toggle:
+		follow_mouse_toggle.toggled.connect(_on_follow_mouse_toggle_toggled)
+	if auto_shoot_toggle:
+		auto_shoot_toggle.toggled.connect(_on_auto_shoot_toggle_toggled)
+
+	if not is_main_settings:
+		player_section.hide()
 	
 	
 	# Initialize sliders with current values
 	_initialize_sliders()
 	_sync_fullscreen_toggle()
+	_sync_gameplay_toggles()
 
 func _initialize_sliders():
 	master_volume_slider.value = Manager.audio.get_master_volume()
@@ -65,6 +83,7 @@ func show_settings():
 	visible = true
 	_initialize_sliders()
 	_sync_fullscreen_toggle()
+	_sync_gameplay_toggles()
 
 func hide_settings():
 	visible = false
@@ -158,7 +177,27 @@ func _apply_fullscreen(toggled_on: bool) -> void:
 	else:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 
+# Gameplay toggle handlers
+func _on_follow_mouse_toggle_toggled(toggled_on: bool) -> void:
+	Manager.follow_mouse = toggled_on
+	Manager.utility.save_setting(GAMEPLAY_SECTION, FOLLOW_MOUSE_KEY, toggled_on)
+
+func _on_auto_shoot_toggle_toggled(toggled_on: bool) -> void:
+	Manager.auto_shoot = toggled_on
+	Manager.utility.save_setting(GAMEPLAY_SECTION, AUTO_SHOOT_KEY, toggled_on)
+
+func _sync_gameplay_toggles() -> void:
+	if follow_mouse_toggle:
+		var follow_mouse_value: bool = Manager.utility.load_setting(GAMEPLAY_SECTION, FOLLOW_MOUSE_KEY, FOLLOW_MOUSE_DEFAULT)
+		follow_mouse_toggle.set_pressed_no_signal(follow_mouse_value)
+		Manager.follow_mouse = follow_mouse_value
+	if auto_shoot_toggle:
+		var auto_shoot_value: bool = Manager.utility.load_setting(GAMEPLAY_SECTION, AUTO_SHOOT_KEY, AUTO_SHOOT_DEFAULT)
+		auto_shoot_toggle.set_pressed_no_signal(auto_shoot_value)
+		Manager.auto_shoot = auto_shoot_value
+
 func _on_clear_player_data_pressed() -> void:
 	Manager.audio.play_click_sfx()
 	Manager.utility.clear_player_data()
+	await Manager.utility.clear_player_data_from_firebase()
 	player_data_cleared.emit()

@@ -8,6 +8,7 @@
 [ext_resource type="Shader" uid="uid://bn5rfvynd4ao2" path="res://shaders/blur.gdshader" id="6_oyvde"]
 [ext_resource type="Shader" uid="uid://cxu0duo2mtc8b" path="res://shaders/vignette.gdshader" id="7_5nafa"]
 [ext_resource type="Script" uid="uid://c7gonkx0isf5i" path="res://scripts/countdown.gd" id="8_oyvde"]
+[ext_resource type="PackedScene" uid="uid://ba6j28f3johsr" path="res://scenes/settings_menu.tscn" id="9_ghh30"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_oyvde"]
 shader = ExtResource("7_5nafa")
@@ -86,9 +87,9 @@ scroll_active = false
 autowrap_mode = 0
 script = ExtResource("3_6wqhg")
 
-[node name="PauseMenu" type="Control" parent="." unique_id=1492014258 node_paths=PackedStringArray("back_button", "quit_button", "click_blocker")]
+[node name="PauseMenu" type="Control" parent="." unique_id=1492014258 node_paths=PackedStringArray("back_button", "settings_button", "quit_button", "click_blocker", "settings_menu")]
 process_mode = 3
-z_index = 999
+z_index = 200
 custom_minimum_size = Vector2(200, 200)
 layout_mode = 3
 anchors_preset = 8
@@ -104,8 +105,10 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("4_jjcv0")
 back_button = NodePath("MarginContainer/VBoxContainer/HBoxContainer/BackButton")
+settings_button = NodePath("MarginContainer/VBoxContainer/HBoxContainer/SettingsButton")
 quit_button = NodePath("MarginContainer/VBoxContainer/HBoxContainer/QuitButton")
 click_blocker = NodePath("ClickBlocker")
+settings_menu = NodePath("../SettingsMenu")
 
 [node name="ClickBlocker" type="ColorRect" parent="PauseMenu" unique_id=499946639]
 layout_mode = 1
@@ -191,6 +194,16 @@ layout_mode = 2
 theme = ExtResource("5_5nafa")
 text = "Continue"
 
+[node name="Seperator7" type="ColorRect" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1567933755]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+color = Color(0, 0, 0, 1)
+
+[node name="SettingsButton" type="Button" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=2089871779]
+layout_mode = 2
+theme = ExtResource("5_5nafa")
+text = "Settings"
+
 [node name="Seperator6" type="ColorRect" parent="PauseMenu/MarginContainer/VBoxContainer/HBoxContainer" unique_id=443462374]
 custom_minimum_size = Vector2(0, 5)
 layout_mode = 2
@@ -227,3 +240,9 @@ shortcut_keys_enabled = false
 horizontal_alignment = 1
 vertical_alignment = 1
 script = ExtResource("8_oyvde")
+
+[node name="SettingsMenu" parent="." unique_id=1682138939 instance=ExtResource("9_ghh30")]
+process_mode = 3
+visible = false
+z_index = 300
+is_main_settings = false

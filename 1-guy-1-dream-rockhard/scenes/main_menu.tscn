@@ -10,6 +10,8 @@
 [ext_resource type="Shader" uid="uid://bn5rfvynd4ao2" path="res://shaders/blur.gdshader" id="4_rtw2f"]
 [ext_resource type="Shader" uid="uid://cxu0duo2mtc8b" path="res://shaders/vignette.gdshader" id="5_8ln24"]
 [ext_resource type="PackedScene" uid="uid://ba6j28f3johsr" path="res://scenes/settings_menu.tscn" id="5_sf4ia"]
+[ext_resource type="Theme" uid="uid://b7vmiqoyxvmki" path="res://styles/outlined_text.tres" id="9_1ajci"]
+[ext_resource type="Theme" uid="uid://cy1xg3e1f5n68" path="res://styles/settings.tres" id="9_rcqid"]
 [ext_resource type="PackedScene" uid="uid://bqjrec7sioa70" path="res://scenes/load_menu.tscn" id="10_lgwnu"]
 [ext_resource type="PackedScene" uid="uid://cttg3hxx5vohj" path="res://scenes/load_game_tile.tscn" id="12_rcqid"]
 
@@ -30,22 +32,6 @@ shader = ExtResource("4_rtw2f")
 shader_parameter/lod = 2.398000113905
 shader_parameter/mix_color = Color(1, 1, 1, 1)
 shader_parameter/add_color = Color(0, 0, 0, 0)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5dd4i"]
-content_margin_left = 4.0
-content_margin_top = 4.0
-content_margin_right = 4.0
-content_margin_bottom = 4.0
-bg_color = Color(0.1, 0.1, 0.1, 0.6)
-corner_radius_top_left = 3
-corner_radius_top_right = 3
-corner_radius_bottom_right = 3
-corner_radius_bottom_left = 3
-corner_detail = 5
-
-[sub_resource type="Theme" id="Theme_lgwnu"]
-Button/constants/outline_size = 9
-Button/styles/normal = SubResource("StyleBoxFlat_5dd4i")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lgwnu"]
 content_margin_left = 4.0
@@ -89,6 +75,22 @@ LineEdit/styles/focus = SubResource("StyleBoxFlat_lgwnu")
 LineEdit/styles/normal = SubResource("StyleBoxFlat_flqon")
 LineEdit/styles/read_only = SubResource("StyleBoxFlat_rcqid")
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5dd4i"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.1, 0.1, 0.1, 0.6)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+corner_detail = 5
+
+[sub_resource type="Theme" id="Theme_lgwnu"]
+Button/constants/outline_size = 9
+Button/styles/normal = SubResource("StyleBoxFlat_5dd4i")
+
 [sub_resource type="LabelSettings" id="LabelSettings_ywuof"]
 font_size = 12
 font_color = Color(3.513545e-06, 0.64607185, 0, 1)
@@ -104,7 +106,7 @@ scale = Vector2(1.225, 1.225)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1864605010]
 
-[node name="TheGuy" type="Node2D" parent="CanvasLayer" unique_id=858231511]
+[node name="TheGuy" type="Node2D" parent="CanvasLayer" unique_id=1397322627]
 z_index = 2
 position = Vector2(718, 285)
 rotation = 0.5846853
@@ -116,18 +118,10 @@ position = Vector2(0, 4)
 scale = Vector2(0.07, 0.07)
 texture = ExtResource("2_jk1qb")
 
-[node name="the_gun" type="Node2D" parent="CanvasLayer/TheGuy" unique_id=247112652]
-position = Vector2(-3, 12)
-scale = Vector2(0.07, 0.07)
-
-[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/TheGuy/the_gun" unique_id=1547750680]
-z_index = 3
-texture = ExtResource("3_5dd4i")
-flip_h = true
-
-[node name="jetpart" type="CPUParticles2D" parent="CanvasLayer/TheGuy" unique_id=1323313036]
+[node name="jetpart" type="CPUParticles2D" parent="CanvasLayer/TheGuy/Sprite2D" unique_id=1323313036]
 z_index = -1
-position = Vector2(0, 15.825)
+position = Vector2(0.00024414063, 168.92871)
+scale = Vector2(14.285713, 14.285713)
 amount = 50
 texture = ExtResource("4_lgwnu")
 direction = Vector2(0, 1)
@@ -141,7 +135,16 @@ scale_amount_min = 0.1
 scale_amount_max = 0.3
 color_ramp = SubResource("Gradient_lghrq")
 
-[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_classic_button", "play_infinite_button", "play_infinite_rising_lava_button", "continue_button", "load_game_save_button", "settings_button", "quit_button", "seed_input", "name_input", "dev_button", "pr_label", "settings_menu", "load_menu")]
+[node name="the_gun" type="Node2D" parent="CanvasLayer/TheGuy" unique_id=247112652]
+position = Vector2(-3, 12)
+scale = Vector2(0.07, 0.07)
+
+[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/TheGuy/the_gun" unique_id=1547750680]
+z_index = 3
+texture = ExtResource("3_5dd4i")
+flip_h = true
+
+[node name="Menu" type="Control" parent="CanvasLayer" unique_id=474964189 node_paths=PackedStringArray("play_classic_button", "play_infinite_button", "play_infinite_rising_lava_button", "play_race_to_space_button", "play_race_to_riches_button", "continue_button", "load_game_save_button", "settings_button", "quit_button", "seed_input", "name_input", "dev_button", "pr_left", "pr_right", "username_label", "username_field", "upload_scores_button", "refresh_leaderboard_button", "leaderboard_title_label", "leaderboard_left", "leaderboard_right", "set_seed_leaderboards_button", "random_seed_leaderboards_button", "classic_leaderboard_button", "infinite_leaderboard_button", "rising_lava_leaderboard_button", "race_to_space_leaderboard_button", "race_to_riches_leaderboard_button", "settings_menu", "load_menu")]
 custom_minimum_size = Vector2(10, 10)
 layout_mode = 3
 anchors_preset = 15
@@ -155,6 +158,8 @@ script = ExtResource("1_yqeox")
 play_classic_button = NodePath("Control/MenuContainer/VBoxContainer2/ClassicButton")
 play_infinite_button = NodePath("Control/MenuContainer/VBoxContainer2/InfiniteButton")
 play_infinite_rising_lava_button = NodePath("Control/MenuContainer/VBoxContainer2/LavaButton")
+play_race_to_space_button = NodePath("Control/MenuContainer/VBoxContainer2/RaceToSpaceButton")
+play_race_to_riches_button = NodePath("Control/MenuContainer/VBoxContainer2/RaceToRichesButton")
 continue_button = NodePath("Control/MenuContainer/VBoxContainer2/ContinueButton")
 load_game_save_button = NodePath("Control/MenuContainer/VBoxContainer2/LoadButton")
 settings_button = NodePath("Control/MenuContainer/VBoxContainer2/SettingsButton")
@@ -162,7 +167,22 @@ quit_button = NodePath("Control/MenuContainer/VBoxContainer2/QuitButton")
 seed_input = NodePath("Control/MenuContainer/VBoxContainer2/WorldSeedField")
 name_input = NodePath("Control/MenuContainer/VBoxContainer2/WorldNameField")
 dev_button = NodePath("DevButton")
-pr_label = NodePath("Control/PRLabel")
+pr_left = NodePath("Control/VBoxContainer/HBoxContainer/PRLabelLeft")
+pr_right = NodePath("Control/VBoxContainer/HBoxContainer/PRLabelRight")
+username_label = NodePath("Control/VBoxContainer/UsernameLabel")
+username_field = NodePath("Control/VBoxContainer/UsernameField")
+upload_scores_button = NodePath("Control/VBoxContainer/UploadScoresButton")
+refresh_leaderboard_button = NodePath("Control/VBoxContainer/RefreshLeaderboardButton")
+leaderboard_title_label = NodePath("Control/VBoxContainer/LeaderboardTitle")
+leaderboard_left = NodePath("Control/VBoxContainer/ScrollContainer/HBoxContainer2/LeaderboardLabelLeft")
+leaderboard_right = NodePath("Control/VBoxContainer/ScrollContainer/HBoxContainer2/LeaderboardLabelRight")
+set_seed_leaderboards_button = NodePath("Control/VBoxContainer/SeedButtons/SetSeedButton")
+random_seed_leaderboards_button = NodePath("Control/VBoxContainer/SeedButtons/RandomSeedButton")
+classic_leaderboard_button = NodePath("Control/VBoxContainer/TypeButtons/ClassicButton")
+infinite_leaderboard_button = NodePath("Control/VBoxContainer/TypeButtons/InfiniteButton")
+rising_lava_leaderboard_button = NodePath("Control/VBoxContainer/TypeButtons/RisingLavaButton")
+race_to_space_leaderboard_button = NodePath("Control/VBoxContainer/TypeButtons2/RaceToSpaceButton")
+race_to_riches_leaderboard_button = NodePath("Control/VBoxContainer/TypeButtons2/RaceToRichesButton")
 settings_menu = NodePath("SettingsMenu")
 load_menu = NodePath("LoadMenu")
 
@@ -209,15 +229,176 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="PRLabel" type="RichTextLabel" parent="CanvasLayer/Menu/Control" unique_id=225563425]
+[node name="VBoxContainer" type="VBoxContainer" parent="CanvasLayer/Menu/Control" unique_id=812242750]
+custom_minimum_size = Vector2(260, 0)
 layout_mode = 2
 size_flags_horizontal = 8
+
+[node name="Spacing" type="Control" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=1593627500]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="PRTitle" type="RichTextLabel" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=1461180608]
+layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 0
-text = "test
-test"
+theme = ExtResource("9_1ajci")
+bbcode_enabled = true
+text = "Personal Records"
 fit_content = true
 scroll_active = false
 autowrap_mode = 0
+horizontal_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=1512095805]
+layout_mode = 2
+
+[node name="PRLabelLeft" type="RichTextLabel" parent="CanvasLayer/Menu/Control/VBoxContainer/HBoxContainer" unique_id=243147654]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme = ExtResource("9_1ajci")
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="PRLabelRight" type="RichTextLabel" parent="CanvasLayer/Menu/Control/VBoxContainer/HBoxContainer" unique_id=225563425]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme = ExtResource("9_1ajci")
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="UsernameField" type="LineEdit" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=1671777243]
+layout_mode = 2
+theme = SubResource("Theme_flqon")
+placeholder_text = "Enter Username"
+
+[node name="UsernameLabel" type="RichTextLabel" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=1328644905]
+layout_mode = 2
+size_flags_vertical = 0
+theme = ExtResource("9_1ajci")
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+horizontal_alignment = 1
+
+[node name="UploadScoresButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=1834338288]
+layout_mode = 2
+theme = ExtResource("9_rcqid")
+text = "Upload Scores"
+
+[node name="SeedButtons" type="HBoxContainer" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=438046536]
+layout_mode = 2
+
+[node name="RandomSeedButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer/SeedButtons" unique_id=1123197327]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("9_rcqid")
+toggle_mode = true
+text = "Random Seed"
+
+[node name="SetSeedButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer/SeedButtons" unique_id=1018174502]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("9_rcqid")
+toggle_mode = true
+text = "Set Seed"
+
+[node name="TypeButtons" type="HBoxContainer" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=527399575]
+layout_mode = 2
+
+[node name="ClassicButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer/TypeButtons" unique_id=168078814]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("9_rcqid")
+toggle_mode = true
+text = "Classic"
+
+[node name="InfiniteButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer/TypeButtons" unique_id=579764335]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("9_rcqid")
+toggle_mode = true
+text = "Infinite"
+
+[node name="RisingLavaButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer/TypeButtons" unique_id=52157857]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("9_rcqid")
+toggle_mode = true
+text = "Rising Lava"
+
+[node name="TypeButtons2" type="HBoxContainer" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=2074958926]
+layout_mode = 2
+
+[node name="RaceToSpaceButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer/TypeButtons2" unique_id=1804830]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("9_rcqid")
+toggle_mode = true
+text = "Race To Space"
+
+[node name="RaceToRichesButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer/TypeButtons2" unique_id=547730042]
+layout_mode = 2
+size_flags_horizontal = 3
+theme = ExtResource("9_rcqid")
+toggle_mode = true
+text = "Race To Riches"
+
+[node name="RefreshLeaderboardButton" type="Button" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=407582260]
+layout_mode = 2
+theme = ExtResource("9_rcqid")
+text = "Refresh Leaderboard"
+
+[node name="LeaderboardTitle" type="RichTextLabel" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=404144330]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme = ExtResource("9_1ajci")
+bbcode_enabled = true
+text = "Leaderboard not loaded."
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=176387523]
+layout_mode = 2
+size_flags_vertical = 3
+theme = ExtResource("9_rcqid")
+
+[node name="HBoxContainer2" type="HBoxContainer" parent="CanvasLayer/Menu/Control/VBoxContainer/ScrollContainer" unique_id=2114327912]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="LeaderboardLabelLeft" type="RichTextLabel" parent="CanvasLayer/Menu/Control/VBoxContainer/ScrollContainer/HBoxContainer2" unique_id=512734260]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme = ExtResource("9_1ajci")
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="LeaderboardLabelRight" type="RichTextLabel" parent="CanvasLayer/Menu/Control/VBoxContainer/ScrollContainer/HBoxContainer2" unique_id=833584850]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme = ExtResource("9_1ajci")
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+
+[node name="Spacing2" type="Control" parent="CanvasLayer/Menu/Control/VBoxContainer" unique_id=1459441449]
+custom_minimum_size = Vector2(0, 15)
+layout_mode = 2
 
 [node name="MenuContainer" type="VBoxContainer" parent="CanvasLayer/Menu/Control" unique_id=1148648463]
 custom_minimum_size = Vector2(387.49, 0)
@@ -262,6 +443,22 @@ layout_mode = 2
 size_flags_horizontal = 4
 theme = SubResource("Theme_lgwnu")
 text = "Play Rising Lava"
+flat = true
+
+[node name="RaceToSpaceButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=517107332]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = SubResource("Theme_lgwnu")
+text = "Play Race To Space"
+flat = true
+
+[node name="RaceToRichesButton" type="Button" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=1005206430]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+theme = SubResource("Theme_lgwnu")
+text = "Play Race To Riches"
 flat = true
 
 [node name="WorldNameField" type="LineEdit" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=348421531]
