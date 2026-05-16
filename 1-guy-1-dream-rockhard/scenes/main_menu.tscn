@@ -15,9 +15,13 @@
 [ext_resource type="PackedScene" uid="uid://bqjrec7sioa70" path="res://scenes/load_menu.tscn" id="10_lgwnu"]
 [ext_resource type="PackedScene" uid="uid://cttg3hxx5vohj" path="res://scenes/load_game_tile.tscn" id="12_rcqid"]
 
-[sub_resource type="Gradient" id="Gradient_lghrq"]
-offsets = PackedFloat32Array(0, 0.9581281)
-colors = PackedColorArray(1, 1, 1, 1, 0.6, 0.3372549, 0.1764706, 1)
+[sub_resource type="Curve" id="Curve_1ajci"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_7b55j"]
+offsets = PackedFloat32Array(0, 0.56740195, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.6893704, 0.5053218, 0.27395758, 1, 0.59608823, 0.27619392, 0.13816993, 0)
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_rtw2f"]
 shader = ExtResource("5_8ln24")
@@ -118,11 +122,11 @@ position = Vector2(0, 4)
 scale = Vector2(0.07, 0.07)
 texture = ExtResource("2_jk1qb")
 
-[node name="jetpart" type="CPUParticles2D" parent="CanvasLayer/TheGuy/Sprite2D" unique_id=1323313036]
+[node name="jetpart" type="CPUParticles2D" parent="CanvasLayer/TheGuy/Sprite2D" unique_id=1561143258]
 z_index = -1
-position = Vector2(0.00024414063, 168.92871)
-scale = Vector2(14.285713, 14.285713)
-amount = 50
+position = Vector2(0, 15.825)
+scale = Vector2(14.286, 14.286)
+amount = 100
 texture = ExtResource("4_lgwnu")
 direction = Vector2(0, 1)
 spread = 13.57
@@ -131,9 +135,10 @@ initial_velocity_min = 51.59
 initial_velocity_max = 215.84
 angular_velocity_min = 51.43
 angular_velocity_max = 154.29
-scale_amount_min = 0.1
-scale_amount_max = 0.3
-color_ramp = SubResource("Gradient_lghrq")
+scale_amount_min = 0.29
+scale_amount_max = 0.4
+scale_amount_curve = SubResource("Curve_1ajci")
+color_ramp = SubResource("Gradient_7b55j")
 
 [node name="the_gun" type="Node2D" parent="CanvasLayer/TheGuy" unique_id=247112652]
 position = Vector2(-3, 12)
@@ -498,10 +503,6 @@ size_flags_horizontal = 4
 theme = SubResource("Theme_lgwnu")
 text = "Quit"
 flat = true
-
-[node name="Spacing" type="Control" parent="CanvasLayer/Menu/Control/MenuContainer/VBoxContainer2" unique_id=852399723]
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
 
 [node name="VersionLabel" type="Label" parent="CanvasLayer/Menu/Control" unique_id=917004836]
 unique_name_in_owner = true

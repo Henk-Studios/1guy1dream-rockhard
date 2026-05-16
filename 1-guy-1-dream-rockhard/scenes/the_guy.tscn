@@ -17,11 +17,15 @@ radius = 12.08
 radius = 4.0
 height = 19.2
 
-[sub_resource type="Gradient" id="Gradient_lghrq"]
-offsets = PackedFloat32Array(0, 0.9581281)
-colors = PackedColorArray(1, 1, 1, 1, 0.6, 0.3372549, 0.1764706, 1)
+[sub_resource type="Curve" id="Curve_ehjnm"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_4agnf"]
+[sub_resource type="Gradient" id="Gradient_lghrq"]
+offsets = PackedFloat32Array(0, 0.56740195, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0.6893704, 0.5053218, 0.27395758, 1, 0.59608823, 0.27619392, 0.13816993, 0)
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ehjnm"]
 resource_local_to_scene = true
 load_path = "res://.godot/imported/sharp stone.png-f81a7aef0b8890a1e23af256dfea34d2.ctex"
 
@@ -56,9 +60,9 @@ scale = Vector2(0.07, 0.07)
 [node name="jetpart" type="CPUParticles2D" parent="." unique_id=1323313036]
 z_index = -1
 position = Vector2(0, 15.825)
-emitting = false
-amount = 50
+amount = 100
 texture = ExtResource("4_lghrq")
+lifetime = 0.5
 direction = Vector2(0, 1)
 spread = 13.57
 gravity = Vector2(0, 100)
@@ -68,12 +72,13 @@ angular_velocity_min = 51.43
 angular_velocity_max = 154.29
 scale_amount_min = 0.04
 scale_amount_max = 0.08
+scale_amount_curve = SubResource("Curve_ehjnm")
 color_ramp = SubResource("Gradient_lghrq")
 
 [node name="FireParticles" parent="." unique_id=904329760 instance=ExtResource("5_ehjnm")]
 z_index = -1
 amount = 100
-texture = SubResource("CompressedTexture2D_4agnf")
+texture = SubResource("CompressedTexture2D_ehjnm")
 lifetime = 3.0
 one_shot = false
 explosiveness = 0.0

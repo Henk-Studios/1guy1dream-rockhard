@@ -187,7 +187,9 @@ func setup(params) -> void:
 			Manager.message.info("[color=yellow]Your 1dream: Get as rich as possible in 10 minutes!")
 	Manager.message.info(" [color=magenta][wave amp=10.0]Now be the 1guy and achieve your 1dream!!![/wave][/color]", 20)
 	Manager.audio.fade_out_music()
-
+	# freeze the guy if loading a saved world
+	if params and params.has("load_data") and params["load_data"] != null:
+		the_guy.freeze_guy()
 	await get_node("WorldUI/Countdown").countdown()
 	the_guy.enable()
 	time_frozen = false
@@ -203,7 +205,7 @@ func save_state() -> void:
 	# Game version
 	world_data["version"] = Manager.utility.GAME_VERSION
 	# Seed
-	world_data["seed"] = terrain.world_seed if terrain else null
+	world_data["seed"] = terrain.world_seed
 	world_data["world_id"] = world_id
 
 	# World name

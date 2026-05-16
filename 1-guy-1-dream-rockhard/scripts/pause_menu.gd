@@ -51,6 +51,7 @@ func _on_quit_button_pressed():
 	if current_scene and current_scene.has_method("save_state"):
 		current_scene.save_state()
 
+	World.the_guy.freeze_guy()
 	get_tree().paused = false
 	Manager.message.clear()
 	Manager.audio.stop_all_looping_sfx()

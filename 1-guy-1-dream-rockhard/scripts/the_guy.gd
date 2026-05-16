@@ -14,7 +14,12 @@ func _ready():
 	self.linear_damp = 1
 	self.angular_damp = 2.0
 
+func freeze_guy() -> void:
+	_enabled = false
+	freeze = true
+
 func enable() -> void:
+	freeze = false
 	_enabled = true
 
 func is_enabled() -> bool:

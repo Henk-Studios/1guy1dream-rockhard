@@ -40,7 +40,7 @@ const LEADERBOARD_SECTION := "leaderboard"
 const USERNAME_KEY := "player_username"
 
 # Leaderboard tab tracking
-var current_seed_type: int = 0
+var current_seed_type: int = 1
 var current_game_type: int = 0
 var leaderboard_entries: Array = [] # Cache the downloaded entries
 var _leaderboard_refresh_token: int = 0
@@ -87,10 +87,13 @@ func _ready() -> void:
 	race_to_riches_leaderboard_button.pressed.connect(_on_race_to_riches_tab_pressed)
 	
 	# Set initial button states
-	set_seed_leaderboards_button.button_pressed = true
+	random_seed_leaderboards_button.button_pressed = true
 	classic_leaderboard_button.button_pressed = true
 	
 	play_classic_button.grab_focus()
+
+	await get_tree().create_timer(2.0).timeout
+	load_leaderboard()
 
 func set_pr_label() -> void:
 	var classic_pr_set = Manager.utility.format_time(Manager.utility.get_personal_record(Manager.utility.GameType.CLASSIC, Manager.utility.SeedType.SET))
@@ -189,14 +192,14 @@ func _on_quit_button_pressed() -> void:
 
 func _on_upload_scores_button_pressed() -> void:
 	Manager.audio.play_click_sfx()
-	
-	if saved_username.is_empty():
+	var uname = saved_username
+	if uname.is_empty():
 		if username_field.text.is_empty():
 			Manager.message.info("Please enter a username to upload scores")
 			return
 		else:
-			saved_username = username_field.text.strip_edges()
-			if saved_username.is_empty():
+			uname = username_field.text.strip_edges()
+			if uname.is_empty():
 				Manager.message.info("Please enter a username to upload scores")
 				return
 	
@@ -205,22 +208,27 @@ func _on_upload_scores_button_pressed() -> void:
 	upload_scores_button.disabled = true
 	Manager.message.info("Uploading scores...")
 	
-	var success = await Manager.utility.upload_scores(saved_username)
+	var success = await Manager.utility.upload_scores(uname)
 	upload_scores_button.disabled = false
 	if upload_token != _upload_token:
 		return
 	
 	if success:
 		# Save the username for future uploads
-		Manager.utility.save_player_data(LEADERBOARD_SECTION, USERNAME_KEY, saved_username)
+		saved_username = uname
+		Manager.utility.save_player_data(LEADERBOARD_SECTION, USERNAME_KEY, uname)
 		# Update UI to reflect that username is now set
 		_update_username_ui()
+		load_leaderboard()
 		Manager.message.info("Scores uploaded successfully!")
 	else:
 		Manager.message.info("Failed to upload scores")
 
 func _on_refresh_leaderboard_button_pressed() -> void:
 	Manager.audio.play_click_sfx()
+	load_leaderboard()
+
+func load_leaderboard() -> void:
 	_leaderboard_refresh_token += 1
 	var refresh_token = _leaderboard_refresh_token
 	leaderboard_left.text = "Loading leaderboard..."
@@ -262,7 +270,6 @@ func _update_leaderboard_display() -> void:
 	for entry in sorted_entries:
 		var player_name = entry["player_name"]
 		var value = entry["scores"].get(score_key, INF)
-		print("Entry: ", entry, " Score Key: ", score_key, " Value: ", value)
 		var value_str = ""
 		if Manager.utility.GAME_TYPE_DEFINITIONS[current_game_type].get("format") == Manager.utility.ScoreFormats.TIME:
 			value_str = Manager.utility.format_time(value)

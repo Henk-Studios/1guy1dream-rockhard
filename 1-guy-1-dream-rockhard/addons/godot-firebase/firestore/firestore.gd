@@ -244,7 +244,6 @@ func _handle_task_finished(task: FirestoreTask, timeout_seconds := 2.0):
 	var deadline: int = Time.get_unix_time_from_system() * 1000 + int(timeout_seconds * 1000)
 
 	while not task.finished and Time.get_unix_time_from_system() * 1000 < deadline:
-		print("f")
 		await get_tree().create_timer(0.1).timeout
 
 	if not task.finished:

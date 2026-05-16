@@ -99,6 +99,11 @@ stream = ExtResource("8_jkv2x")
 volume = 0.7
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
+[sub_resource type="Resource" id="Resource_j8jky"]
+script = ExtResource("2_eb6dy")
+stream = ExtResource("27_qkpxi")
+metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
+
 [sub_resource type="Resource" id="Resource_dgi5k"]
 script = ExtResource("2_eb6dy")
 stream = ExtResource("26_qkpxi")
@@ -154,11 +159,6 @@ metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 script = ExtResource("2_eb6dy")
 stream = ExtResource("5_choun")
 volume = 0.5
-metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
-
-[sub_resource type="Resource" id="Resource_j8jky"]
-script = ExtResource("2_eb6dy")
-stream = ExtResource("27_qkpxi")
 metadata/_custom_type_script = "uid://d3equ4c8ok0hr"
 
 [node name="Main" type="Node" unique_id=767152644]
