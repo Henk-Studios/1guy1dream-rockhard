@@ -14,8 +14,12 @@ const FPS_COUNTER_KEY := "fps_visible"
 const PLAYER_SECTION := "player"
 const PERSONAL_RECORD_KEY := "personal_records"
 
-# Game version
-const GAME_VERSION := 2
+# The version of the game data format. Increment this when making changes that invalidate old save data.
+const DATA_VERSION := 2
+
+# The public game version, shown to players. Increment this for any player-facing changes or updates.
+# You can add game-version-specific messages to firebase, for example to notify players of updates or changes that may affect them.
+const GAME_VERSION := "1.0.1"
 
 # Seed type constants
 const SEED_TYPE_SET := "set"
@@ -341,7 +345,7 @@ func save_setting(section: String, key: String, value: Variant) -> void:
 	
 	# Ensure version is set
 	if not config.has_section_key("meta", "version"):
-		config.set_value("meta", "version", GAME_VERSION)
+		config.set_value("meta", "version", DATA_VERSION)
 	config.set_value(section, key, value)
 	
 	var err := config.save(SETTINGS_PATH)
@@ -568,7 +572,7 @@ func save_player_data(section: String, key: String, value: Variant) -> void:
 	
 	# Ensure version is set
 	if not config.has_section_key("meta", "version"):
-		config.set_value("meta", "version", GAME_VERSION)
+		config.set_value("meta", "version", DATA_VERSION)
 	config.set_value(section, key, value)
 	
 	var err := config.save(PLAYER_DATA_PATH)
@@ -1057,21 +1061,66 @@ func _firestore_operation_with_timeout_and_retry(operation: Callable, operation_
 		Manager.message.info(failure_message)
 	return null
 
-func _get_firestore_game_version() -> Variant:
-	"""Fetch the current game version from Firestore
-	Returns the version number or null if unable to retrieve"""
+func _get_firestore_game_data() -> Dictionary:
+	"""Fetch the current game version and release information from Firestore
+	Returns a dictionary with version and release information or null if unable to retrieve"""
 	if not is_authenticated:
-		return null
-	
+		return {}
+
 	var game_collection = firestore.collection("game")
 	var game_doc = await game_collection.get_doc("data")
 	
 	if game_doc:
-		var version = game_doc.get_value("version")
-		if version != null:
-			return version
+		var version = game_doc.get_value("data_version")
+		# var release = game_doc.get_value("latest_release")
+		# var messages = messages_for_this_version(game_doc)
+		# var patch_notes = game_doc.get_value("releases_in_order")
+		if version != null: # and release != null:
+			return {"data_version": version} # , "latest_release": release, "messages": messages, "patch_notes": patch_notes}
 	
-	return null
+	return {}
+
+# func messages_for_this_version(game_doc) -> Array:
+# 	"""Check if there are any messages in the game document that should be shown to the player based on their current version and last seen message timestamp"""
+# 	var messages = []
+# 	if not game_doc.get_value("messages"):
+# 		return messages
+	
+# 	var all_messages: Dictionary = game_doc.get_value("messages")
+# 	for key in all_messages:
+# 		# key example: "1.0.0-1.0.2,1.0.4", would apply to versions 1.0.0 through 1.0.2 and 1.0.4
+# 		var sections = key.split(",")
+# 		for section in sections:
+# 			var limits = section.split("-")
+# 			if limits.size() == 2:
+# 				var lower = limits[0].strip_edges()
+# 				var upper = limits[1].strip_edges()
+# 				if _is_version_in_range(GAME_VERSION, lower, upper):
+# 					messages.append(all_messages[key])
+# 			elif limits.size() == 1:
+# 				var version = limits[0].strip_edges()
+# 				if version == GAME_VERSION:
+# 					messages.append(all_messages[key])
+# 	return messages
+
+func _is_version_in_range(version: String, lower: String, upper: String) -> bool:
+	"""Check if a version string is within a specified range (inclusive)
+	Version strings are expected in format 'major.minor.patch'"""
+	var version_parts = version.split(".")
+	var lower_parts = lower.split(".")
+	var upper_parts = upper.split(".")
+	
+	for i in range(3): # Compare major, minor, patch
+		var v = int(version_parts[i]) if i < version_parts.size() else 0
+		var l = int(lower_parts[i]) if i < lower_parts.size() else 0
+		var u = int(upper_parts[i]) if i < upper_parts.size() else 0
+		
+		if v < l:
+			return false
+		if v > u:
+			return false
+	
+	return true
 
 func _username_exists_in_leaderboard(username: String) -> bool:
 	"""Check if a username already exists in the leaderboard
@@ -1108,8 +1157,8 @@ func upload_scores(player_name: String) -> bool:
 		return false
 	
 	# Check game version before uploading
-	var firestore_version = await _get_firestore_game_version()
-	if firestore_version != null and firestore_version != GAME_VERSION:
+	var game_data = await _get_firestore_game_data()
+	if game_data != {} and game_data["data_version"] != DATA_VERSION:
 		Manager.message.info("A new game version is available. Please update to the latest version before uploading scores.")
 		return false
 	
@@ -1175,7 +1224,7 @@ func upload_scores(player_name: String) -> bool:
 	var player_data = {
 		PLAYER_NAME_KEY: sanitized_name,
 		SCORES_KEY: scores,
-		"version": GAME_VERSION,
+		"version": DATA_VERSION,
 	}
 	
 	# Upload to Firestore with timeout and retry
@@ -1226,7 +1275,7 @@ func download_leaderboard(messaging: bool = true) -> Variant:
 	var query_operation = func():
 		var query: FirestoreQuery = FirestoreQuery.new()
 		query.from(FIRESTORE_COLLECTION)
-		query.where("version", FirestoreQuery.OPERATOR.EQUAL, GAME_VERSION)
+		query.where("version", FirestoreQuery.OPERATOR.EQUAL, DATA_VERSION)
 		query.order_by("player_name", FirestoreQuery.DIRECTION.DESCENDING)
 		query.limit(100) # Limit to top 100 entries
 		

@@ -203,7 +203,7 @@ func save_state() -> void:
 	var config := ConfigFile.new()
 	var world_data: Dictionary = {}
 	# Game version
-	world_data["version"] = Manager.utility.GAME_VERSION
+	world_data["version"] = Manager.utility.DATA_VERSION
 	# Seed
 	world_data["seed"] = terrain.world_seed
 	world_data["world_id"] = world_id
