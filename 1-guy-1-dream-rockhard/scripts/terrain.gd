@@ -135,6 +135,17 @@ var s_patches: Dictionary = {
 	'9': PatchShape.new(noises["crystalline"], 0.40, 0.2),
 	'10': PatchShape.new(noises["smooth"], 0.35, 0.15),
 }
+const MAX_CHUNK_GENERATION_THREADS: int = 4
+
+class ChunkJob:
+				var chunk_coord: Vector2i
+				var thread: Thread = Thread.new()
+				var done: bool = false
+				var result: Dictionary = {}
+				var mutex: Mutex = Mutex.new()
+
+				func _init(p_chunk_coord: Vector2i) -> void:
+					chunk_coord = p_chunk_coord
 
 var patches: Dictionary = {
 	"stone_6": [
@@ -187,6 +198,8 @@ var patches: Dictionary = {
 		Patch.new(Tile.stone(3), noises["smooth"].o_s(24), 0.3, false, [
 				Patch.new(Tile.Type.EXPLOSIVE, noises["smooth"].o_s(24), 0.5),
 				Patch.new(Tile.Type.DIAMOND, noises["smooth"].o_s(24), 0.45)
+
+			
 			]),
 		Patch.new(Tile.Type.EXPLOSIVE, noises["chunky"].o_s(25), 0.52),
 		Patch.new(Tile.Type.EXPLOSIVE, noises["spaghetti"].o_s(26), -0.55, true),
@@ -194,6 +207,7 @@ var patches: Dictionary = {
 		Patch.new(Tile.Type.DIAMOND, noises["crystalline"].o_s(28), 0.45),
 	],
 
+			
 	"stone_1": [
 		Patch.new(-1, noises["ridged"].o_s(29), 0.8),
 		Patch.new(-1, noises["blobby"].o_s(30), -0.25, true),
@@ -332,6 +346,9 @@ var broken_by_group: Dictionary = {}
 
 var tile_pool: Array[Tile] = []
 var _last_streamed_chunk: Vector2i = Vector2i(-2147483648, -2147483648)
+var _chunk_generation_jobs: Dictionary = {}
+var _chunk_generation_queue: Array[Vector2i] = []
+var _wanted_chunks: Dictionary = {}
 
 func setup(params: Dictionary) -> void:
 	world_thickness = 0
@@ -361,7 +378,7 @@ func setup(params: Dictionary) -> void:
 	World.the_guy.global_position = spawn_world
 	_setup_lava(params.has("gamemode") and Manager.utility.GAME_TYPE_DEFINITIONS.get(params["gamemode"]).get("rising_lava", false))
 	_setup_credits(Manager.utility.GAME_TYPE_DEFINITIONS.get(params["gamemode"]).get("show_credits", false))
-	update_region(spawn_world)
+	update_region(spawn_world, true)
 	Manager.scene.finish_loading()
 
 func _setup_patches_recursive(items: Array) -> void:
@@ -378,6 +395,7 @@ func _setup_patches_recursive(items: Array) -> void:
 			if not patch.patches.is_empty():
 				_setup_patches_recursive([patch])
 func _process(_delta: float) -> void:
+	_collect_finished_chunk_jobs()
 	var tracking_pos: Vector2
 	if World.camera.free_cam_enabled:
 		tracking_pos = World.camera.global_position
@@ -412,7 +430,7 @@ func _setup_credits(show_credits: bool) -> void:
 		World.credits.disable()
 	World.credits.position.y = - world_thickness * TILE_SIZE - 200
 
-func update_region(world_pos: Vector2) -> void:
+func update_region(world_pos: Vector2, wait_for_completion: bool = false) -> void:
 	var rx = LOAD_RADIUS_X
 	var ry = LOAD_RADIUS_Y
 	if World.camera.free_cam_enabled:
@@ -420,12 +438,18 @@ func update_region(world_pos: Vector2) -> void:
 		ry = roundi(LOAD_RADIUS_Y * FREE_CAM_RADIUS_MULT)
 	var center := _world_to_chunk(world_pos)
 	var wanted: Dictionary = {}
+	_wanted_chunks = wanted
 	for dx in range(-rx, rx + 1):
 		for dy in range(-ry, ry + 1):
 			var chunk := center + Vector2i(dx, dy)
 			wanted[chunk] = true
-			if not loaded_chunks.has(chunk):
-				_generate_chunk(chunk)
+			if not loaded_chunks.has(chunk) and not _chunk_generation_jobs.has(chunk) and not _chunk_generation_queue.has(chunk):
+				_chunk_generation_queue.append(chunk)
+	if wait_for_completion:
+		_start_chunk_generation_jobs()
+		_wait_for_wanted_chunks(wanted)
+	else:
+		_start_chunk_generation_jobs()
 	for chunk in loaded_chunks.keys():
 		if not wanted.has(chunk):
 			_unload_chunk(chunk)
@@ -435,60 +459,133 @@ func _world_to_chunk(world_pos: Vector2) -> Vector2i:
 	return Vector2i(floor(world_pos.x / chunk_pixels), floor(world_pos.y / chunk_pixels))
 
 func _generate_chunk(chunk_coord: Vector2i) -> void:
-	var base = chunk_coord * CHUNK_SIZE
-	var tiles: Dictionary = {}
-	# One upfront lookup; null means no broken cells in this chunk's group (fast path).
 	var chunk_broken: Variant = broken_by_group.get(_chunk_to_break_group(chunk_coord))
+	_apply_chunk_result(_build_chunk_data(chunk_coord, chunk_broken))
+
+func _build_chunk_data(chunk_coord: Vector2i, chunk_broken: Variant) -> Dictionary:
+	var base = chunk_coord * CHUNK_SIZE
+	var tiles: Array = []
+	var local_surface_noise := FastNoiseLite.new()
+	local_surface_noise.seed = world_seed ^ 0x12345678
+	local_surface_noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	local_surface_noise.frequency = 0.03
 	for lx in CHUNK_SIZE:
 		var col_x: int = base.x + lx
-		var surface_y: int = _surface_y(col_x)
+		var surface_y: int = _surface_y_with_noise(col_x, local_surface_noise)
 		for ly in CHUNK_SIZE:
 			var cell := Vector2i(col_x, base.y + ly)
 			if cell.y > 0 or cell.y < - (world_thickness - 1):
 				continue
 			if cell.y < surface_y:
-				continue # above surface: sky
-			# Unbreakable layer at the bottom of the world is always solid
+				continue
 			if cell.y == 0:
-				var unbreakable_tile := _acquire_tile()
-				unbreakable_tile.configure(Tile.Type.UNBREAKABLE, _cell_angle(cell), _cell_texture_index(cell), cell)
-				unbreakable_tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
-				add_child(unbreakable_tile)
-				tiles[cell] = unbreakable_tile
-				active_tiles[cell] = unbreakable_tile
+				tiles.append({"cell": cell, "tile_type": Tile.Type.UNBREAKABLE, "angle": _cell_angle(cell), "texture_index": _cell_texture_index(cell)})
 				continue
 			if cell.y == surface_y:
-				# Skip cell if accumulated damage already destroys this grass tile.
-				if chunk_broken != null:
-					var hp_lost: int = chunk_broken.get(cell, 0)
-					if hp_lost >= Tile.get_hp(Tile.Type.GRASS) or hp_lost == EXPLOSION_OVERKILL:
-						continue
-				var grass_tile := _acquire_tile()
-				grass_tile.configure(Tile.Type.GRASS, _cell_angle(cell), _cell_texture_index(cell), cell)
-				grass_tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
-				add_child(grass_tile)
-				tiles[cell] = grass_tile
-				active_tiles[cell] = grass_tile
+				if _is_cell_broken(cell, Tile.Type.GRASS, chunk_broken):
+					continue
+				tiles.append({"cell": cell, "tile_type": Tile.Type.GRASS, "angle": _cell_angle(cell), "texture_index": _cell_texture_index(cell)})
 				continue
-
 			var depth: int = - cell.y
 			var tile_type: int = _tile_type_for(cell, depth)
 			if tile_type == -1:
 				continue
+			if _is_cell_broken(cell, tile_type, chunk_broken):
+				continue
+			tiles.append({"cell": cell, "tile_type": tile_type, "angle": _cell_angle(cell), "texture_index": _cell_texture_index(cell)})
+	return {"chunk_coord": chunk_coord, "tiles": tiles}
 
-			# Skip cell if accumulated damage already destroys this tile type.
-			if chunk_broken != null:
-				var hp_lost: int = chunk_broken.get(cell, 0)
-				if hp_lost >= Tile.get_hp(tile_type) or hp_lost == EXPLOSION_OVERKILL:
-					continue
+func _run_chunk_job(job: ChunkJob) -> Dictionary:
+	var chunk_broken: Variant = broken_by_group.get(_chunk_to_break_group(job.chunk_coord))
+	var result: Dictionary = _build_chunk_data(job.chunk_coord, chunk_broken)
+	job.mutex.lock()
+	job.result = result
+	job.done = true
+	job.mutex.unlock()
+	return result
 
-			var tile := _acquire_tile()
-			tile.configure(tile_type, _cell_angle(cell), _cell_texture_index(cell), cell)
-			tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
-			add_child(tile)
-			tiles[cell] = tile
-			active_tiles[cell] = tile
+func _start_chunk_generation_jobs() -> void:
+	while _chunk_generation_jobs.size() < MAX_CHUNK_GENERATION_THREADS and not _chunk_generation_queue.is_empty():
+		var chunk_coord: Vector2i = _chunk_generation_queue.pop_front()
+		if loaded_chunks.has(chunk_coord) or _chunk_generation_jobs.has(chunk_coord):
+			continue
+		var job := ChunkJob.new(chunk_coord)
+		_chunk_generation_jobs[chunk_coord] = job
+		job.thread.start(Callable(self , "_run_chunk_job").bind(job))
+
+func _collect_finished_chunk_jobs() -> void:
+	var finished: Array = []
+	for chunk_coord in _chunk_generation_jobs.keys():
+		var job: ChunkJob = _chunk_generation_jobs[chunk_coord]
+		var ready := false
+		var result: Dictionary = {}
+		job.mutex.lock()
+		ready = job.done
+		if ready:
+			result = job.result
+		job.mutex.unlock()
+		if not ready:
+			continue
+		job.thread.wait_to_finish()
+		if _wanted_chunks.has(chunk_coord) and not loaded_chunks.has(chunk_coord):
+			_apply_chunk_result(result)
+		finished.append(chunk_coord)
+	for chunk_coord in finished:
+		_chunk_generation_jobs.erase(chunk_coord)
+	_start_chunk_generation_jobs()
+
+func _wait_for_wanted_chunks(wanted: Dictionary) -> void:
+	while not _all_wanted_chunks_loaded(wanted):
+		_collect_finished_chunk_jobs()
+		if _all_wanted_chunks_loaded(wanted):
+			break
+		var job: ChunkJob = _get_any_chunk_job()
+		if job == null:
+			break
+		var result: Dictionary = job.thread.wait_to_finish()
+		var chunk_coord: Vector2i = result["chunk_coord"]
+		if wanted.has(chunk_coord) and not loaded_chunks.has(chunk_coord):
+			_apply_chunk_result(result)
+		_chunk_generation_jobs.erase(chunk_coord)
+		_start_chunk_generation_jobs()
+
+func _get_any_chunk_job() -> ChunkJob:
+	for chunk_coord in _chunk_generation_jobs.keys():
+		return _chunk_generation_jobs[chunk_coord]
+	return null
+
+func _all_wanted_chunks_loaded(wanted: Dictionary) -> bool:
+	for chunk_coord in wanted.keys():
+		if not loaded_chunks.has(chunk_coord):
+			return false
+	return true
+
+func _apply_chunk_result(result: Dictionary) -> void:
+	var chunk_coord: Vector2i = result["chunk_coord"]
+	if loaded_chunks.has(chunk_coord):
+		return
+	if not _wanted_chunks.has(chunk_coord):
+		return
+	var tiles: Dictionary = {}
+	var chunk_broken: Variant = broken_by_group.get(_chunk_to_break_group(chunk_coord))
+	for tile_data: Dictionary in result["tiles"]:
+		var cell: Vector2i = tile_data["cell"]
+		var tile_type: int = tile_data["tile_type"]
+		if _is_cell_broken(cell, tile_type, chunk_broken):
+			continue
+		var tile := _acquire_tile()
+		tile.configure(tile_type, tile_data["angle"], tile_data["texture_index"], cell)
+		tile.position = Vector2(cell.x * TILE_SIZE + TILE_SIZE / 2.0, cell.y * TILE_SIZE + TILE_SIZE / 2.0)
+		add_child(tile)
+		tiles[cell] = tile
+		active_tiles[cell] = tile
 	loaded_chunks[chunk_coord] = tiles
+
+func _is_cell_broken(cell: Vector2i, tile_type: int, chunk_broken: Variant) -> bool:
+	if chunk_broken == null:
+		return false
+	var hp_lost: int = chunk_broken.get(cell, 0)
+	return hp_lost == EXPLOSION_OVERKILL or hp_lost >= Tile.get_hp(tile_type)
 
 func _unload_chunk(chunk_coord: Vector2i) -> void:
 	var chunk_tiles: Dictionary = loaded_chunks[chunk_coord]
@@ -658,6 +755,9 @@ func _cell_texture_index(cell: Vector2i) -> int:
 	# Deterministic per-cell stone-texture choice.
 	var h: int = hash(Vector2i(cell.x, cell.y)) ^ world_seed ^ 0xA5A5A5A5
 	return absi(h) % 6
+
+func _surface_y_with_noise(x: int, noise_source: FastNoiseLite) -> int:
+	return roundi(terrain_config.surface_base + noise_source.get_noise_1d(x) * terrain_config.surface_amplitude) - (world_thickness - 1)
 
 func _update_sky(world_y: float) -> void:
 	var y_tiles: float = (world_y / float(TILE_SIZE)) + float(world_thickness - 1)
